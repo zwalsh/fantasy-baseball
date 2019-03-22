@@ -1,0 +1,5 @@
+*_pass.txt
+espn_s2_*.txt
+
+.idea/**
+__pycache__/**
