@@ -52,3 +52,12 @@ class EspnApi:
             self.login()
             return self.espn_request(url)
         return r
+
+    def lineup(self):
+        url = "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/56491263?view=mMatchupScore" \
+              "&view=mLiveScoring"
+
+        teams = self.espn_request(url).json()['schedule'][0]["teams"]
+        # todo calculate team id based on primaryOwner
+        my_team = list(filter(lambda t: t["teamId"] == 2, teams))[0]
+        return my_team["rosterForCurrentScoringPeriod"]
