@@ -8,30 +8,32 @@ class Lineup:
         self.player_dict = player_dict
 
     def possible_lineups(self, lineup_settings):
-        slot_lists = self.player_dict.values()
-        players = []
-        for sl in slot_lists:
-            players.extend(sl)
-
-        lineups = [(Lineup(dict()), players)]
-
-        for slot in lineup_settings.slot_counts.keys():
-            print("Adding all combos of {} to {} lineups".format(slot, len(lineups)))
+        lineups = [(Lineup(dict()), self.players())]
+        for slot, count in lineup_settings.slot_counts.items():
+            print("Slot: {}, Lineups: {}".format(slot, len(lineups)))
             new_lineups = []
             for lineup, remaining_players in lineups:
-                candidates = list(filter(lambda player: player.can_play(slot), remaining_players))
-                count = lineup_settings.slot_counts.get(slot)
-                possible_combos = list(combinations(candidates, count))
-                if len(possible_combos) == 0:
-                    new_lineups.append((lineup, remaining_players))
-                for players in possible_combos:
-                    l_copy = lineup.copy()
-                    rem_copy = copy.copy(remaining_players)
-                    rem_copy = list(filter(lambda p: p not in players, rem_copy))
-                    l_copy.player_dict[slot] = players
-                    new_lineups.append((l_copy, rem_copy))
+                new_lineups.extend(lineup.add_players_for_slot(slot, count, remaining_players))
             lineups = new_lineups
         return list(map(lambda l_rem: l_rem[0], filter(lambda l_rem: len(l_rem[1]) == 0, lineups)))
+
+    def add_players_for_slot(self, slot, count, remaining_players):
+        candidates = Lineup.candidates(slot, remaining_players)
+        possible_combos = list(combinations(candidates, count))
+        if len(possible_combos) == 0:
+            return [(self, remaining_players)]
+        new_lineups = []
+        for players in possible_combos:
+            l_copy = self.copy()
+            rem_copy = copy.copy(remaining_players)
+            rem_copy = list(filter(lambda p: p not in players, rem_copy))
+            l_copy.player_dict[slot] = players
+            new_lineups.append((l_copy, rem_copy))
+        return new_lineups
+
+    @staticmethod
+    def candidates(slot, players):
+        return list(filter(lambda player: player.can_play(slot), players))
 
     def copy(self):
         new_dict = dict()
@@ -39,6 +41,12 @@ class Lineup:
             new_list = copy.copy(self.player_dict.get(slot))
             new_dict[slot] = new_list
         return Lineup(new_dict)
+
+    def players(self):
+        all_players = []
+        for players_in_slot in self.player_dict.values():
+            all_players.extend(players_in_slot)
+        return all_players
 
     def starters(self):
         starters = set()
