@@ -9,6 +9,13 @@ class Player:
         self.possible_positions = possible_positions
 
     def __str__(self):
-        return self.name + ", " + self.espn_id
+        return "{}\t{}\t{}".format(self.name, self.espn_id, self.possible_positions)
 
+    def can_play(self, slot_id):
+        return slot_id in self.possible_positions
 
+    def __eq__(self, other):
+        return self.espn_id == other.espn_id
+
+    def __hash__(self):
+        return hash(self.name) + hash(self.espn_id)

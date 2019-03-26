@@ -2,6 +2,8 @@ import requests
 import json
 import os
 from player import Player
+from lineup import Lineup
+from lineup_settings import LineupSettings
 
 """
 http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/<LEAGUE_ID>
@@ -61,29 +63,42 @@ class EspnApi:
                     return stored_key
         return self.login()
 
-    def espn_request(self, url, check_cache=True):
+    def espn_request(self, method, url, payload, check_cache=True):
         if check_cache and url in self.cache.keys():
             return self.cache.get(url)
 
         k = self.key()
-        r = requests.get(url, cookies={"espn_s2": k})
+        cookies = {"espn_s2": k}
+        if method == 'GET':
+            r = requests.get(url, cookies=cookies)
+        if method == 'POST':
+            r = requests.post(url, cookies=cookies, json=payload)
         if r.status_code == 401:
             self.login()
-            return self.espn_request(url)
+            return self.espn_request(method=method, url=url, payload=payload, check_cache=check_cache)
         self.cache[url] = r
         return r
 
+    def espn_get(self, url, check_cache=True):
+        return self.espn_request(method='GET', url=url, payload={}, check_cache=check_cache)
+
+    def espn_post(self, url, payload):
+        return self.espn_request(method='POST', url=url, payload=payload)
+
     def scoring_period(self):
         url = "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/{}".format(self.league_id())
-        return self.espn_request(url).json()['scoringPeriodId']
+        return self.espn_get(url).json()['scoringPeriodId']
+
+    def member_id(self):
+        return "{84C1CD19-5E2C-4D5D-81CD-195E2C4D5D75}"  # todo fetch when logging in, persist?
 
     def team_id(self):
         # use above lineup + display name to calc
-        return 2  # hard-coded for
+        return 7  # 2 - Bless the Rains
 
     def league_id(self):
         # accept as param to object
-        return 56491263
+        return 94862462   # 56491263 - Bless the Rains
 
     def lineup_url(self):
         league_id = self.league_id()
@@ -97,8 +112,55 @@ class EspnApi:
 
     def lineup(self):
         url = self.lineup_url()
-        roster = self.espn_request(url).json()['teams'][0]['roster']['entries']
-        return list(map(lambda e: (EspnApi.roster_entry_to_player(e), e['lineupSlotId']), roster))
+        roster = self.espn_get(url, check_cache=False).json()['teams'][0]['roster']['entries']
+        players = list(map(lambda e: (EspnApi.roster_entry_to_player(e), e['lineupSlotId']), roster))
+        player_dict = dict()
+        for (player, slot) in players:
+            cur_list = player_dict.get(slot, list())
+            cur_list.append(player)
+            player_dict[slot] = cur_list
+        return Lineup(player_dict)
+
+    def lineup_settings_url(self):
+        return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
+               "{}?view=mSettings".format(self.league_id())
+
+    def lineup_settings(self):
+        url = self.lineup_settings_url()
+        settings = self.espn_get(url).json()['settings']['rosterSettings']['lineupSlotCounts']
+        return LineupSettings(settings)
+
+    def set_lineup_url(self):
+        return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
+               "{}/transactions/".format(self.league_id())
+
+    @staticmethod
+    def transition_to_item(transition):
+        return {
+            "playerId": transition[0].espn_id,
+            "type": "LINEUP",
+            "fromLineupSlotId": transition[1],
+            "toLineupSlotId": transition[2]
+        }
+
+    def set_lineup_payload(self, transitions):
+        payload = {
+            "isLeagueManager": False,
+            "teamId": self.team_id(),
+            "type": "ROSTER",
+            "memberId": self.member_id(),
+            "scoringPeriodId": self.scoring_period(),
+            "executionType": "EXECUTE",
+            "items": list(map(EspnApi.transition_to_item, transitions))
+        }
+        return payload
+
+    def set_lineup(self, lineup):
+        url = self.set_lineup_url()
+        cur_lineup = self.lineup()
+        transitions = cur_lineup.transitions(lineup)
+        payload = self.set_lineup_payload(transitions)
+        return self.espn_post(url, payload)
 
     @staticmethod
     def roster_entry_to_player(entry):
