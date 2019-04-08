@@ -3,6 +3,18 @@ import copy
 
 
 class Lineup:
+    slots = [(0, "C"),
+             (1, "1B"),
+             (2, "2B"),
+             (3, "3B"),
+             (4, "SS"),
+             (6, "2B/SS"),
+             (7, "1B/3B"),
+             (5, "OF"),
+             (13, "P"),
+             (16, "BE"),
+             (17, "IL")]
+
     def __init__(self, player_dict):
         # map from slot -> [Player, ...]
         self.player_dict = player_dict
@@ -72,3 +84,11 @@ class Lineup:
                     transitions.append(t)
 
         return transitions
+
+    def __str__(self):
+        result = ""
+        for (slot, code) in Lineup.slots:
+            result += code + "\n"
+            for player in self.player_dict.get(slot, []):
+                result += player.__str__() + "\n"
+        return result

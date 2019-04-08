@@ -4,6 +4,8 @@ import os
 import pickle
 from player import Player
 from lineup import Lineup
+from team import Team
+from league import League
 from lineup_settings import LineupSettings
 from scoring_setting import ScoringSetting
 from stats import Stats
@@ -125,11 +127,10 @@ class EspnApi:
 
     # { team_id: Lineup, ...}
     def all_lineups(self):
-        resp = self.espn_get(self.all_lineups_url())
+        resp = self.espn_get(self.all_lineups_url()).json()
         teams = resp['teams']
         lineup_dict = dict()
         for team in teams:
-            print(team.keys())
             roster = team['roster']['entries']
             players = list(map(lambda e: (EspnApi.roster_entry_to_player(e), e['lineupSlotId']), roster))
             lineup = EspnApi.player_list_to_lineup(players)
@@ -171,15 +172,18 @@ class EspnApi:
         return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
                "{}/transactions/".format(self.league_id())
 
-    @staticmethod
-    def transition_to_item(transition):
-        return {
-            "playerId": transition[0].espn_id,
-            "type": "LINEUP",
-            "fromLineupSlotId": transition[1],
-            "toLineupSlotId": transition[2]
-        }
-
+    def league(self):
+        """
+        Fetches the whole league, including each team's current lineup and yearly stats
+        :return: League - the whole league
+        """
+        stats = self.year_stats()
+        lineups = self.all_lineups()
+        teams = []
+        for team_id in stats.keys():
+            t = Team(team_id, lineups.get(team_id), stats.get(team_id))
+            teams.append(t)
+        return League(teams)
 
     """
     {"bidAmount":0,
@@ -254,3 +258,12 @@ class EspnApi:
     @staticmethod
     def json_to_scoring_setting(item):
         return ScoringSetting(item['statId'], item['isReverseItem'])
+
+    @staticmethod
+    def transition_to_item(transition):
+        return {
+            "playerId": transition[0].espn_id,
+            "type": "LINEUP",
+            "fromLineupSlotId": transition[1],
+            "toLineupSlotId": transition[2]
+        }

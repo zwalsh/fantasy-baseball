@@ -9,7 +9,7 @@ class Player:
         self.possible_positions = possible_positions
 
     def __str__(self):
-        return "{}\t{}\t{}".format(self.name, self.espn_id, self.possible_positions)
+        return "{}\t{}".format(self.name, self.espn_id)
 
     def can_play(self, slot_id):
         return slot_id in self.possible_positions

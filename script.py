@@ -21,12 +21,11 @@ api = EspnApi(username, password)
 # resp = api.all_info()
 # pickle.dump(resp, open("all_info.p", "wb+"))
 
-s = api.year_stats()
+league = api.league()
 
-for team, stats in s.items():
-    print(team)
-    print(stats)
-
+for team in league.teams:
+    print(team.team_id)
+    print(team.stats.era())
 
 
 # lineup = api.lineup()
