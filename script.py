@@ -2,6 +2,7 @@ from pprint import pprint
 from espn_api import EspnApi
 import sys
 import pickle
+import requests
 
 from lineup_settings import LineupSettings
 
@@ -16,43 +17,55 @@ password = password(username)
 
 api = EspnApi(username, password)
 
-lineup = api.lineup()
+# print('fetching all lineups...')
+# resp = api.all_info()
+# pickle.dump(resp, open("all_info.p", "wb+"))
+
+s = api.year_stats()
+
+for team, stats in s.items():
+    print(team)
+    print(stats)
 
 
-def print_lineup(l):
-    for slot, players in l.player_dict.items():
-        print(slot)
-        for p in players:
-            print(p)
 
-
-settings = api.lineup_settings()
-# lineup = pickle.load(open("lineup.p", "rb"))
-# settings = LineupSettings(pickle.load(open("settings.p", "rb")).slot_counts)  # for casting str->str to int->int
-
-
-possibles = lineup.possible_lineups(settings)
-# lineup_dict = dict()
-# for poss_lineup in possibles:
-#     benched = poss_lineup.benched()
-#     lineups_same_benched = lineup_dict.get(benched, list())
-#     lineups_same_benched.append(poss_lineup)
-#     lineup_dict[benched] = lineups_same_benched
-
-# print("{} different configurations of benched players".format(len(lineup_dict)))
-
-
-def low_transition_lineup(cur, possible_lineups):
-    for l in possible_lineups:
-        if len(cur.transitions(l)) == 3:
-            return l
-
-rand_lineup = low_transition_lineup(lineup, possibles)
-transitions = lineup.transitions(rand_lineup)
-for t in transitions:
-    print("{} {} {}".format(t[0], t[1], t[2]))
-
-pprint(api.set_lineup(rand_lineup))
+# lineup = api.lineup()
+#
+#
+# def print_lineup(l):
+#     for slot, players in l.player_dict.items():
+#         print(slot)
+#         for p in players:
+#             print(p)
+#
+#
+# settings = api.lineup_settings()
+# # lineup = pickle.load(open("lineup.p", "rb"))
+# # settings = LineupSettings(pickle.load(open("settings.p", "rb")).slot_counts)  # for casting str->str to int->int
+#
+#
+# possibles = lineup.possible_lineups(settings)
+# # lineup_dict = dict()
+# # for poss_lineup in possibles:
+# #     benched = poss_lineup.benched()
+# #     lineups_same_benched = lineup_dict.get(benched, list())
+# #     lineups_same_benched.append(poss_lineup)
+# #     lineup_dict[benched] = lineups_same_benched
+#
+# # print("{} different configurations of benched players".format(len(lineup_dict)))
+#
+#
+# def low_transition_lineup(cur, possible_lineups):
+#     for l in possible_lineups:
+#         if len(cur.transitions(l)) == 3:
+#             return l
+#
+# rand_lineup = low_transition_lineup(lineup, possibles)
+# transitions = lineup.transitions(rand_lineup)
+# for t in transitions:
+#     print("{} {} {}".format(t[0], t[1], t[2]))
+#
+# pprint(api.set_lineup(rand_lineup))
 
 """
 GOAL:
@@ -75,21 +88,34 @@ GOAL:
         possibleSlots: [Num, ...]
     }
     
-    LineupSettings = [Slot, ...]
-    
-    Slot = {
-        slot_id: ...
-        stats_count?: ...
+    LineupSettings = {
+        slot_id: count,
+        ...
     }
     
     Lineup = {
-        0: Player,
-        1: Player,
+        0: [Player, ...]
+        1: [Player, ...]
         ...
     }
         (Lineup LineupSettings? Projections) -> Statistics
     
     Projections = { Player: Statistics }
+    
+    ScoringSettings: [(id, reverse?), ...]
+    
+    Statistics: {
+        id: value,
+        ...
+    }
+    
+    League: [Team, ...]
+    
+    Team: {
+        id: Int,
+        lineup: Lineup,
+        year_stats: Statistics,
+    }
     
 
 """
