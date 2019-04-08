@@ -22,49 +22,13 @@ api = EspnApi(username, password)
 # pickle.dump(resp, open("all_info.p", "wb+"))
 
 league = api.league()
+settings = api.scoring_settings()
 
-for team in league.teams:
-    print(team.team_id)
-    print(team.stats.era())
+points = league.points(settings)
+for (team_id, points) in points.items():
+    print("{}\t{}\n".format(team_id, points))
 
 
-# lineup = api.lineup()
-#
-#
-# def print_lineup(l):
-#     for slot, players in l.player_dict.items():
-#         print(slot)
-#         for p in players:
-#             print(p)
-#
-#
-# settings = api.lineup_settings()
-# # lineup = pickle.load(open("lineup.p", "rb"))
-# # settings = LineupSettings(pickle.load(open("settings.p", "rb")).slot_counts)  # for casting str->str to int->int
-#
-#
-# possibles = lineup.possible_lineups(settings)
-# # lineup_dict = dict()
-# # for poss_lineup in possibles:
-# #     benched = poss_lineup.benched()
-# #     lineups_same_benched = lineup_dict.get(benched, list())
-# #     lineups_same_benched.append(poss_lineup)
-# #     lineup_dict[benched] = lineups_same_benched
-#
-# # print("{} different configurations of benched players".format(len(lineup_dict)))
-#
-#
-# def low_transition_lineup(cur, possible_lineups):
-#     for l in possible_lineups:
-#         if len(cur.transitions(l)) == 3:
-#             return l
-#
-# rand_lineup = low_transition_lineup(lineup, possibles)
-# transitions = lineup.transitions(rand_lineup)
-# for t in transitions:
-#     print("{} {} {}".format(t[0], t[1], t[2]))
-#
-# pprint(api.set_lineup(rand_lineup))
 
 """
 GOAL:
@@ -115,6 +79,26 @@ GOAL:
         lineup: Lineup,
         year_stats: Statistics,
     }
+    
+    Now, calculate optimal lineup:
+    
+    Given:
+    * League
+    * Team Id
+    * Projections
+    * Scoring Settings
+    * set of starters
+    
+    Determine:
+    * point value of those starters
+    
+    Approach:
+    - calculate all others' stats based on curr lineup, projections
+    - save my curr year stats
+    - calc my stats with daily projections
+    - for each stat, calc my % difference vs. all others ... ? sum to total points
+    
+    
     
 
 """
