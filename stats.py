@@ -29,6 +29,45 @@ class Stats:
         99: "STARTER",  # maybe?
     })
 
+    @staticmethod
+    def pitcher_stats(wins, innings, batters, hits, homers, walks, strikeouts):
+        # component era calculation from Bill James https://en.wikipedia.org/wiki/Component_ERA
+        # pitcher_total_bases = 0.89 * (1.255 * (hits - homers) + 4 * homers) + 0.475 * walks
+        # unadjusted_comp_era = 9 * ((hits + walks) * pitcher_total_bases) / (batters * innings)
+        # component_era = unadjusted_comp_era - 0.56
+        # if component_era < 2.24:
+        #     component_era = unadjusted_comp_era * 0.75
+        component_era = 3.00 + (13 * homers + 3 * walks - 2 * strikeouts) / innings
+
+        stats_dict = {
+            34: innings * 3,
+            37: hits,
+            39: walks,
+            41: (walks + hits) / innings,
+            45: component_era,
+            46: homers,
+            48: strikeouts,
+            53: wins,
+        }
+        return Stats(stats_dict)
+
+    @staticmethod
+    def hitter_stats(pa, h, hr, r, rbi, sb, bb):
+        ab = pa - bb
+        stats_dict = {
+            0: ab,
+            1: h,
+            2: h / ab,
+            5: hr,
+            10: bb,
+            16: pa,
+            17: (h + bb) / pa,
+            20: r,
+            21: rbi,
+            23: sb,
+        }
+        return Stats(stats_dict)
+
     # self.stat_dict: { id: val, ...} where id is an int, val is an
     def __init__(self, stat_dict):
         self.stat_dict = dict()

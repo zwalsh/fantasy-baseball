@@ -1,34 +1,35 @@
 from pprint import pprint
 from espn_api import EspnApi
+from fangraphs_api import FangraphsApi
 import sys
 import pickle
 import requests
 
 from lineup_settings import LineupSettings
 
+#
+# def password(user):
+#     with open(user + "_pass.txt", "w+") as pass_file:
+#         return pass_file.read()
+#
+#
+# username = sys.argv[1]
+# password = password(username)
+#
+# api = EspnApi(username, password)
+#
+# league = api.league()
+# settings = api.scoring_settings()
+#
+# points = league.points(settings)
+# for (team_id, points) in points.items():
+#     print("{}\t{}\n".format(team_id, points))
 
-def password(user):
-    with open(user + "_pass.txt", "w+") as pass_file:
-        return pass_file.read()
-
-
-username = sys.argv[1]
-password = password(username)
-
-api = EspnApi(username, password)
-
-# print('fetching all lineups...')
-# resp = api.all_info()
-# pickle.dump(resp, open("all_info.p", "wb+"))
-
-league = api.league()
-settings = api.scoring_settings()
-
-points = league.points(settings)
-for (team_id, points) in points.items():
-    print("{}\t{}\n".format(team_id, points))
-
-
+proj = FangraphsApi().pitcher_projections()
+print(proj.items())
+name_and_average = list(map(lambda n: (n[0], n[1].whip()), proj.items()))
+for name, stats in sorted(name_and_average, key=lambda na: na[1]):
+    print("{}\t{}\n".format(name, stats))
 
 """
 GOAL:
