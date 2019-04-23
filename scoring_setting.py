@@ -1,6 +1,13 @@
 
 class ScoringSetting:
 
-    def __init__(self, stat_id, is_reverse):
-        self.stat_id = stat_id
+    def __init__(self, stat, is_reverse):
+        """
+        Represents a Scoring setting in a fantasy league, based on a Stat
+        where teams are ranked on that stat. The boolean says if the rankings
+        are in reverse order or not
+        :param stat: the Stat that this setting is for
+        :param is_reverse: the order of the standings
+        """
+        self.stat = stat
         self.is_reverse = is_reverse

@@ -1,42 +1,66 @@
+from enum import Enum
+
+
+class Stat(Enum):
+    AB = "AB"
+    H = "H"
+    AVG = "AVG"
+    HR = "HR"
+    BB = "BB"
+    PA = "PA"
+    OBP = "OBP"
+    R = "R"
+    RBI = "RBI"
+    SB = "SB"
+    OUTS = "OUTS"
+    BATTERS = "BATTERS"
+    PITCHES = "PITCHES"
+    P_H = "P_H"
+    P_BB = "P_BB"
+    WHIP = "WHIP"
+    HBP = "HBP"
+    P_R = "P_R"
+    ER = "ER"
+    P_HR = "P_HR"
+    ERA = "ERA"
+    K = "K"
+    W = "W"
+    L = "L"
+    SV = "SV"
+    STARTER = "STARTER"
+
 
 class Stats:
-    stat_names = dict({
-        0: "AB",
-        1: "H",
-        2: "AVG",
-        5: "HR",
-        10: "BB",
-        16: "PA",
-        17: "OBP",
-        20: "R",
-        21: "RBI",
-        23: "SB",
-        34: "OUTS",  # can derive IP
-        35: "BATTERS FACED",
-        36: "PITCHES",
-        37: "H",
-        39: "BB",
-        41: "WHIP",
-        42: "HBP",
-        44: "R",
-        45: "ER",
-        46: "HR",
-        47: "ERA",
-        48: "K",
-        53: "W",
-        54: "L",
-        57: "SV",
-        99: "STARTER",  # maybe?
-    })
-
     stat_functions = {
-        2: lambda s: s.average(),
-        17: lambda s: s.obp(),
-        41: lambda s: s.whip(),
-        47: lambda s: s.era(),
+        Stat.AVG: lambda s: s.average(),
+        Stat.OBP: lambda s: s.obp(),
+        Stat.WHIP: lambda s: s.whip(),
+        Stat.ERA: lambda s: s.era(),
     }
 
-    sum_stats = {0, 1, 5, 10, 16, 20, 21, 23, 34, 35, 36, 37, 39, 42, 44, 45, 46, 48, 53, 54, 57}
+    sum_stats = {
+        Stat.AB,
+        Stat.H,
+        Stat.HR,
+        Stat.BB,
+        Stat.PA,
+        Stat.R,
+        Stat.RBI,
+        Stat.SB,
+        Stat.OUTS,
+        Stat.BATTERS,
+        Stat.PITCHES,
+        Stat.P_H,
+        Stat.P_BB,
+        Stat.HBP,
+        Stat.P_R,
+        Stat.ER,
+        Stat.P_HR,
+        Stat.K,
+        Stat.W,
+        Stat.L,
+        Stat.SV
+    }
 
     @staticmethod
     def pitcher_stats(wins, innings, batters, hits, homers, walks, strikeouts):
@@ -49,14 +73,14 @@ class Stats:
         component_era = 3.00 + (13 * homers + 3 * walks - 2 * strikeouts) / innings
 
         stats_dict = {
-            34: innings * 3,
-            37: hits,
-            39: walks,
-            41: (walks + hits) / innings,
-            45: component_era,
-            46: homers,
-            48: strikeouts,
-            53: wins,
+            Stat.OUTS: innings * 3,
+            Stat.P_H: hits,
+            Stat.P_BB: walks,
+            Stat.WHIP: (walks + hits) / innings,
+            Stat.ERA: component_era,
+            Stat.P_HR: homers,
+            Stat.K: strikeouts,
+            Stat.W: wins,
         }
         return Stats(stats_dict)
 
@@ -64,24 +88,25 @@ class Stats:
     def hitter_stats(pa, h, hr, r, rbi, sb, bb):
         ab = pa - bb
         stats_dict = {
-            0: ab,
-            1: h,
-            2: h / ab,
-            5: hr,
-            10: bb,
-            16: pa,
-            17: (h + bb) / pa,
-            20: r,
-            21: rbi,
-            23: sb,
+            Stat.AB: ab,
+            Stat.H: h,
+            Stat.AVG: h / ab,
+            Stat.HR: hr,
+            Stat.BB: bb,
+            Stat.PA: pa,
+            Stat.OBP: (h + bb) / pa,
+            Stat.R: r,
+            Stat.RBI: rbi,
+            Stat.SB: sb,
         }
         return Stats(stats_dict)
 
-    # self.stat_dict: { id: val, ...} where id is an int, val is an
     def __init__(self, stat_dict):
-        self.stat_dict = dict()
-        for k, v in stat_dict.items():
-            self.stat_dict[int(k)] = float(v)
+        """
+        Accepts a dictionary from Stat to float
+        :param stat_dict: mapping of a stat to its float value
+        """
+        self.stat_dict = stat_dict
 
     def __add__(self, other):
         combined = dict()
@@ -96,14 +121,14 @@ class Stats:
 
     def __str__(self):
         print_pairs = list()
-        for stat_id in Stats.sum_stats:
-            val = self.stat_dict.get(stat_id)
+        for stat in Stats.sum_stats:
+            val = self.stat_dict.get(stat)
             if val:
-                print_pairs.append((Stats.stat_names[stat_id], val))
-        print_pairs.append(("AVG", self.average()))
-        print_pairs.append(("OBP", self.obp()))
-        print_pairs.append(("ERA", self.era()))
-        print_pairs.append(("WHIP", self.whip()))
+                print_pairs.append((stat, val))
+        print_pairs.append((Stat.AVG, self.average()))
+        print_pairs.append((Stat.OBP, self.obp()))
+        print_pairs.append((Stat.ERA, self.era()))
+        print_pairs.append((Stat.WHIP, self.whip()))
         s = ""
         for (name, stat) in print_pairs:
             if stat:
@@ -111,53 +136,57 @@ class Stats:
         return s
 
     def average(self):
-        return round(self.stat_dict.get(2, self.stat_dict.get(1) / self.stat_dict.get(0)), 3)
+        return round(self.stat_dict.get(Stat.AVG, self.stat_dict.get(Stat.H) / self.stat_dict.get(Stat.AB)), 3)
 
     # note - adjust calculation to include not just walks + hits but also HBP, etc.
     def obp(self):
-        return round(self.stat_dict.get(17, (self.stat_dict.get(1) + self.stat_dict.get(10)) / self.stat_dict.get(16)), 3)
+        exact_obp = self.stat_dict.get(Stat.OBP)
+        if exact_obp is None:
+            reached_base = self.stat_dict[Stat.H] + self.stat_dict[Stat.BB]
+            exact_obp = reached_base / self.stat_dict[Stat.PA]
+        return round(exact_obp, 3)
 
     def runs(self):
-        return self.stat_dict.get(20, 0)
+        return self.stat_dict.get(Stat.R, 0)
 
     def home_runs(self):
-        return self.stat_dict.get(5, 0)
+        return self.stat_dict.get(Stat.HR, 0)
 
     def steals(self):
-        return self.stat_dict.get(23, 0)
+        return self.stat_dict.get(Stat.SB, 0)
 
     def strikeouts(self):
-        return self.stat_dict.get(48, 0)
+        return self.stat_dict.get(Stat.K, 0)
 
     def wins(self):
-        return self.stat_dict.get(53, 0)
+        return self.stat_dict.get(Stat.W, 0)
 
     def saves(self):
-        return self.stat_dict.get(57, 0)
+        return self.stat_dict.get(Stat.SV, 0)
 
     def era(self):
-        total = self.stat_dict.get(47)
+        total = self.stat_dict.get(Stat.ERA)
         if total:
             return round(total, 3)
 
-        earned_runs = self.stat_dict.get(45, 0)
-        outs = self.stat_dict.get(34, 1.0)
+        earned_runs = self.stat_dict.get(Stat.ER, 0)
+        outs = self.stat_dict.get(Stat.OUTS, 1.0)
 
         return round(earned_runs * 27.0 / outs, 3)
 
     def whip(self):
-        total = self.stat_dict.get(41)
+        total = self.stat_dict.get(Stat.WHIP)
         if total:
             return round(total, 3)
 
-        hits = self.stat_dict.get(37, 0)
-        walks = self.stat_dict.get(39, 0)
-        outs = self.stat_dict.get(34, 1.0)
+        hits = self.stat_dict.get(Stat.P_H, 0)
+        walks = self.stat_dict.get(Stat.P_BB, 0)
+        outs = self.stat_dict.get(Stat.OUTS, 1.0)
 
         return round((walks + hits) / outs * 3.0, 3)
 
-    def value_for_stat_id(self, stat_id):
-        if stat_id in Stats.sum_stats:
-            return self.stat_dict.get(stat_id)
-        elif stat_id in Stats.stat_functions:
-            return Stats.stat_functions.get(stat_id)(self)
+    def value_for_stat(self, stat):
+        if stat in Stats.sum_stats:
+            return self.stat_dict.get(stat)
+        elif stat in Stats.stat_functions:
+            return Stats.stat_functions.get(stat)(self)

@@ -1,14 +1,13 @@
 import requests
 import json
 import os
-import pickle
 from player import Player
 from lineup import Lineup
 from team import Team
 from league import League
 from lineup_settings import LineupSettings
 from scoring_setting import ScoringSetting
-from stats import Stats
+from espn.stats_translator import stat_id_to_stat, create_stats
 
 """
 http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/<LEAGUE_ID>
@@ -152,10 +151,15 @@ class EspnApi:
         return list(map(EspnApi.json_to_scoring_setting, scoring_items))
 
     def year_stats(self):
+        """
+        Returns a dictionary of all stats for all teams on the year.
+        Maps team id to Stats object
+        :return: mapping of team id to Stats for the year
+        """
         teams = self.all_info().json()['teams']
         team_to_stats = dict()
         for t in teams:
-            stats = Stats(t['valuesByStat'])
+            stats = create_stats(t['valuesByStat'])
             team_to_stats[t['id']] = stats
         return team_to_stats
 
@@ -257,7 +261,8 @@ class EspnApi:
 
     @staticmethod
     def json_to_scoring_setting(item):
-        return ScoringSetting(item['statId'], item['isReverseItem'])
+        stat = stat_id_to_stat(item['statId'])
+        return ScoringSetting(stat, item['isReverseItem'])
 
     @staticmethod
     def transition_to_item(transition):

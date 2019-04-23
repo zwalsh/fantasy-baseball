@@ -2,6 +2,6 @@
 espn_s2_*.txt
 
 .idea/**
-__pycache__/**
+**/__pycache__/**
 
 *.p

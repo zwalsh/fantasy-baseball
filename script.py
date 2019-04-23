@@ -1,11 +1,8 @@
-from pprint import pprint
-from espn_api import EspnApi
-from fangraphs_api import FangraphsApi
-import lineup_optimizer
 import sys
-import pickle
-import requests
 
+import lineup_optimizer
+from espn.espn_api import EspnApi
+from fangraphs_api import FangraphsApi
 from stats import Stats
 
 
@@ -19,31 +16,37 @@ password = password(username)
 
 api = EspnApi(username, password)
 
-league = api.league()
-lineup = api.lineup(api.team_id())
-lineup_settings = api.lineup_settings()
+s = api.year_stats()
 
-scoring_settings = api.scoring_settings()
-
-proj = FangraphsApi().hitter_projections()
-
-max_lineup_for_stats = lineup_optimizer.optimize_lineup(lineup, lineup_settings, proj, scoring_settings)
-
-lineup_maxes = dict()
-
-for stat_id, (_, best_lineup) in max_lineup_for_stats.items():
-    cur_bests = lineup_maxes.get(best_lineup, [])
-    cur_bests.append(stat_id)
-    lineup_maxes[best_lineup] = cur_bests
-
-for lineup, bests in lineup_maxes.items():
-    stats = lineup_optimizer.stats_with_projections(lineup, proj)
-    for player in lineup:
-        print("{}\n".format(player.__str__()))
+for team, stats in s.items():
+    print(team)
     print(stats)
-    print("Best for:")
-    for best in bests:
-        print("{}".format(Stats.stat_names.get(best)))
+
+# league = api.league()
+# lineup = api.lineup(api.team_id())
+# lineup_settings = api.lineup_settings()
+#
+# scoring_settings = api.scoring_settings()
+#
+# proj = FangraphsApi().hitter_projections()
+#
+# max_lineup_for_stats = lineup_optimizer.optimize_lineup(lineup, lineup_settings, proj, scoring_settings)
+#
+# lineup_maxes = dict()
+#
+# for stat_id, (_, best_lineup) in max_lineup_for_stats.items():
+#     cur_bests = lineup_maxes.get(best_lineup, [])
+#     cur_bests.append(stat_id)
+#     lineup_maxes[best_lineup] = cur_bests
+#
+# for lineup, bests in lineup_maxes.items():
+#     stats = lineup_optimizer.stats_with_projections(lineup, proj)
+#     for player in lineup:
+#         print("{}\n".format(player.__str__()))
+#     print(stats)
+#     print("Best for:")
+#     for best in bests:
+#         print("{}".format(Stats.stat_names.get(best)))
 
 """
 TO DO:
