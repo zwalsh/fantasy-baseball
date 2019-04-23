@@ -29,6 +29,15 @@ class Stats:
         99: "STARTER",  # maybe?
     })
 
+    stat_functions = {
+        2: lambda s: s.average(),
+        17: lambda s: s.obp(),
+        41: lambda s: s.whip(),
+        47: lambda s: s.era(),
+    }
+
+    sum_stats = {0, 1, 5, 10, 16, 20, 21, 23, 34, 35, 36, 37, 39, 42, 44, 45, 46, 48, 53, 54, 57}
+
     @staticmethod
     def pitcher_stats(wins, innings, batters, hits, homers, walks, strikeouts):
         # component era calculation from Bill James https://en.wikipedia.org/wiki/Component_ERA
@@ -74,10 +83,31 @@ class Stats:
         for k, v in stat_dict.items():
             self.stat_dict[int(k)] = float(v)
 
+    def __add__(self, other):
+        combined = dict()
+        my_keys = set(self.stat_dict.keys()).intersection(Stats.sum_stats)
+        for k in my_keys:
+            combined[k] = self.stat_dict.get(k) + other.stat_dict.get(k, 0.0)
+
+        other_keys = set(other.stat_dict.keys() - my_keys).intersection(Stats.sum_stats)
+        for k in other_keys:
+            combined[k] = other.stat_dict[k]
+        return Stats(combined)
+
     def __str__(self):
+        print_pairs = list()
+        for stat_id in Stats.sum_stats:
+            val = self.stat_dict.get(stat_id)
+            if val:
+                print_pairs.append((Stats.stat_names[stat_id], val))
+        print_pairs.append(("AVG", self.average()))
+        print_pairs.append(("OBP", self.obp()))
+        print_pairs.append(("ERA", self.era()))
+        print_pairs.append(("WHIP", self.whip()))
         s = ""
-        for k, v in self.stat_dict.items():
-            s += "{}\t{}\n".format(self.stat_names.get(k, k), v)
+        for (name, stat) in print_pairs:
+            if stat:
+                s += "{}\t{}\n".format(name, stat)
         return s
 
     def average(self):
@@ -125,3 +155,9 @@ class Stats:
         outs = self.stat_dict.get(34, 1.0)
 
         return round((walks + hits) / outs * 3.0, 3)
+
+    def value_for_stat_id(self, stat_id):
+        if stat_id in Stats.sum_stats:
+            return self.stat_dict.get(stat_id)
+        elif stat_id in Stats.stat_functions:
+            return Stats.stat_functions.get(stat_id)(self)

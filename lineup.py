@@ -11,23 +11,43 @@ class Lineup:
              (6, "2B/SS"),
              (7, "1B/3B"),
              (5, "OF"),
+             (12, "UTIL"),
              (13, "P"),
              (16, "BE"),
              (17, "IL")]
+
+    hitting_slots = {0, 1, 2, 3, 4, 5, 6, 7, 12}
 
     def __init__(self, player_dict):
         # map from slot -> [Player, ...]
         self.player_dict = player_dict
 
-    def possible_lineups(self, lineup_settings):
-        lineups = [(Lineup(dict()), self.players())]
-        for slot, count in lineup_settings.slot_counts.items():
-            print("Slot: {}, Lineups: {}".format(slot, len(lineups)))
-            new_lineups = []
-            for lineup, remaining_players in lineups:
-                new_lineups.extend(lineup.add_players_for_slot(slot, count, remaining_players))
-            lineups = new_lineups
-        return list(map(lambda l_rem: l_rem[0], filter(lambda l_rem: len(l_rem[1]) == 0, lineups)))
+    def possible_starting_hitters(self, lineup_settings):
+        """
+        settings -> {starters, ...}
+
+        :param lineup_settings:
+        :return: set of all possible combinations of starting hitters
+        """
+        lineups = [(Lineup(dict()), self.players(), Lineup.hitting_slots.copy())]
+        all_starters = set()
+        total_proc = 0
+
+        while not len(lineups) == 0:
+            (cur_lineup, remaining_players, slots_to_process) = lineups.pop(0)
+            next_slot = slots_to_process.pop()
+            slot_count = lineup_settings.slot_counts.get(next_slot)
+            new_lineups = cur_lineup.add_players_for_slot(next_slot, slot_count, remaining_players)
+            total_proc += len(new_lineups)
+            if len(slots_to_process) == 0:
+                for (new_lin, _) in new_lineups:
+                    all_starters.add(new_lin.starters())
+            else:
+                for (new_lin, rem_play) in new_lineups:
+                    created_lineup = (new_lin, rem_play, slots_to_process.copy())
+                    lineups.insert(0, created_lineup)
+        print("Possible starting combos: {} / {} lineups".format(len(all_starters), total_proc))
+        return all_starters
 
     def add_players_for_slot(self, slot, count, remaining_players):
         candidates = Lineup.candidates(slot, remaining_players)
@@ -87,6 +107,7 @@ class Lineup:
 
     def __str__(self):
         result = ""
+
         for (slot, code) in Lineup.slots:
             result += code + "\n"
             for player in self.player_dict.get(slot, []):
