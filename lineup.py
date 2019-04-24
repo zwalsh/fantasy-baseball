@@ -1,5 +1,5 @@
-from itertools import combinations
 import copy
+from itertools import combinations
 
 
 class Lineup:
@@ -19,7 +19,11 @@ class Lineup:
     hitting_slots = {0, 1, 2, 3, 4, 5, 6, 7, 12}
 
     def __init__(self, player_dict):
-        # map from slot -> [Player, ...]
+        """
+        Accepts a map from LineupSlot to list of Player saying which players are
+        currently lined up in each slot
+        :param dict player_dict: map from LineupSlot to list of players
+        """
         self.player_dict = player_dict
 
     def possible_starting_hitters(self, lineup_settings):
@@ -65,6 +69,13 @@ class Lineup:
 
     @staticmethod
     def candidates(slot, players):
+        """
+        Filters the given list of players to the ones eligible to play in
+        the given Slot
+        :param list slot: LineupSlots that match
+        :param list players: players available to play
+        :return:
+        """
         return list(filter(lambda player: player.can_play(slot), players))
 
     def copy(self):

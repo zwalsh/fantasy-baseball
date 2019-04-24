@@ -1,13 +1,13 @@
 import requests
 import json
 import os
-from player import Player
 from lineup import Lineup
 from team import Team
 from league import League
 from lineup_settings import LineupSettings
 from scoring_setting import ScoringSetting
 from espn.stats_translator import stat_id_to_stat, create_stats
+from espn.player_translator import roster_entry_to_player, espn_slot_to_slot
 
 """
 http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/<LEAGUE_ID>
@@ -131,7 +131,7 @@ class EspnApi:
         lineup_dict = dict()
         for team in teams:
             roster = team['roster']['entries']
-            players = list(map(lambda e: (EspnApi.roster_entry_to_player(e), e['lineupSlotId']), roster))
+            players = list(map(lambda e: (roster_entry_to_player(e), espn_slot_to_slot.get(e['lineupSlotId'])), roster))
             lineup = EspnApi.player_list_to_lineup(players)
             lineup_dict[team['id']] = lineup
         return lineup_dict
@@ -234,21 +234,14 @@ class EspnApi:
         }
         return payload
 
+    # this will not work at the moment - need to translate LineupSlots back to espn
+    # lineup ids
     def set_lineup(self, lineup):
         url = self.set_lineup_url()
         cur_lineup = self.lineup(self.team_id())
         transitions = cur_lineup.transitions(lineup)
         payload = self.set_lineup_payload(transitions)
         return self.espn_post(url, payload)
-
-    @staticmethod
-    def roster_entry_to_player(entry):
-        player_id = entry['playerId']
-        player_map = entry['playerPoolEntry']['player']
-        name = player_map['fullName']
-        position = player_map['defaultPositionId']
-        possible_positions = player_map['eligibleSlots']
-        return Player(name, player_id, position, possible_positions)
 
     @staticmethod
     def player_list_to_lineup(players):

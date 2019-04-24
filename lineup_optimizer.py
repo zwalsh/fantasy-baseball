@@ -15,7 +15,7 @@ def optimize_lineup(lineup, lineup_settings, projections, scoring_settings):
     for starters in lineup.possible_starting_hitters(lineup_settings):
         stats = stats_with_projections(starters, projections)
         for scoring_stat in scoring_settings:
-            cur_starters_value = stats.value_for_stat(scoring_stat.stat_id)
+            cur_starters_value = stats.value_for_stat(scoring_stat.stat)
             if cur_starters_value is None:
                 continue
             cur_max = maximums.get(scoring_stat.stat_id)

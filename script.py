@@ -16,11 +16,7 @@ password = password(username)
 
 api = EspnApi(username, password)
 
-s = api.year_stats()
-
-for team, stats in s.items():
-    print(team)
-    print(stats)
+l = api.lineup(api.team_id())
 
 # league = api.league()
 # lineup = api.lineup(api.team_id())

@@ -1,18 +1,29 @@
+from lineup_slot import LineupSlot
 
 
 class Player:
-
-    def __init__(self, name, espn_id, position, possible_positions):
+    def __init__(self, name, espn_id, possible_positions):
+        """
+        Creates a Player from their name, espn id, primary positions, and possible positions
+        :param str name: the player's name
+        :param int espn_id: their id as specified by ESPN
+        :param set possible_positions: set of LineupSlots they can play
+        """
         self.name = name
         self.espn_id = espn_id
-        self.position = position
         self.possible_positions = possible_positions
 
     def __str__(self):
         return "{}\t{}".format(self.name, self.espn_id)
 
-    def can_play(self, slot_id):
-        return slot_id in self.possible_positions
+    def can_play(self, slot):
+        """
+        Checks if this player can play in the given slot,
+        where a slot is an array of Positions.
+        :param LineupSlot slot: slot to see if the player can play in
+        :return: true if one of the player's possible positions matches
+        """
+        return slot in self.possible_positions
 
     def __eq__(self, other):
         return self.espn_id == other.espn_id
