@@ -4,10 +4,9 @@ import os
 from lineup import Lineup
 from team import Team
 from league import League
-from lineup_settings import LineupSettings
 from scoring_setting import ScoringSetting
 from espn.stats_translator import stat_id_to_stat, create_stats
-from espn.player_translator import roster_entry_to_player, espn_slot_to_slot
+from espn.player_translator import roster_entry_to_player, espn_slot_to_slot, lineup_slot_counts_to_lineup_settings
 
 """
 http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/<LEAGUE_ID>
@@ -114,8 +113,12 @@ class EspnApi:
                "&scoringPeriodId={}" \
                "&view=mRoster".format(league_id, team_id, scoring_period_id)
 
-    # team_id -> Lineup
     def lineup(self, team_id):
+        """
+        Returns the current lineup of the team with the given team id
+        :param int team_id: the id of the team in this league to get the lineup for
+        :return Lineup: Lineup the lineup of the given team
+        """
         return self.all_lineups()[team_id]
 
     def all_lineups_url(self):
@@ -170,7 +173,7 @@ class EspnApi:
     def lineup_settings(self):
         url = self.lineup_settings_url()
         settings = self.espn_get(url).json()['settings']['rosterSettings']['lineupSlotCounts']
-        return LineupSettings(settings)
+        return lineup_slot_counts_to_lineup_settings(settings)
 
     def set_lineup_url(self):
         return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \

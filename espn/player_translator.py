@@ -1,5 +1,6 @@
 from player import Player
 from lineup_slot import LineupSlot
+from lineup_settings import LineupSettings
 
 espn_slot_to_slot = {
     0: LineupSlot.CATCHER,
@@ -33,3 +34,19 @@ def roster_entry_to_player(entry):
         if converted is not None:
             possible_positions.add(converted)
     return Player(name, player_id, possible_positions)
+
+
+def lineup_slot_counts_to_lineup_settings(settings):
+    """
+    Takes an ESPN API dictionary mapping slots (which arrive as strings)
+    to counts (which arrive as ints), and converts it into a LineupSettings object
+    :param dict settings: mapping of slot to count
+    :return LineupSettings: the settings object for the given dictionary
+    """
+    converted_settings = dict()
+
+    for slot_id, count in settings.items():
+        slot = espn_slot_to_slot.get(int(slot_id))
+        if slot is not None:
+            converted_settings[slot] = count
+    return LineupSettings(converted_settings)

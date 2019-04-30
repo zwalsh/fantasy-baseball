@@ -1,7 +1,9 @@
 import unittest
 
 from espn.player_translator import roster_entry_to_player
+from espn.player_translator import lineup_slot_counts_to_lineup_settings
 from lineup_slot import LineupSlot
+from lineup_settings import LineupSettings
 
 
 class Test(unittest.TestCase):
@@ -60,3 +62,23 @@ class Test(unittest.TestCase):
             LineupSlot.BENCH,
             LineupSlot.INJURED
         })
+
+    lineup_slot_response = {'0': 1, '1': 1, '2': 1, '3': 1, '4': 1, '5': 5, '6': 1, '7': 1, '8': 0, '9': 0, '10': 0,
+                            '11': 0, '12': 1, '13': 9, '14': 0, '15': 0, '16': 3, '17': 2, '19': 0}
+
+    def test_convert_lineup_slot_counts(self):
+        settings = {
+            LineupSlot.CATCHER: 1,
+            LineupSlot.FIRST: 1,
+            LineupSlot.SECOND: 1,
+            LineupSlot.THIRD: 1,
+            LineupSlot.SHORT: 1,
+            LineupSlot.MIDDLE_INFIELD: 1,
+            LineupSlot.CORNER_INFIELD: 1,
+            LineupSlot.OUTFIELD: 5,
+            LineupSlot.PITCHER: 9,
+            LineupSlot.BENCH: 3,
+            LineupSlot.INJURED: 2,
+        }
+        self.assertEqual(lineup_slot_counts_to_lineup_settings(self.lineup_slot_response).slot_counts,
+                         LineupSettings(settings).slot_counts)
