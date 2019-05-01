@@ -17,6 +17,11 @@ password = password(username)
 api = EspnApi(username, password)
 
 l = api.lineup(api.team_id())
+print(l)
+l_settings = api.lineup_settings()
+
+
+poss_starters = l.possible_starting_hitters(l_settings)
 
 # league = api.league()
 # lineup = api.lineup(api.team_id())

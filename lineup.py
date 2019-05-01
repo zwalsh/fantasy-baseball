@@ -1,22 +1,31 @@
 import copy
 from itertools import combinations
+from lineup_slot import LineupSlot
 
 
 class Lineup:
-    slots = [(0, "C"),
-             (1, "1B"),
-             (2, "2B"),
-             (3, "3B"),
-             (4, "SS"),
-             (6, "2B/SS"),
-             (7, "1B/3B"),
-             (5, "OF"),
-             (12, "UTIL"),
-             (13, "P"),
-             (16, "BE"),
-             (17, "IL")]
+    slots = [LineupSlot.CATCHER,
+             LineupSlot.FIRST,
+             LineupSlot.SECOND,
+             LineupSlot.THIRD,
+             LineupSlot.SHORT,
+             LineupSlot.MIDDLE_INFIELD,
+             LineupSlot.CORNER_INFIELD,
+             LineupSlot.OUTFIELD,
+             LineupSlot.UTIL,
+             LineupSlot.BENCH,
+             LineupSlot.PITCHER,
+             LineupSlot.INJURED]
 
-    hitting_slots = {0, 1, 2, 3, 4, 5, 6, 7, 12}
+    hitting_slots = {LineupSlot.CATCHER,
+                     LineupSlot.FIRST,
+                     LineupSlot.SECOND,
+                     LineupSlot.THIRD,
+                     LineupSlot.SHORT,
+                     LineupSlot.MIDDLE_INFIELD,
+                     LineupSlot.CORNER_INFIELD,
+                     LineupSlot.OUTFIELD,
+                     LineupSlot.UTIL}
 
     def __init__(self, player_dict):
         """
@@ -33,27 +42,33 @@ class Lineup:
         :param lineup_settings:
         :return: set of all possible combinations of starting hitters
         """
-        lineups = [(Lineup(dict()), self.players(), Lineup.hitting_slots.copy())]
+        initial_node = LineupSearchNode(Lineup(dict()), self.players(), Lineup.hitting_slots.copy())
+        # list of nodes representing the frontier of the search graph
+        frontier = [initial_node]
         all_starters = set()
         total_proc = 0
 
-        while not len(lineups) == 0:
-            (cur_lineup, remaining_players, slots_to_process) = lineups.pop(0)
-            next_slot = slots_to_process.pop()
-            slot_count = lineup_settings.slot_counts.get(next_slot)
-            new_lineups = cur_lineup.add_players_for_slot(next_slot, slot_count, remaining_players)
-            total_proc += len(new_lineups)
-            if len(slots_to_process) == 0:
-                for (new_lin, _) in new_lineups:
-                    all_starters.add(new_lin.starters())
-            else:
-                for (new_lin, rem_play) in new_lineups:
-                    created_lineup = (new_lin, rem_play, slots_to_process.copy())
-                    lineups.insert(0, created_lineup)
+        while not len(frontier) == 0:
+            node = frontier.pop(0)
+            successors = node.successors(lineup_settings)
+
+            for successor in successors:
+                if successor.all_slots_filled():
+                    all_starters.add(successor.lineup)
+                else:
+                    frontier.insert(0, successor)
         print("Possible starting combos: {} / {} lineups".format(len(all_starters), total_proc))
         return all_starters
 
     def add_players_for_slot(self, slot, count, remaining_players):
+        """
+        Generates all possible lineups that are the same as this one except
+        count players from remaining_players have been added in slot
+        :param LineupSlot slot: the slot in which to add players
+        :param int count: the number of players to add
+        :param list remaining_players: the players from which to choose
+        :return: list of tuples, where each tuple is the new lineup and the remaining players
+        """
         candidates = Lineup.candidates(slot, remaining_players)
         possible_combos = list(combinations(candidates, count))
         if len(possible_combos) == 0:
@@ -72,7 +87,7 @@ class Lineup:
         """
         Filters the given list of players to the ones eligible to play in
         the given Slot
-        :param list slot: LineupSlots that match
+        :param LineupSlot slot: the Slot that must match
         :param list players: players available to play
         :return:
         """
@@ -119,8 +134,51 @@ class Lineup:
     def __str__(self):
         result = ""
 
-        for (slot, code) in Lineup.slots:
-            result += code + "\n"
+        for slot in Lineup.slots:
+            result += slot.name + "\n"
             for player in self.player_dict.get(slot, []):
                 result += player.__str__() + "\n"
         return result
+
+
+class LineupSearchNode:
+
+    def __init__(self, lineup, players_left, slots_left):
+        """
+        Represents a node in a search of all possible lineups given a set of players.
+        :param Lineup lineup: lineup of players currently assigned to slots in this search
+        :param list players_left: list of players still available to be assigned
+        :param set slots_left: set of slots that have yet to be filled
+        """
+        self.lineup = lineup
+        self.players_left = players_left
+        self.slots_left = slots_left
+
+    def successors(self, lineup_settings):
+        """
+        Returns a list of all successors of this node in the graph search.
+
+        Does so by picking a remaining slot, and generating all possible lineups
+        where that slot is filled with some subset of the remaining players.
+
+        Returns all
+        :param LineupSettings lineup_settings: the restrictions for making new lineups
+        :return: a list of all successor nodes
+        """
+        next_slot = self.slots_left.pop()
+        slot_count = lineup_settings.slot_counts.get(next_slot)
+        new_lineups = self.lineup.add_players_for_slot(next_slot, slot_count, self.players_left)
+        successors = []
+        for (new_lin, rem_players) in new_lineups:
+            rem_slots = self.slots_left.copy()
+            node = LineupSearchNode(new_lin, rem_players, rem_slots)
+            successors.append(node)
+
+        return successors
+
+    def all_slots_filled(self):
+        """
+        Checks if all slots have been filled for this node.
+        :return boolean: True if there are no slots left
+        """
+        return len(self.slots_left) == 0
