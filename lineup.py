@@ -114,12 +114,12 @@ class Lineup:
     def starters(self):
         starters = set()
         for slot, players in self.player_dict.items():
-            if slot != 16:  # the bench
+            if slot != LineupSlot.BENCH:
                 starters.update(players)
         return frozenset(starters)
 
     def benched(self):
-        return frozenset(self.player_dict[16])
+        return frozenset(self.player_dict[LineupSlot.BENCH])
 
     # [(Player, from_slot, to_slot), ...]
     def transitions(self, to_lineup):
