@@ -47,21 +47,11 @@ class Test(unittest.TestCase):
     def test_conversion(self):
         nolan = roster_entry_to_player(self.nolan_arenado_entry)
         self.assertEqual(nolan.name, "Nolan Arenado")
-        self.assertEqual(nolan.possible_positions, {LineupSlot.THIRD,
-                                                    LineupSlot.CORNER_INFIELD,
-                                                    LineupSlot.BENCH,
-                                                    LineupSlot.INJURED})
+        self.assertEqual(nolan.possible_positions, LineupSlot.third() | {LineupSlot.INJURED})
 
         travis = roster_entry_to_player(self.travis_shaw_entry)
         self.assertEqual(travis.name, "Travis Shaw")
-        self.assertEqual(travis.possible_positions, {
-            LineupSlot.SECOND,
-            LineupSlot.THIRD,
-            LineupSlot.MIDDLE_INFIELD,
-            LineupSlot.CORNER_INFIELD,
-            LineupSlot.BENCH,
-            LineupSlot.INJURED
-        })
+        self.assertEqual(travis.possible_positions, LineupSlot.second() | LineupSlot.third() | {LineupSlot.INJURED})
 
     lineup_slot_response = {'0': 1, '1': 1, '2': 1, '3': 1, '4': 1, '5': 5, '6': 1, '7': 1, '8': 0, '9': 0, '10': 0,
                             '11': 0, '12': 1, '13': 9, '14': 0, '15': 0, '16': 3, '17': 2, '19': 0}

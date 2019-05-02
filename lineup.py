@@ -39,25 +39,30 @@ class Lineup:
         """
         settings -> {starters, ...}
 
-        :param lineup_settings:
+        :param LineupSettings lineup_settings:
         :return: set of all possible combinations of starting hitters
         """
         initial_node = LineupSearchNode(Lineup(dict()), self.players(), Lineup.hitting_slots.copy())
         # list of nodes representing the frontier of the search graph
         frontier = [initial_node]
+        max_starters = lineup_settings.total_for_slots(Lineup.hitting_slots)
+
         all_starters = set()
         total_proc = 0
+        max_stack = 0
 
         while not len(frontier) == 0:
             node = frontier.pop(0)
             successors = node.successors(lineup_settings)
-
+            total_proc += len(successors)
+            max_stack = max(max_stack, len(frontier))
             for successor in successors:
-                if successor.all_slots_filled():
-                    all_starters.add(successor.lineup)
-                else:
+                starters = successor.lineup.starters()
+                if len(starters) == max_starters:
+                    all_starters.add(starters)
+                elif not successor.all_slots_filled():
                     frontier.insert(0, successor)
-        print("Possible starting combos: {} / {} lineups".format(len(all_starters), total_proc))
+        print("Possible starting combos: {} / {} lineups, max stack: {}".format(len(all_starters), total_proc, max_stack))
         return all_starters
 
     def add_players_for_slot(self, slot, count, remaining_players):
