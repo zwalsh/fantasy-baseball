@@ -6,6 +6,10 @@ class FangraphsApi:
 
     @staticmethod
     def hitter_projections():
+        """
+        Scrapes Fangraphs for today's projected stats for hitters
+        :return: dictionary mapping hitter name to a Stats object
+        """
         session = HTMLSession()
         r = session.post(
             "https://www.fangraphs.com/dailyprojections.aspx?pos=all&stats=bat&type=sabersim&team=0&lg=all&players=0",
@@ -40,6 +44,10 @@ class FangraphsApi:
 
     @staticmethod
     def pitcher_projections():
+        """
+        Scrapes Fangraphs for today's projected stats for pitchers
+        :return: dictionary mapping Pitcher name to a Stats object
+        """
         session = HTMLSession()
         r = session.get(
             "https://www.fangraphs.com/dailyprojections.aspx?pos=all&stats=pit&type=sabersim&team=0&lg=all&players=0")

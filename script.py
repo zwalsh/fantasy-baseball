@@ -16,23 +16,17 @@ password = password(username)
 
 api = EspnApi(username, password)
 
-l = api.lineup(api.team_id())
-print(l)
-l_settings = api.lineup_settings()
+lineup = api.lineup(api.team_id())
+lineup_settings = api.lineup_settings()
 
+scoring_settings = api.scoring_settings()
 
-poss_starters = l.possible_starting_hitters(l_settings)
+proj = FangraphsApi().hitter_projections()
 
-# league = api.league()
-# lineup = api.lineup(api.team_id())
-# lineup_settings = api.lineup_settings()
-#
-# scoring_settings = api.scoring_settings()
-#
-# proj = FangraphsApi().hitter_projections()
-#
-# max_lineup_for_stats = lineup_optimizer.optimize_lineup(lineup, lineup_settings, proj, scoring_settings)
-#
+max_lineup_for_stats = lineup_optimizer.optimize_lineup(lineup, lineup_settings, proj, scoring_settings)
+
+# NONE OF THIS BELOW WORKS RIGHT NOW
+
 # lineup_maxes = dict()
 #
 # for stat_id, (_, best_lineup) in max_lineup_for_stats.items():

@@ -6,8 +6,8 @@ class ScoringSetting:
         Represents a Scoring setting in a fantasy league, based on a Stat
         where teams are ranked on that stat. The boolean says if the rankings
         are in reverse order or not
-        :param stat: the Stat that this setting is for
-        :param is_reverse: the order of the standings
+        :param Stat stat: the Stat that this setting is for
+        :param bool is_reverse: the order of the standings
         """
         self.stat = stat
         self.is_reverse = is_reverse
