@@ -76,6 +76,7 @@ class Test(unittest.TestCase):
             LineupSlot.MIDDLE_INFIELD: 1,
             LineupSlot.CORNER_INFIELD: 1,
             LineupSlot.OUTFIELD: 5,
+            LineupSlot.UTIL: 1,
             LineupSlot.PITCHER: 9,
             LineupSlot.BENCH: 3,
             LineupSlot.INJURED: 2,

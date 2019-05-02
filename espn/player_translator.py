@@ -8,9 +8,10 @@ espn_slot_to_slot = {
     2: LineupSlot.SECOND,
     3: LineupSlot.THIRD,
     4: LineupSlot.SHORT,
+    5: LineupSlot.OUTFIELD,
     6: LineupSlot.MIDDLE_INFIELD,
     7: LineupSlot.CORNER_INFIELD,
-    5: LineupSlot.OUTFIELD,
+    12: LineupSlot.UTIL,
     13: LineupSlot.PITCHER,
     16: LineupSlot.BENCH,
     17: LineupSlot.INJURED
