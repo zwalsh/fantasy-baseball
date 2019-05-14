@@ -1,7 +1,13 @@
 import copy
+import logging
 from itertools import combinations
+
+import time
+
 from lineup_slot import LineupSlot
 from lineup_transition import LineupTransition
+
+LOGGER = logging.getLogger("lineup")
 
 
 class Lineup:
@@ -55,13 +61,16 @@ class Lineup:
         max_stack = 0
         total_stack = 0
 
+        start_time = time.time()
+        LOGGER.info("generating all possible lineups")
+
         while not len(frontier) == 0:
             total_stack += len(frontier)
             node = frontier.pop(0)
             successors = node.successors(lineup_settings)
             total_proc += 1
             if total_proc % 1000 == 0:
-                print("Processed {}".format(total_proc))
+                LOGGER.debug("processed {}".format(total_proc))
             max_stack = max(max_stack, len(frontier))
             for successor in successors:
                 starters = successor.lineup.starters()
@@ -69,8 +78,16 @@ class Lineup:
                     self.add_lineup_to_unique_starters(successor.lineup, all_starters)
                 elif not successor.all_slots_filled():
                     frontier.insert(0, successor)
-        print("Possible starting combos: {} / {} lineups, max stack: {}, avg stack: {}"
-              .format(len(all_starters), total_proc, max_stack, total_stack / float(total_proc)))
+        end_time = time.time()
+        info_dict = {
+            "starters": len(all_starters),
+            "total": total_proc,
+            "max_stack": max_stack,
+            "avg_stack": total_stack / float(total_proc),
+            "elapsed": end_time - start_time
+        }
+        LOGGER.info("possible starting combos: %(starters)d / %(total)d lineups,"
+                    " max stack: %(max_stack)d, avg stack: %(avg_stack).3f, time: %(elapsed).3fs", info_dict)
         return all_starters.values()
 
     def add_players_for_slot(self, slot, count, remaining_players):

@@ -75,7 +75,7 @@ class EspnApi:
     def espn_request(self, method, url, payload, check_cache=True):
         if check_cache and url in self.cache.keys():
             return self.cache.get(url)
-        LOGGER.info("making request to %(url)s", {"url": url})
+        LOGGER.info("making request to %(url)s in league %(league_id)d", {"url": url, "league_id": self.league_id()})
         start_time = time.time()
         k = self.key()
         cookies = {"espn_s2": k}
@@ -108,15 +108,15 @@ class EspnApi:
 
     def team_id(self):
         # use above lineup + display name to calc
-        return 2  # Bless the Rains
+        # return 2  # Bless the Rains
         # return 6  # Do Damage
-        # return 7  # Here Comes the Pizza
+        return 7  # Here Comes the Pizza
 
     def league_id(self):
         # accept as param to object
-        return 56491263  # Bless the Rains
+        # return 56491263  # Bless the Rains
         # return 68388039  # Do Damage
-        # return 94862462  # Here Comes the Pizza
+        return 94862462  # Here Comes the Pizza
 
     def lineup_url(self):
         league_id = self.league_id()
