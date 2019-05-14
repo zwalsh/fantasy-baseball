@@ -122,7 +122,7 @@ class Stats:
     def __str__(self):
         print_pairs = list()
         for stat in Stats.sum_stats:
-            val = self.stat_dict.get(stat)
+            val = self.value_for_stat(stat)
             if val:
                 print_pairs.append((stat, val))
         print_pairs.append((Stat.AVG, self.average()))
@@ -185,8 +185,15 @@ class Stats:
 
         return round((walks + hits) / outs * 3.0, 3)
 
-    def value_for_stat(self, stat):
+    def unrounded_value_for_stat(self, stat):
         if stat in Stats.sum_stats:
             return self.stat_dict.get(stat)
         elif stat in Stats.stat_functions:
             return Stats.stat_functions.get(stat)(self)
+
+    def value_for_stat(self, stat):
+        val = self.unrounded_value_for_stat(stat)
+        if val is not None:
+            return round(val, 2)
+        else:
+            return val

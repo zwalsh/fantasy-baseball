@@ -1,6 +1,7 @@
 import copy
 from itertools import combinations
 from lineup_slot import LineupSlot
+from lineup_transition import LineupTransition
 
 
 class Lineup:
@@ -37,33 +38,40 @@ class Lineup:
 
     def possible_starting_hitters(self, lineup_settings):
         """
-        settings -> {starters, ...}
-
+        Calculates all possible sets of starting hitters.
+         For each set of starting hitters, it calculates the lineup with that set
+         of starters that is closest to this one.
+        Returns a set of such lineups.
         :param LineupSettings lineup_settings:
-        :return: set of all possible combinations of starting hitters
+        :return set: set of lineups with all combinations of starters
         """
         initial_node = LineupSearchNode(Lineup(dict()), self.players(), Lineup.hitting_slots.copy())
-        # list of nodes representing the frontier of the search graph
+        # stack of nodes representing the frontier of the search graph
         frontier = [initial_node]
         max_starters = lineup_settings.total_for_slots(Lineup.hitting_slots)
 
-        all_starters = set()
+        all_starters = dict()
         total_proc = 0
         max_stack = 0
+        total_stack = 0
 
         while not len(frontier) == 0:
+            total_stack += len(frontier)
             node = frontier.pop(0)
             successors = node.successors(lineup_settings)
-            total_proc += len(successors)
+            total_proc += 1
+            if total_proc % 1000 == 0:
+                print("Processed {}".format(total_proc))
             max_stack = max(max_stack, len(frontier))
             for successor in successors:
                 starters = successor.lineup.starters()
                 if len(starters) == max_starters:
-                    all_starters.add(starters)
+                    self.add_lineup_to_unique_starters(successor.lineup, all_starters)
                 elif not successor.all_slots_filled():
                     frontier.insert(0, successor)
-        print("Possible starting combos: {} / {} lineups, max stack: {}".format(len(all_starters), total_proc, max_stack))
-        return all_starters
+        print("Possible starting combos: {} / {} lineups, max stack: {}, avg stack: {}"
+              .format(len(all_starters), total_proc, max_stack, total_stack / float(total_proc)))
+        return all_starters.values()
 
     def add_players_for_slot(self, slot, count, remaining_players):
         """
@@ -121,20 +129,42 @@ class Lineup:
     def benched(self):
         return frozenset(self.player_dict[LineupSlot.BENCH])
 
-    # [(Player, from_slot, to_slot), ...]
     def transitions(self, to_lineup):
+        """
+        Returns a list of all transitions necessary to convert this Lineup into the given one.
+        If a Player in this Lineup is not in the given Lineup, it is assumed to be on the bench of
+        the given one.
+        :param Lineup to_lineup: the Lineup to create transitions for
+        :return list: the list of LineupTransitions necessary to move to the given Lineup
+        """
         transitions = []
 
         for slot, players in self.player_dict.items():
             for player in players:
                 if player not in to_lineup.player_dict.get(slot, []):
                     to_slots = to_lineup.player_dict.keys()
-                    to_slot = list(filter(lambda s: player in to_lineup.player_dict[s], to_slots))[0]
-
-                    t = (player, slot, to_slot)
-                    transitions.append(t)
+                    to_slot = next(filter(lambda s: player in to_lineup.player_dict[s], to_slots), LineupSlot.BENCH)
+                    if slot != to_slot and slot != LineupSlot.PITCHER:
+                        transitions.append(LineupTransition(player, slot, to_slot))
 
         return transitions
+
+    def add_lineup_to_unique_starters(self, lineup, all_starters):
+        """
+        Adds the given lineup to the given dictionary of starters to lineups.
+        If the lineup's starters are not in the map, it adds them to the map.
+        If they are, it will replace the current value with the given lineup if this
+        lineup requires fewer transitions to produce the given one.
+        :param Lineup lineup: the lineup to add to the dictionary
+        :param dict all_starters: the dictionary from starters to closest lineup
+        """
+        cur_lineup = all_starters.get(lineup.starters(), lineup)
+        cur_lineup_transitions = len(self.transitions(cur_lineup))
+        given_lineup_transitions = len(self.transitions(lineup))
+        if cur_lineup_transitions < given_lineup_transitions:
+            all_starters[lineup.starters()] = cur_lineup
+        else:
+            all_starters[lineup.starters()] = lineup
 
     def __str__(self):
         result = ""

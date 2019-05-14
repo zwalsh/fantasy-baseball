@@ -97,11 +97,15 @@ class EspnApi:
 
     def team_id(self):
         # use above lineup + display name to calc
-        return 2  # - Bless the Rains
+        return 2  # Bless the Rains
+        # return 6  # Do Damage
+        # return 7  # Here Comes the Pizza
 
     def league_id(self):
         # accept as param to object
         return 56491263  # Bless the Rains
+        # return 68388039  # Do Damage
+        # return 94862462  # Here Comes the Pizza
 
     def lineup_url(self):
         league_id = self.league_id()
