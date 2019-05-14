@@ -33,6 +33,8 @@ DEV_LOGGING = {
             'level': 'DEBUG',
             'propagate': True
         },
+        'lineup': {},
+        'fangraphs.api': {}
     }
 
 }
