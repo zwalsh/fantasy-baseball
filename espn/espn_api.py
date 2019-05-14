@@ -1,6 +1,11 @@
+import logging
+
 import requests
 import json
 import os
+
+import time
+
 from lineup import Lineup
 from team import Team
 from league import League
@@ -21,6 +26,7 @@ url that is hit on page load:
               "&view=mLiveScoring"
 
 """
+LOGGER = logging.getLogger("espn.api")
 
 
 class EspnApi:
@@ -49,10 +55,10 @@ class EspnApi:
             "authorization": EspnApi.api_key(),
             "content-type": "application/json",
         }
-        print("Logging in...")
+        LOGGER.info("logging into ESPN for %(user)s...", {"user": self.username})
         resp = requests.post(EspnApi.LOGIN_URL, data=json.dumps(login_payload), headers=login_headers)
         key = resp.json().get('data').get('s2')
-        print("Logged in.")
+        LOGGER.info("logged in for %(user)s", {"user": self.username})
         cache_file = open(self.session_file_name(), "w+")
         cache_file.truncate()
         cache_file.write(key)
@@ -69,7 +75,8 @@ class EspnApi:
     def espn_request(self, method, url, payload, check_cache=True):
         if check_cache and url in self.cache.keys():
             return self.cache.get(url)
-
+        LOGGER.info("making request to %(url)s", {"url": url})
+        start_time = time.time()
         k = self.key()
         cookies = {"espn_s2": k}
         if method == 'GET':
@@ -77,8 +84,12 @@ class EspnApi:
         if method == 'POST':
             r = requests.post(url, cookies=cookies, json=payload)
         if r.status_code == 401:
+            LOGGER.warning("request denied, logging in again.")
             self.login()
             return self.espn_request(method=method, url=url, payload=payload, check_cache=check_cache)
+        else:
+            end_time = time.time()
+            LOGGER.info("finished after %(time).3fs", {"time": end_time - start_time})
         self.cache[url] = r
         return r
 
@@ -229,6 +240,7 @@ class EspnApi:
     "teamId":7,
     "type":"FREEAGENT"}
     """
+
     def set_lineup_payload(self, transitions):
         payload = {
             "isLeagueManager": False,
