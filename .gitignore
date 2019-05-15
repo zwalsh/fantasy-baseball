@@ -1,6 +1,8 @@
 *_pass.txt
 espn_s2_*.txt
 
+team_configs/**
+
 .idea/**
 **/__pycache__/**
 

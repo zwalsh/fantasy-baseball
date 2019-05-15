@@ -34,7 +34,8 @@ DEV_LOGGING = {
             'propagate': True
         },
         'lineup': {},
-        'fangraphs.api': {}
+        'fangraphs.api': {},
+        'config.team_reader': {},
     }
 
 }
