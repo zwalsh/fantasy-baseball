@@ -15,11 +15,10 @@ def all_teams(directory):
     They should be stored on disk in the given directory as JSON text files
     with all the fields of the EspnTeamConfig as keys.
 
-    :param str directory: the directory in which to look for the EspnTeamConfigs
+    :param Path directory: the directory in which to look for the EspnTeamConfigs
     :return list: all EspnTeamConfigs present on the filesystem
     """
-    team_dir = Path(directory)
-    files = filter(lambda child: child.is_file(), team_dir.iterdir())
+    files = filter(lambda child: child.is_file(), directory.iterdir())
     configs = []
     for file in files:
         try:

@@ -40,9 +40,11 @@ class LoginException(Exception):
 class EspnApi:
     LOGIN_URL = "https://registerdisney.go.com/jgc/v6/client/ESPN-ONESITE.WEB-PROD/guest/login?langPref=en-US"
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, league_id, team_id):
         self.username = username
         self.password = password
+        self.league_id = league_id
+        self.team_id = team_id
         self.cache = dict()
 
     def session_file_name(self):
@@ -101,7 +103,7 @@ class EspnApi:
     def espn_request(self, method, url, payload, check_cache=True):
         if check_cache and url in self.cache.keys():
             return self.cache.get(url)
-        LOGGER.info("making request to %(url)s in league %(league_id)d", {"url": url, "league_id": self.league_id()})
+        LOGGER.info("making request to %(url)s in league %(league_id)d", {"url": url, "league_id": self.league_id})
         start_time = time.time()
         k = self.key()
         cookies = {"espn_s2": k}
@@ -126,33 +128,19 @@ class EspnApi:
         return self.espn_request(method='POST', url=url, payload=payload)
 
     def scoring_period(self):
-        url = "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/{}".format(self.league_id())
+        url = "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/{}".format(self.league_id)
         return self.espn_get(url).json()['scoringPeriodId']
 
     def member_id(self):
         return "{84C1CD19-5E2C-4D5D-81CD-195E2C4D5D75}"  # todo fetch when logging in, persist?
 
-    def team_id(self):
-        # use above lineup + display name to calc
-        return 2  # Bless the Rains
-        # return 6  # Do Damage
-        # return 7  # Here Comes the Pizza
-
-    def league_id(self):
-        # accept as param to object
-        return 56491263  # Bless the Rains
-        # return 68388039  # Do Damage
-        # return 94862462  # Here Comes the Pizza
-
     def lineup_url(self):
-        league_id = self.league_id()
-        team_id = self.team_id()
         scoring_period_id = self.scoring_period()
         return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
                "{}" \
                "?forTeamId={}" \
                "&scoringPeriodId={}" \
-               "&view=mRoster".format(league_id, team_id, scoring_period_id)
+               "&view=mRoster".format(self.league_id, self.team_id, scoring_period_id)
 
     def lineup(self, team_id):
         """
@@ -166,7 +154,7 @@ class EspnApi:
         return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
                "{}" \
                "?view=mRoster" \
-               "&scoringPeriodId={}".format(self.league_id(), self.scoring_period())
+               "&scoringPeriodId={}".format(self.league_id, self.scoring_period())
 
     # { team_id: Lineup, ...}
     def all_lineups(self):
@@ -184,7 +172,7 @@ class EspnApi:
         return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
                "{}" \
                "?view=mLiveScoring&view=mMatchupScore&view=mPendingTransactions" \
-               "&view=mPositionalRatings&view=mSettings&view=mTeam".format(self.league_id())
+               "&view=mPositionalRatings&view=mSettings&view=mTeam".format(self.league_id)
 
     def all_info(self):
         return self.espn_get(self.all_info_url())
@@ -209,7 +197,7 @@ class EspnApi:
 
     def lineup_settings_url(self):
         return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
-               "{}?view=mSettings".format(self.league_id())
+               "{}?view=mSettings".format(self.league_id)
 
     def lineup_settings(self):
         url = self.lineup_settings_url()
@@ -218,7 +206,7 @@ class EspnApi:
 
     def set_lineup_url(self):
         return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
-               "{}/transactions/".format(self.league_id())
+               "{}/transactions/".format(self.league_id)
 
     def league(self):
         """
@@ -270,7 +258,7 @@ class EspnApi:
     def set_lineup_payload(self, transitions):
         payload = {
             "isLeagueManager": False,
-            "teamId": self.team_id(),
+            "teamId": self.team_id,
             "type": "ROSTER",
             "memberId": self.member_id(),
             "scoringPeriodId": self.scoring_period(),
@@ -283,7 +271,7 @@ class EspnApi:
     # lineup ids
     def set_lineup(self, lineup):
         url = self.set_lineup_url()
-        cur_lineup = self.lineup(self.team_id())
+        cur_lineup = self.lineup(self.team_id)
         transitions = cur_lineup.transitions(lineup)
         payload = self.set_lineup_payload(transitions)
         return self.espn_post(url, payload)

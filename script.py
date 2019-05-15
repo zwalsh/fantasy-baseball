@@ -52,40 +52,15 @@ logger = logging.getLogger()
 username = sys.argv[1]
 logger.info("starting up with user %(user)s", {"user": username})
 password = config.password_reader.password(username, Path.cwd() / "config/passwords")
-api = EspnApi(username, password)
-
-current_lineup = api.lineup(api.team_id())
-lineup_settings = api.lineup_settings()
-
-scoring_settings = api.scoring_settings()
-
-proj = FangraphsApi().hitter_projections()
-
-max_lineup_for_stats = lineup_optimizer.optimize_lineup(current_lineup, lineup_settings, proj, scoring_settings)
+configs = config.team_reader.all_teams(Path.cwd() / "config/team_configs")
+fangraphs = FangraphsApi()
 
 
-lineup_maxes = dict()
-print("CURRENT LINEUP")
-print(current_lineup)
-print(lineup_optimizer.stats_with_projections(current_lineup, proj))
+for c in filter(lambda team_config: team_config.username == username, configs):
+    espn = EspnApi(username, password, c.league_id, c.team_id)
+    lineup_optimizer.print_lineup_optimization(espn, fangraphs)
 
-for stat, best_lineup in max_lineup_for_stats.items():
-    cur_bests = lineup_maxes.get(best_lineup.starters(), [best_lineup])
-    cur_bests.append(stat)
-    lineup_maxes[best_lineup.starters()] = cur_bests
 
-for bests in lineup_maxes.values():
-    lineup = bests[0]
-    stats = lineup_optimizer.stats_with_projections(lineup, proj)
-    transitions = current_lineup.transitions(lineup)
-    print(lineup)
-    for t in transitions:
-        print(t)
-    print(stats)
-    print("Best for:")
-    for best in bests[1:]:
-        print("{}".format(best))
-    print("\n\n\n")
 
 """
 TO DO:
