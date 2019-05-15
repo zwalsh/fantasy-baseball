@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import requests
 import json
@@ -29,6 +30,13 @@ url that is hit on page load:
 LOGGER = logging.getLogger("espn.api")
 
 
+class LoginException(Exception):
+    """
+    Exception to throw when Login to ESPN was unsuccessful
+    """
+    pass
+
+
 class EspnApi:
     LOGIN_URL = "https://registerdisney.go.com/jgc/v6/client/ESPN-ONESITE.WEB-PROD/guest/login?langPref=en-US"
 
@@ -46,6 +54,16 @@ class EspnApi:
         resp = requests.post(key_url)
         return "APIKEY " + resp.headers["api-key"]
 
+    @staticmethod
+    def session_dir():
+        sessions = Path("espn/sessions")
+        if not sessions.exists() or not sessions.is_dir():
+            sessions.mkdir()
+        return sessions
+
+    def user_session_file(self):
+        return EspnApi.session_dir() / self.session_file_name()
+
     def login(self):
         login_payload = {
             "loginValue": self.username,
@@ -56,20 +74,28 @@ class EspnApi:
             "content-type": "application/json",
         }
         LOGGER.info("logging into ESPN for %(user)s...", {"user": self.username})
+        start = time.time()
         resp = requests.post(EspnApi.LOGIN_URL, data=json.dumps(login_payload), headers=login_headers)
+        end = time.time()
+        if resp.status_code != 200:
+            LOGGER.error("could not log into ESPN: %(msg)s", {"msg": resp.reason})
+            LOGGER.error(resp.text)
+            raise LoginException
         key = resp.json().get('data').get('s2')
-        LOGGER.info("logged in for %(user)s", {"user": self.username})
-        cache_file = open(self.session_file_name(), "w+")
+        LOGGER.info("logged in for %(user)s after %(time).3fs", {"user": self.username, "time": end - start})
+
+        session = self.user_session_file()
+        cache_file = session.open("w+")
         cache_file.truncate()
         cache_file.write(key)
         return key
 
     def key(self):
-        if os.path.isfile(self.session_file_name()):
-            with open(self.session_file_name(), "r") as file:
-                stored_key = file.read()
-                if len(stored_key) > 0:
-                    return stored_key
+        session = self.user_session_file()
+        if session.is_file():
+            stored_key = session.read_text()
+            if len(stored_key) > 0:
+                return stored_key
         return self.login()
 
     def espn_request(self, method, url, payload, check_cache=True):
@@ -108,15 +134,15 @@ class EspnApi:
 
     def team_id(self):
         # use above lineup + display name to calc
-        # return 2  # Bless the Rains
+        return 2  # Bless the Rains
         # return 6  # Do Damage
-        return 7  # Here Comes the Pizza
+        # return 7  # Here Comes the Pizza
 
     def league_id(self):
         # accept as param to object
-        # return 56491263  # Bless the Rains
+        return 56491263  # Bless the Rains
         # return 68388039  # Do Damage
-        return 94862462  # Here Comes the Pizza
+        # return 94862462  # Here Comes the Pizza
 
     def lineup_url(self):
         league_id = self.league_id()
