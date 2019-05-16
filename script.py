@@ -2,11 +2,7 @@ import logging.config
 import sys
 from pathlib import Path
 
-import config.team_reader
-import config.password_reader
 import config.notifier_config
-import lineup_optimizer
-from espn.espn_api import EspnApi
 from fangraphs_api import FangraphsApi
 
 DEV_LOGGING = {
