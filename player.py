@@ -2,14 +2,18 @@ from lineup_slot import LineupSlot
 
 
 class Player:
-    def __init__(self, name, espn_id, possible_positions):
+    def __init__(self, name, first, last, espn_id, possible_positions):
         """
         Creates a Player from their name, espn id, primary positions, and possible positions
-        :param str name: the player's name
+        :param str name: the player's whole name
+        :param str first: the player's first name
+        :param str last: the player's last name
         :param int espn_id: their id as specified by ESPN
         :param set possible_positions: set of LineupSlots they can play
         """
         self.name = name
+        self.first = first
+        self.last = last
         self.espn_id = espn_id
         self.possible_positions = possible_positions
 

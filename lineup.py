@@ -161,7 +161,7 @@ class Lineup:
                 if player not in to_lineup.player_dict.get(slot, []):
                     to_slots = to_lineup.player_dict.keys()
                     to_slot = next(filter(lambda s: player in to_lineup.player_dict[s], to_slots), LineupSlot.BENCH)
-                    if slot != to_slot and slot != LineupSlot.PITCHER:
+                    if slot != to_slot and slot != LineupSlot.PITCHER and slot != LineupSlot.INJURED:
                         transitions.append(LineupTransition(player, slot, to_slot))
 
         return transitions

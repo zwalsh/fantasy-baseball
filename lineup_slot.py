@@ -16,6 +16,9 @@ class LineupSlot(Enum):
     BENCH = "BE"
     INJURED = "IL"
 
+    def __str__(self):
+        return self.value
+
     @staticmethod
     def catcher():
         return {LineupSlot.CATCHER, LineupSlot.BENCH, LineupSlot.UTIL}

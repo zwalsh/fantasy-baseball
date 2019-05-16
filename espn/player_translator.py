@@ -28,13 +28,15 @@ def roster_entry_to_player(entry):
     player_id = entry['playerId']
     player_map = entry['playerPoolEntry']['player']
     name = player_map['fullName']
+    first = player_map['firstName']
+    last = player_map['lastName']
     espn_positions = player_map['eligibleSlots']
     possible_positions = set()
     for espn_pos in espn_positions:
         converted = espn_slot_to_slot.get(espn_pos)
         if converted is not None:
             possible_positions.add(converted)
-    return Player(name, player_id, possible_positions)
+    return Player(name, first, last, player_id, possible_positions)
 
 
 def lineup_slot_counts_to_lineup_settings(settings):

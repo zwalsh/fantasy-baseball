@@ -2,6 +2,7 @@
 espn_s2_*.txt
 
 config/team_configs/*
+config/pushed_config/*
 config/passwords/**
 
 .idea/**

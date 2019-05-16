@@ -21,6 +21,8 @@ class Test(unittest.TestCase):
                     17
                 ],
                 "fullName": "Nolan Arenado",
+                "firstName": "Nolan",
+                "lastName": "Arenado",
                 "id": 31261,
             }
         }
@@ -36,6 +38,8 @@ class Test(unittest.TestCase):
                                                  'active': True,
                                                  'eligibleSlots': [2, 3, 6, 7, 19, 12, 16, 17],
                                                  'fullName': 'Travis Shaw',
+                                                 "firstName": "Travis",
+                                                 "lastName": "Shaw",
                                                  'injured': False,
                                                  'injuryStatus': 'ACTIVE'
                                              },
@@ -51,6 +55,8 @@ class Test(unittest.TestCase):
 
         travis = roster_entry_to_player(self.travis_shaw_entry)
         self.assertEqual(travis.name, "Travis Shaw")
+        self.assertEqual(travis.first, "Travis")
+        self.assertEqual(travis.last, "Shaw")
         self.assertEqual(travis.possible_positions, LineupSlot.second() | LineupSlot.third() | {LineupSlot.INJURED})
 
     lineup_slot_response = {'0': 1, '1': 1, '2': 1, '3': 1, '4': 1, '5': 5, '6': 1, '7': 1, '8': 0, '9': 0, '10': 0,
