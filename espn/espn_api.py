@@ -221,6 +221,19 @@ class EspnApi:
             teams.append(t)
         return League(teams)
 
+    def team_name(self, team_id=None):
+        """
+        Fetches the name of the team with the given id, or the id of the team tied to this object
+        if none is given. The name is the concatenation of the team's "location" and the team's
+        "nickname", per ESPN.
+        :param int team_id: the id of the team whose name is to be fetched
+        :return str: the name fetched from ESPN for the given team
+        """
+        team_id = team_id or self.team_id
+        teams = self.all_info().json()['teams']
+        team = next(filter(lambda t: t['id'] == team_id, teams))
+        return f"{team['location']} {team['nickname']}"
+
     """
     {"bidAmount":0,
     "executionType":"EXECUTE",
