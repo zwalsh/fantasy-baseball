@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from notifications.client.dev import DevClient
@@ -6,8 +7,11 @@ from notifications.notifier import Notifier
 
 
 def current_notifier(user):
-    # todo - check env and use prod_notifier if env says prod
-    return Notifier(DevClient())
+    env = os.getenv('ENV', 'DEV')
+    if env == 'PROD':
+        return Notifier(prod_notifier(user))
+    else:
+        return Notifier(DevClient())
 
 
 def prod_notifier(user):

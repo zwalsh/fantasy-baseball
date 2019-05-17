@@ -2,7 +2,11 @@ import logging.config
 import sys
 from pathlib import Path
 
+import os
+
 import config.team_reader
+import config.password_reader
+import config.notifier_config
 import optimize.lineup_optimizer
 from espn.espn_api import EspnApi
 from fangraphs_api import FangraphsApi
@@ -42,10 +46,39 @@ DEV_LOGGING = {
         "notifications.client.pushed": {},
         'optimize.optimizer': {},
     }
-
 }
 
-logging.config.dictConfig(DEV_LOGGING)
+
+def prod_logging():
+    prod_config = DEV_LOGGING.copy()
+
+    log_dir = Path.cwd() / 'logs'
+    if not log_dir.exists() or not log_dir.is_dir():
+        log_dir.mkdir()
+    log_path = log_dir / 'fantasy-baseball.log'
+    if not log_path.exists() or not log_path.is_file():
+        f = log_path.open('w+')
+        f.close()
+
+    prod_handler = prod_config['handlers']['default']
+    prod_handler['level'] = 'INFO'
+    prod_handler['class'] = 'logging.handlers.TimedRotatingFileHandler'
+    prod_handler.pop('stream', None)
+    prod_handler['filename'] = log_path.absolute()
+    prod_handler['when'] = 'd'
+    prod_handler['interval'] = 1
+    prod_handler['backupCount'] = 10
+    return prod_config
+
+
+def logging_config():
+    env = os.getenv('ENV', 'DEV')
+    if env == 'PROD':
+        return prod_logging()
+    else:
+        return DEV_LOGGING
+
+logging.config.dictConfig(logging_config())
 
 logger = logging.getLogger()
 
