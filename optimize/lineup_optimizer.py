@@ -33,19 +33,21 @@ def optimize_lineup(espn, fangraphs, notifier):
 
     num_candidates = len(candidates)
     LOGGER.info(f"found {num_candidates} candidates within 95% of max PA's (above threshold {threshold})")
-    best = best_lineup(lineup, candidates, hitting_settings)
+    best_list = best_lineups(lineup, candidates, hitting_settings)
+    most_pas_from_best = best_for_stat(lineup, best_list, ScoringSetting(Stat.PA, False))
+    return most_pas_from_best
 
 
-def best_lineup(current, candidates, scoring_settings):
+def best_lineups(current, candidates, scoring_settings):
     """
-    Returns the best Lineup given a list of candidate LineupTotals and a list of ScoringSettings.
-    Picks the first Lineup that is within the highest possible percentage threshold of each
+    Returns the best Lineups given a list of candidate LineupTotals and a list of ScoringSettings.
+    Picks the Lineups that are within the highest possible percentage threshold of each
     maximum value across all scoring settings.
 
     :param Lineup current: the currently-set Lineup
     :param list candidates: the LineupTotals from which to choose a Lineup
     :param iter scoring_settings: the ScoringSettings to optimize over
-    :return Lineup: the best Lineup from the list
+    :return list: the best Lineups from the list
     """
     max_values = list()
     for setting in scoring_settings:
@@ -61,7 +63,7 @@ def best_lineup(current, candidates, scoring_settings):
         passing = candidates_above_threshold(candidates, max_values, threshold)
     num_to_choose = len(passing)
     LOGGER.info(f"{num_to_choose} candidates pass for each stat at {round(threshold, 2)}")
-    return passing[0]
+    return passing
 
 
 def candidates_above_threshold(candidates, maxes, threshold_percentage):
