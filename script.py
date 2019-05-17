@@ -2,14 +2,10 @@ import logging.config
 import sys
 from pathlib import Path
 
-import config.notifier_config
-import config.password_reader
 import config.team_reader
 import optimize.lineup_optimizer
 from espn.espn_api import EspnApi
 from fangraphs_api import FangraphsApi
-from scoring_setting import ScoringSetting
-from stats import Stat
 
 DEV_LOGGING = {
     'version': 1,
@@ -63,4 +59,3 @@ fangraphs = FangraphsApi()
 for team_config in configs:
     espn = EspnApi(username, password, team_config.league_id, team_config.team_id)
     optimize.lineup_optimizer.optimize_lineup(espn, fangraphs, config.notifier_config.current_notifier(username))
-

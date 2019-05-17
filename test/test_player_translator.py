@@ -1,6 +1,6 @@
 import unittest
 
-from espn.player_translator import roster_entry_to_player
+from espn.player_translator import roster_entry_to_player, slot_to_slot_id
 from espn.player_translator import lineup_slot_counts_to_lineup_settings
 from lineup_slot import LineupSlot
 from lineup_settings import LineupSettings
@@ -79,3 +79,7 @@ class Test(unittest.TestCase):
         }
         self.assertEqual(lineup_slot_counts_to_lineup_settings(self.lineup_slot_response).slot_counts,
                          LineupSettings(settings).slot_counts)
+
+    def test_slot_to_slot_id(self):
+        self.assertEqual(slot_to_slot_id(LineupSlot.CATCHER), 0)
+        self.assertEqual(slot_to_slot_id(LineupSlot.UTIL), 12)

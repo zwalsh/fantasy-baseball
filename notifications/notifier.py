@@ -1,3 +1,6 @@
+from lineup_slot import LineupSlot
+
+
 class Notifier:
     def __init__(self, client):
         self.client = client
@@ -14,13 +17,28 @@ class Notifier:
         """
         msg = f"{team_name}: proj. {plate_appearances:.02f} PA"
 
-        for tr in transitions:
+        for tr in sorted(transitions, key=Notifier.transition_sort_value):
             msg += "\n" + self.transition_message(tr)
 
         if len(msg) > 140:
             msg = msg[0:137] + "..."
 
         self.client.send_message(msg)
+
+    @staticmethod
+    def transition_sort_value(transition):
+        """
+        Gives a value to a transition so that it may be sorted. Benched players come first,
+        started players come second, swapped come last.
+        :param LineupTransition transition: the transition to be given a sort value
+        :return int: a value representing whether the transition should come sooner or later
+        """
+        if transition.to_slot == LineupSlot.BENCH:
+            return 0
+        elif transition.from_slot == LineupSlot.BENCH:
+            return 1
+        else:
+            return 2
 
     @staticmethod
     def transition_message(transition):

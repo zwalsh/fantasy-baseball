@@ -18,6 +18,16 @@ espn_slot_to_slot = {
 }
 
 
+def slot_to_slot_id(slot):
+    """
+    Converts a LineupSlot back to an ESPN slot id
+    :param LineupSlot slot: the slot to convert
+    :return int: the corresponding slot id
+    """
+    slot_to_espn_slot = {v: k for k, v in espn_slot_to_slot.items()}
+    return slot_to_espn_slot[slot]
+
+
 def roster_entry_to_player(entry):
     """
     Takes an object from the ESPN API that represents a Player

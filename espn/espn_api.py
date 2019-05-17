@@ -1,18 +1,17 @@
+import json
 import logging
+import time
 from pathlib import Path
 
 import requests
-import json
-import os
 
-import time
-
-from lineup import Lineup
-from team import Team
-from league import League
-from scoring_setting import ScoringSetting
+from espn.player_translator import roster_entry_to_player, espn_slot_to_slot, lineup_slot_counts_to_lineup_settings, \
+    slot_to_slot_id
 from espn.stats_translator import stat_id_to_stat, create_stats
-from espn.player_translator import roster_entry_to_player, espn_slot_to_slot, lineup_slot_counts_to_lineup_settings
+from league import League
+from lineup import Lineup
+from scoring_setting import ScoringSetting
+from team import Team
 
 """
 http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/<LEAGUE_ID>
@@ -103,7 +102,7 @@ class EspnApi:
     def espn_request(self, method, url, payload, check_cache=True):
         if check_cache and url in self.cache.keys():
             return self.cache.get(url)
-        LOGGER.info("making request to %(url)s in league %(league_id)d", {"url": url, "league_id": self.league_id})
+        LOGGER.info(f"making {method} request to {url} in league {self.league_id}")
         start_time = time.time()
         k = self.key()
         cookies = {"espn_s2": k}
@@ -286,6 +285,8 @@ class EspnApi:
         url = self.set_lineup_url()
         cur_lineup = self.lineup(self.team_id)
         transitions = cur_lineup.transitions(lineup)
+        for t in transitions:
+            LOGGER.info(f"executing transition {t}")
         payload = self.set_lineup_payload(transitions)
         return self.espn_post(url, payload)
 
@@ -305,9 +306,14 @@ class EspnApi:
 
     @staticmethod
     def transition_to_item(transition):
+        """
+        Creates the ESPN API item for a transition out of a LineupTransition object.
+        :param LineupTransition transition:
+        :return:
+        """
         return {
-            "playerId": transition[0].espn_id,
+            "playerId": transition.player.espn_id,
             "type": "LINEUP",
-            "fromLineupSlotId": transition[1],
-            "toLineupSlotId": transition[2]
+            "fromLineupSlotId": slot_to_slot_id(transition.from_slot),
+            "toLineupSlotId": slot_to_slot_id(transition.to_slot)
         }

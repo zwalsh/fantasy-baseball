@@ -35,7 +35,10 @@ def optimize_lineup(espn, fangraphs, notifier):
     LOGGER.info(f"found {num_candidates} candidates within 95% of max PA's (above threshold {threshold})")
     best_list = best_lineups(lineup, candidates, hitting_settings)
     most_pas_from_best = best_for_stat(lineup, best_list, ScoringSetting(Stat.PA, False))
-    return most_pas_from_best
+    pas = most_pas_from_best.stats.value_for_stat(Stat.PA)
+    transitions = lineup.transitions(most_pas_from_best.lineup)
+    notifier.notify_set_lineup(espn.team_name(), pas, transitions)
+    espn.set_lineup(most_pas_from_best.lineup)
 
 
 def best_lineups(current, candidates, scoring_settings):
