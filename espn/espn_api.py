@@ -142,13 +142,13 @@ class EspnApi:
                "&scoringPeriodId={}" \
                "&view=mRoster".format(self.league_id, self.team_id, scoring_period_id)
 
-    def lineup(self, team_id):
+    def lineup(self, team_id=None):
         """
         Returns the current lineup of the team with the given team id
         :param int team_id: the id of the team in this league to get the lineup for
         :return Lineup: Lineup the lineup of the given team
         """
-        return self.all_lineups()[team_id]
+        return self.all_lineups()[team_id or self.team_id]
 
     def all_lineups_url(self):
         return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \

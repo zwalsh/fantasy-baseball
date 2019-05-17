@@ -3,7 +3,13 @@ import sys
 from pathlib import Path
 
 import config.notifier_config
+import config.password_reader
+import config.team_reader
+import optimize.lineup_optimizer
+from espn.espn_api import EspnApi
 from fangraphs_api import FangraphsApi
+from scoring_setting import ScoringSetting
+from stats import Stat
 
 DEV_LOGGING = {
     'version': 1,
@@ -38,6 +44,7 @@ DEV_LOGGING = {
         "notifications": {},
         "notifications.client.dev": {},
         "notifications.client.pushed": {},
+        'optimize.optimizer': {},
     }
 
 }

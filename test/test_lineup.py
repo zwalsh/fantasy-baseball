@@ -5,7 +5,7 @@ from lineup_transition import LineupTransition
 from test.test_player import PlayerTest
 
 
-class Test(unittest.TestCase):
+class LineupTest(unittest.TestCase):
     empty_lineup_dict = {
         LineupSlot.CATCHER: [],
         LineupSlot.FIRST: [],
