@@ -7,6 +7,7 @@ config/passwords/**
 logs/*
 
 .idea/**
+.venv/**
 **/__pycache__/**
 
 *.p
