@@ -84,11 +84,15 @@ logger = logging.getLogger()
 
 username = sys.argv[1]
 logger.info("starting up with user %(user)s", {"user": username})
-password = config.password_reader.password(username, Path.cwd() / "config/passwords")
-configs = config.team_reader.all_teams(Path.cwd() / "config/team_configs")
+try:
+    password = config.password_reader.password(username, Path.cwd() / "config/passwords")
+    configs = config.team_reader.all_teams(Path.cwd() / "config/team_configs")
 
-fangraphs = FangraphsApi()
+    fangraphs = FangraphsApi()
 
-for team_config in configs:
-    espn = EspnApi(username, password, team_config.league_id, team_config.team_id)
-    optimize.lineup_optimizer.optimize_lineup(espn, fangraphs, config.notifier_config.current_notifier(username))
+    for team_config in configs:
+        espn = EspnApi(username, password, team_config.league_id, team_config.team_id)
+        optimize.lineup_optimizer.optimize_lineup(espn, fangraphs, config.notifier_config.current_notifier(username))
+except Exception as e:
+    logger.exception(e)
+    raise e

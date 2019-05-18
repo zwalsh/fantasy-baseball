@@ -9,7 +9,7 @@ from notifications.notifier import Notifier
 def current_notifier(user):
     env = os.getenv('ENV', 'DEV')
     if env == 'PROD':
-        return Notifier(prod_notifier(user))
+        return prod_notifier(user)
     else:
         return Notifier(DevClient())
 
