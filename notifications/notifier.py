@@ -1,3 +1,7 @@
+import traceback
+
+import sys
+
 from lineup_slot import LineupSlot
 
 
@@ -22,6 +26,23 @@ class Notifier:
 
         if len(msg) > 140:
             msg = msg[0:137] + "..."
+
+        self.client.send_message(msg)
+
+    def error_occurred(self):
+        """
+        Notifies the client of the last exception that occurred during the execution of the script
+        """
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+
+        name = exc_type.__name__
+        file = exc_traceback.tb_frame.f_code.co_filename
+        line = exc_traceback.tb_lineno
+
+        msg = f"error occured: {name} [{file}:{line}] {exc_value}"
+
+        if len(msg) > 140:
+            msg = msg[:137] + "..."
 
         self.client.send_message(msg)
 

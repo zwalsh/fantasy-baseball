@@ -84,6 +84,7 @@ logger = logging.getLogger()
 
 username = sys.argv[1]
 logger.info("starting up with user %(user)s", {"user": username})
+notifier = config.notifier_config.current_notifier(username)
 try:
     password = config.password_reader.password(username, Path.cwd() / "config/passwords")
     configs = config.team_reader.all_teams(Path.cwd() / "config/team_configs")
@@ -92,7 +93,8 @@ try:
 
     for team_config in configs:
         espn = EspnApi(username, password, team_config.league_id, team_config.team_id)
-        optimize.lineup_optimizer.optimize_lineup(espn, fangraphs, config.notifier_config.current_notifier(username))
+        optimize.lineup_optimizer.optimize_lineup(espn, fangraphs, notifier)
 except Exception as e:
     logger.exception(e)
+    notifier.error_occurred()
     raise e
