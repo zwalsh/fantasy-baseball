@@ -4,7 +4,10 @@ from lineup_slot import LineupSlot
 from lineup_transition import LineupTransition
 from notifications.client.pushed import PushedClient
 from notifications.notifier import Notifier
+from scoring_setting import ScoringSetting
+from stats import Stat
 from test.test_player import PlayerTest
+from test.test_lineup_total import LineupTotalTest
 
 
 class MockClient:
@@ -23,6 +26,8 @@ class Test(unittest.TestCase):
     t1 = LineupTransition(PlayerTest.muncy, LineupSlot.CORNER_INFIELD, LineupSlot.BENCH)
     t2 = LineupTransition(PlayerTest.merrifield, LineupSlot.OUTFIELD, LineupSlot.SECOND)
 
+    lt1 = LineupTotalTest.lt1
+
     def test_transition_message(self):
         self.assertEqual(Notifier.transition_message(self.t1), "Muncy: 1B/3B->BE")
         self.assertEqual(Notifier.transition_message(self.t2), "Merrifield: OF->2B")
@@ -32,12 +37,11 @@ class Test(unittest.TestCase):
         n = Notifier(mock_client)
 
         team = "Team1"
-        pas = 45.0234
         ts = [self.t1, self.t2]
 
-        n.notify_set_lineup(team, pas, ts)
+        n.notify_set_lineup(team, self.lt1, ts, [ScoringSetting(Stat.H, False)])
 
-        msg = team + ": proj. " + str(round(pas, 2)) + " PA"
+        msg = team + ": 50.00PA\n10.00H "
         for t in ts:
             msg += "\n" + Notifier.transition_message(t)
 
@@ -50,14 +54,31 @@ class Test(unittest.TestCase):
         mock_client = MockClient()
         n = Notifier(mock_client)
 
-        team = "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong team name"
-        pas = 1234567890.11
+        team = "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong team name"
         ts = [self.t1, self.t1]
 
-        n.notify_set_lineup(team, pas, ts)
+        n.notify_set_lineup(team, self.lt1, ts, [ScoringSetting(Stat.H, False)])
 
-        expected = team + ": proj. " + str(round(pas, 2)) + " PA"
+        expected = team + ": 50.00PA\n10.00H "
         expected += "\n" + Notifier.transition_message(self.t1)
-        expected += "\n" + "Muncy: 1..."
+        expected += "\n" + "Muncy: ..."
 
         self.assertEqual(expected, mock_client.messages[0][0])
+
+    def test_notify_ignore_non_hitting_stat(self):
+        mock_client = MockClient()
+        n = Notifier(mock_client)
+
+        team = "Name"
+        ts = [self.t1, self.t2]
+
+        n.notify_set_lineup(team, self.lt1, ts, [ScoringSetting(Stat.WHIP, True)])
+
+        expected = team + ": 50.00PA\n"
+        for t in ts:
+            expected += "\n" + Notifier.transition_message(t)
+
+        (msg_rec, url_rec) = mock_client.messages[0]
+
+        self.assertEqual(expected, msg_rec)
+        self.assertEqual(None, url_rec)

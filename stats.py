@@ -29,6 +29,20 @@ class Stat(Enum):
     SV = "SV"
     STARTER = "STARTER"
 
+    def is_hitting_stat(self):
+        return self in {
+            Stat.AB,
+            Stat.H,
+            Stat.AVG,
+            Stat.HR,
+            Stat.BB,
+            Stat.PA,
+            Stat.OBP,
+            Stat.R,
+            Stat.RBI,
+            Stat.SB,
+        }
+
 
 class Stats:
     stat_functions = {

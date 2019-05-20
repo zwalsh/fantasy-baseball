@@ -3,23 +3,32 @@ import traceback
 import sys
 
 from lineup_slot import LineupSlot
+from stats import Stat
 
 
 class Notifier:
     def __init__(self, client):
         self.client = client
 
-    def notify_set_lineup(self, team_name, plate_appearances, transitions):
+    def notify_set_lineup(self, team_name, lineup_total, transitions, scoring_settings):
         """
         Sends a message to the client detailing that a lineup has been set for the given team name,
-        achieving the given projected plate appearances, with the given transitions.
+        achieving the given projected stats, with the given transitions.
 
         :param str team_name:
+        :param LineupTotal lineup_total:
         :param list transitions:
-        :param float plate_appearances:
+        :param list scoring_settings:
         :return:
         """
-        msg = f"{team_name}: proj. {plate_appearances:.02f} PA"
+        stats = lineup_total.stats
+        plate_appearances = stats.value_for_stat(Stat.PA)
+        msg = f"{team_name}: {plate_appearances:.02f}PA\n"
+
+        for setting in scoring_settings:
+            if setting.stat.is_hitting_stat():
+                val = stats.value_for_stat(setting.stat)
+                msg += f"{val:.02f}{setting.stat.name} "
 
         for tr in sorted(transitions, key=Notifier.transition_sort_value):
             msg += "\n" + self.transition_message(tr)
