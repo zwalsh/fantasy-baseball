@@ -1,5 +1,6 @@
 *_pass.txt
 espn_s2_*.txt
+fangraphs/updated.txt
 
 config/team_configs/*
 config/pushed_config/*

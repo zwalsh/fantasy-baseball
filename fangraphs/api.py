@@ -1,11 +1,13 @@
 import logging
 
+import datetime
 import time
 
 from stats import Stats
 from requests_html import HTMLSession
 
 LOGGER = logging.getLogger('fangraphs.api')
+
 
 class FangraphsApi:
 
@@ -84,3 +86,18 @@ class FangraphsApi:
         walks = float(row[11].text)
         strikeouts = float(row[12].text)
         return Stats.pitcher_stats(wins, ip, total_batters, hits, hr, walks, strikeouts)
+
+    @staticmethod
+    def last_updated():
+        """
+        Returns a datetime object representing the last time that the Fangraphs projections were updated.
+        :return datetime: the datetime that the projections changed
+        """
+        session = HTMLSession()
+        LOGGER.info("fetching page to check for last updated")
+        start = time.time()
+        r = session.get("https://www.fangraphs.com/dailyprojections.aspx")
+        end = time.time()
+        LOGGER.info("finished in %(time).3fs seconds", {"time": end - start})
+        date_string = r.html.search("Updated: {} ET")[0]
+        return datetime.datetime.strptime(date_string, "%A, %B %d, %Y %I:%M %p")
