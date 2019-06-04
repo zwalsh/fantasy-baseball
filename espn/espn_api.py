@@ -99,7 +99,7 @@ class EspnApi:
                 return stored_key
         return self.login()
 
-    def espn_request(self, method, url, payload, check_cache=True):
+    def espn_request(self, method, url, payload, headers=None, check_cache=True):
         if check_cache and url in self.cache.keys():
             return self.cache.get(url)
         LOGGER.info(f"making {method} request to {url} in league {self.league_id}")
@@ -107,24 +107,24 @@ class EspnApi:
         k = self.key()
         cookies = {"espn_s2": k}
         if method == 'GET':
-            r = requests.get(url, cookies=cookies)
+            r = requests.get(url, headers=headers or {}, cookies=cookies)
         if method == 'POST':
-            r = requests.post(url, cookies=cookies, json=payload)
+            r = requests.post(url, headers=headers or {}, cookies=cookies, json=payload)
         if r.status_code == 401:
             LOGGER.warning("request denied, logging in again.")
             self.login()
-            return self.espn_request(method=method, url=url, payload=payload, check_cache=check_cache)
+            return self.espn_request(method=method, url=url, payload=payload, headers=headers, check_cache=check_cache)
         else:
             end_time = time.time()
             LOGGER.info("finished after %(time).3fs", {"time": end_time - start_time})
         self.cache[url] = r
         return r
 
-    def espn_get(self, url, check_cache=True):
-        return self.espn_request(method='GET', url=url, payload={}, check_cache=check_cache)
+    def espn_get(self, url, headers=None, check_cache=True):
+        return self.espn_request(method='GET', url=url, payload={}, headers=headers, check_cache=check_cache)
 
-    def espn_post(self, url, payload):
-        return self.espn_request(method='POST', url=url, payload=payload)
+    def espn_post(self, url, payload, headers=None):
+        return self.espn_request(method='POST', url=url, payload=payload, headers=headers)
 
     def scoring_period(self):
         url = "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/{}".format(self.league_id)
@@ -162,7 +162,8 @@ class EspnApi:
         lineup_dict = dict()
         for team in teams:
             roster = team['roster']['entries']
-            players = list(map(lambda e: (roster_entry_to_player(e), espn_slot_to_slot.get(e['lineupSlotId'])), roster))
+            players = list(map(lambda e: (roster_entry_to_player(e["playerPoolEntry"]["player"]),
+                                          espn_slot_to_slot.get(e['lineupSlotId'])), roster))
             lineup = EspnApi.player_list_to_lineup(players)
             lineup_dict[team['id']] = lineup
         return lineup_dict
@@ -232,6 +233,24 @@ class EspnApi:
         teams = self.all_info().json()['teams']
         team = next(filter(lambda t: t['id'] == team_id, teams))
         return f"{team['location']} {team['nickname']}"
+
+    def player_url(self):
+        return f"http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
+               f"{self.league_id}?view=kona_playercard"
+
+    def player(self, player_id):
+        """
+        Given the ESPN id of a Player, this will return the Player object associated with that Player,
+        or None if no such player exists.
+        :param int player_id: the id in the ESPN system of the player to be requested
+        :return Player: the associated Player object (or None)
+        """
+        filter_header = {"players": {"filterIds": {"value": [player_id]}}}
+        resp = self.espn_get(self.player_url(), {"X-Fantasy-Filter": json.dumps(filter_header)})
+        player_list = resp.json()["players"]
+        if len(player_list) == 0:
+            return None
+        return roster_entry_to_player(player_list[0]["player"])
 
     """
     {"bidAmount":0,

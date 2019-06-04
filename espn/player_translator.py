@@ -28,15 +28,14 @@ def slot_to_slot_id(slot):
     return slot_to_espn_slot[slot]
 
 
-def roster_entry_to_player(entry):
+def roster_entry_to_player(player_map):
     """
     Takes an object from the ESPN API that represents a Player
     and converts it into a Player, including all positions
-    :param entry: ESPN api player object
+    :param player_map: ESPN api player object
     :return: Player object
     """
-    player_id = entry['playerId']
-    player_map = entry['playerPoolEntry']['player']
+    player_id = player_map['id']
     name = player_map['fullName']
     first = player_map['firstName']
     last = player_map['lastName']

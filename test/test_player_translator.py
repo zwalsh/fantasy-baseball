@@ -8,45 +8,31 @@ from lineup_settings import LineupSettings
 
 class Test(unittest.TestCase):
     nolan_arenado_entry = {
-        "playerId": 31261,
-        "playerPoolEntry": {
-            "player": {
-                "defaultPositionId": 5,
-                "eligibleSlots": [
-                    3,
-                    7,
-                    19,
-                    12,
-                    16,
-                    17
-                ],
-                "fullName": "Nolan Arenado",
-                "firstName": "Nolan",
-                "lastName": "Arenado",
-                "id": 31261,
-            }
-        }
+        "defaultPositionId": 5,
+        "eligibleSlots": [
+            3,
+            7,
+            19,
+            12,
+            16,
+            17
+        ],
+        "fullName": "Nolan Arenado",
+        "firstName": "Nolan",
+        "lastName": "Arenado",
+        "id": 31261,
     }
 
-    travis_shaw_entry = {'injuryStatus': 'NORMAL',
-                         'lineupSlotId': 2,
-                         'pendingTransactionIds': None,
-                         'playerId': 32890,
-                         'playerPoolEntry': {'id': 32890,
-                                             'lineupLocked': True,
-                                             'player': {
-                                                 'active': True,
-                                                 'eligibleSlots': [2, 3, 6, 7, 19, 12, 16, 17],
-                                                 'fullName': 'Travis Shaw',
-                                                 "firstName": "Travis",
-                                                 "lastName": "Shaw",
-                                                 'injured': False,
-                                                 'injuryStatus': 'ACTIVE'
-                                             },
-                                             'rosterLocked': True,
-                                             'status': 'ONTEAM',
-                                             'tradeLocked': False},
-                         'status': 'NORMAL'}
+    travis_shaw_entry = {
+        'id': 32890,
+        'active': True,
+        'eligibleSlots': [2, 3, 6, 7, 19, 12, 16, 17],
+        'fullName': 'Travis Shaw',
+        "firstName": "Travis",
+        "lastName": "Shaw",
+        'injured': False,
+        'injuryStatus': 'ACTIVE'
+    }
 
     def test_conversion(self):
         nolan = roster_entry_to_player(self.nolan_arenado_entry)

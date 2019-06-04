@@ -1,6 +1,7 @@
 *_pass.txt
 espn_s2_*.txt
 fangraphs/updated.txt
+sandbox-script.py
 
 config/team_configs/*
 config/pushed_config/*
