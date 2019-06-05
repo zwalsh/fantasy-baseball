@@ -102,7 +102,7 @@ class EspnApi:
     def espn_request(self, method, url, payload, headers=None, check_cache=True):
         if check_cache and url in self.cache.keys():
             return self.cache.get(url)
-        LOGGER.info(f"making {method} request to {url} in league {self.league_id}")
+        LOGGER.info(f"making {method} request to {url} in league {self.league_id} with headers {headers}")
         start_time = time.time()
         k = self.key()
         cookies = {"espn_s2": k}
@@ -246,7 +246,7 @@ class EspnApi:
         :return Player: the associated Player object (or None)
         """
         filter_header = {"players": {"filterIds": {"value": [player_id]}}}
-        resp = self.espn_get(self.player_url(), {"X-Fantasy-Filter": json.dumps(filter_header)})
+        resp = self.espn_get(self.player_url(), {"X-Fantasy-Filter": json.dumps(filter_header)}, check_cache=False)
         player_list = resp.json()["players"]
         if len(player_list) == 0:
             return None

@@ -27,6 +27,7 @@ DEV_LOGGING = {
             'level': 'DEBUG',
             'propagate': True
         },
+        "espn.trade_finder": {},
         'lineup': {},
         'fangraphs.api': {},
         "fangraphs.metrics": {},
