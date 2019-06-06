@@ -15,9 +15,9 @@ def all_current_trades(api):
     all_info = api.all_info().json()
     pending = all_info.get("pendingTransactions", None)
     if pending is None:
-        return []
+        return set()
     trades = filter(is_trade, pending)
-    return list(map(lambda t: trade_object_to_trade(t, api), trades))
+    return set(map(lambda t: trade_object_to_trade(t, api), trades))
 
 
 def is_trade(transaction):

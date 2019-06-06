@@ -33,9 +33,6 @@ class Notifier:
         for tr in sorted(transitions, key=Notifier.transition_sort_value):
             msg += "\n" + self.transition_message(tr)
 
-        if len(msg) > 140:
-            msg = msg[0:137] + "..."
-
         self.client.send_message(msg)
 
     def error_occurred(self):
@@ -43,16 +40,18 @@ class Notifier:
         Notifies the client of the last exception that occurred during the execution of the script
         """
         exc_type, exc_value, exc_traceback = sys.exc_info()
-
         name = exc_type.__name__
         file = exc_traceback.tb_frame.f_code.co_filename
         line = exc_traceback.tb_lineno
-
         msg = f"error occured: {name} [{file}:{line}] {exc_value}"
+        self.client.send_message(msg)
 
-        if len(msg) > 140:
-            msg = msg[:137] + "..."
-
+    def notify_new_trade(self, trade):
+        """
+        Notifies the client of the new trade in the user's league.
+        :param Trade trade: the trade to notify the user about
+        """
+        msg = f"new trade proposed: {trade}"
         self.client.send_message(msg)
 
     @staticmethod

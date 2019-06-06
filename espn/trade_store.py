@@ -45,6 +45,6 @@ class TradeStore:
         trades_file = self.current_trades_path()
         if not trades_file.exists():
             LOGGER.info(f"no trades stored for league {self.league_id}")
-            return None
+            return set()
         fo = trades_file.open("rb")
         return pickle.load(fo)

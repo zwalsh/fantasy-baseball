@@ -24,4 +24,6 @@ class PushedClient:
         :param str content_url: Optional - the URL that the user will be redirected to if they open the notification
         """
         LOGGER.info("sending message: %(content)s to user: %(user)s", {"content": content, "user": self.user})
+        if len(content) > 140:
+            content = content[:137] + "..."
         self.pushed.push_pushed_id(content, self.pushed_id, content_url)
