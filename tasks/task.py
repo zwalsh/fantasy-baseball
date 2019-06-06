@@ -27,7 +27,6 @@ class Task:
         """
         Executes this Task in a controlled manner. Calls the method run(), logging and notifying in the event
         of an error.
-        :param str username: the username for whom this Task is being executed
         """
         logging.config.dictConfig(logging_config.config_dict())
 
