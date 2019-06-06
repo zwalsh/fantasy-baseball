@@ -38,6 +38,8 @@ DEV_LOGGING = {
         "notifications.client.dev": {},
         "notifications.client.pushed": {},
         'optimize.optimizer': {},
+        "tasks.set_lineup": {},
+        "tasks.check_fangraphs": {},
     }
 }
 
