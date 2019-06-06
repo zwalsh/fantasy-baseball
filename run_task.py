@@ -11,10 +11,7 @@ username = sys.argv[1]
 task_file_name = sys.argv[2]
 
 task_module = importlib.import_module(f"tasks.{task_file_name}")
-print(task_module)
-print(dir(task_module))
 task_class = getattr(task_module, task_class_name(task_file_name))
-print(dir(task_class))
 
 task = task_class.create(username)
 task.execute()

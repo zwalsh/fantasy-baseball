@@ -32,22 +32,25 @@ class NotifyNewTrades(Task):
     def check_for_trades(self, config):
         LOGGER.info(f"searching for new trades in league {config.league_id}")
         espn = EspnApi(self.username, self.password, config.league_id, config.team_id)
+        team_name = espn.team_name(config.team_id)
         trade_store = TradeStore(config.league_id)
         cur_trades = trade_finder.all_current_trades(espn)
         stored_trades = trade_store.retrieve_trades()
         if cur_trades != stored_trades:
-            self.notify_new(stored_trades, cur_trades)
+            self.notify_new(team_name, stored_trades, cur_trades)
             LOGGER.info(f"new trades found in league {config.league_id}")
             trade_store.store_trades(cur_trades)
         else:
             LOGGER.info(f"no new trades found in league {config.league_id}")
 
-    def notify_new(self, old_trades, new_trades):
+    def notify_new(self, this_team_name, old_trades, new_trades):
         """
         Notifies the notifier of each trade that appears in the new trades, but not
-        the old trades.
+        the old trades (if this team did not initiate the trade)
+        :param str this_team_name: the name of the owner of this team
         :param set old_trades: the set of trades that used to be current
         :param set new_trades: the set of trades that is now current
         """
         for trade in new_trades - old_trades:
-            self.notifier.notify_new_trade(trade)
+            if trade.from_team != this_team_name:
+                self.notifier.notify_new_trade(trade)
