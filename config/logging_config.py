@@ -39,6 +39,7 @@ DEV_LOGGING = {
         "notifications.client.pushed": {},
         'optimize.optimizer': {},
         "tasks.set_lineup": {},
+        "tasks.notify_new_trades": {},
         "tasks.check_fangraphs": {},
     }
 }
