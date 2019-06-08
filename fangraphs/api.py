@@ -38,7 +38,9 @@ class FangraphsApi:
             cells = row.find("td")
             proj = FangraphsApi.row_to_hitter_projections(cells)
             name = cells[0].text
-            projections[name] = proj
+            # if there's a doubleheader, we want to sum the stats
+            cur_stats = projections.get(name, Stats({}))
+            projections[name] = proj + cur_stats
 
         return projections
 

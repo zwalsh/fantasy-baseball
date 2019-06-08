@@ -43,6 +43,12 @@ class Stat(Enum):
             Stat.SB,
         }
 
+    def num_rounding_digits(self):
+        if self in {Stat.AVG, Stat.OBP}:
+            return 3
+        else:
+            return 2
+
 
 class Stats:
     stat_functions = {
@@ -208,6 +214,6 @@ class Stats:
     def value_for_stat(self, stat):
         val = self.unrounded_value_for_stat(stat)
         if val is not None:
-            return round(val, 2)
+            return round(val, stat.num_rounding_digits())
         else:
             return val
