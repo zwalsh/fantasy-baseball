@@ -1,3 +1,5 @@
+import logging
+
 from espn.player_translator import espn_slot_to_slot
 from lineup_slot import LineupSlot
 from stats import Stat, Stats
@@ -31,6 +33,7 @@ espn_stat_to_stat = {
     99: Stat.STARTER,
 }
 
+LOGGER = logging.getLogger("espn.stats_translator")
 
 def stat_id_to_stat(stat_id):
     return espn_stat_to_stat[stat_id]
@@ -69,7 +72,11 @@ def cumulative_stats_from_roster_entries(entries, scoring_period_id):
     total_stats = Stats({})
     for e in filter(is_starting, entries):
         entry_stats_list = e["playerPoolEntry"]["player"]["stats"]
-        stats_dict = next(filter(lambda d: d['scoringPeriodId'] == scoring_period_id, entry_stats_list))
+        stats_dict = next(filter(lambda d: d['scoringPeriodId'] == scoring_period_id, entry_stats_list), None)
+        if stats_dict is None:
+            name = e["playerPoolEntry"]["player"]["fullName"]
+            LOGGER.warning(f"{name} has no stats matching scoring period {scoring_period_id} found in entry {e}")
+            continue
         stats = create_stats(stats_dict["stats"])
         total_stats += stats
     return total_stats

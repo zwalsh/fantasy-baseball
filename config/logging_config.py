@@ -27,6 +27,7 @@ DEV_LOGGING = {
             'level': 'DEBUG',
             'propagate': True
         },
+        "espn.stats_translator": {},
         "espn.trade_finder": {},
         "espn.trade_store": {},
         "espn.stat_store": {},
@@ -42,6 +43,7 @@ DEV_LOGGING = {
         "tasks.set_lineup": {},
         "tasks.notify_new_trades": {},
         "tasks.check_fangraphs": {},
+        "tasks.archive_daily_stats": {},
     }
 }
 
