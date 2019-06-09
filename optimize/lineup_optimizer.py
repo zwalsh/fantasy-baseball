@@ -3,7 +3,9 @@ import operator
 import logging
 
 from lineup_slot import LineupSlot
+from lineup_transition import LineupTransition
 from optimize.lineup_total import LineupTotal
+from position import Position
 from scoring_setting import ScoringSetting
 from stats import Stats, Stat
 
@@ -36,9 +38,10 @@ def optimize_lineup(espn, fangraphs, notifier):
     LOGGER.info(f"found {num_candidates} candidates within 95% of max PA's (above threshold {threshold})")
     best_list = best_lineups(lineup, candidates, hitting_settings)
     most_pas_from_best = best_for_stat(lineup, best_list, ScoringSetting(Stat.PA, False))
-    transitions = lineup.transitions(most_pas_from_best.lineup)
-    notifier.notify_set_lineup(espn.team_name(), most_pas_from_best, transitions, s_settings)
-    espn.set_lineup(most_pas_from_best.lineup)
+    hitting_transitions = lineup.transitions(most_pas_from_best.lineup)
+    pitching_transitions = optimal_pitching_transitions(lineup, espn)
+    notifier.notify_set_lineup(espn.team_name(), most_pas_from_best, hitting_transitions + pitching_transitions, s_settings)
+    espn.execute_transitions(hitting_transitions + pitching_transitions)
 
 
 def best_lineups(current, candidates, scoring_settings):
@@ -133,20 +136,43 @@ def possible_lineup_totals(lineup, lineup_settings, projections):
     return list(map(lambda l: LineupTotal.total_from_projections(l, projections), possibles))
 
 
-def optimize_pitching(lineup):
+def optimal_pitching_transitions(lineup, espn):
+    """
+    Optimizes the pitching portion of the lineup, moving all probable pitchers and relievers into
+    starting roles, benching a Starter that isn't starting if necessary.
+    :param Lineup lineup: the current Lineup to optimize
+    :param EspnApi espn: access to ESPN for the lineup being optimized
     """
 
-    :param lineup:
-    :return:
-    """
+    must_start = must_start_pitchers(lineup, espn)
+    LOGGER.info(f"{len(must_start)} must-start pitchers found")
+    not_started = must_start - lineup.starters()
+    LOGGER.info(f"{len(not_started)} not currently started")
 
-    pitchers = filter(lambda p: p.can_play(LineupSlot.PITCHER), lineup.players())
+    started_unimportant = iter({player for player in lineup.starters() if player.can_play(LineupSlot.PITCHER)})
 
+    transitions = []
+    for ns in not_started:
+        player_to_bench = next(started_unimportant)
+        LOGGER.info(f"starting {ns}, benching {player_to_bench}")
+        transitions.append(LineupTransition(ns, LineupSlot.BENCH, LineupSlot.PITCHER))
+        transitions.append(LineupTransition(player_to_bench, LineupSlot.PITCHER, LineupSlot.BENCH))
+
+    return transitions
+
+
+def must_start_pitchers(lineup, espn):
     """
-    Need to....
-    - figure out RP/SP from ESPN API (add a "position" enum or something?)
-    - determine starting pitchers
-    - start all today's pitchers + relievers
-    - return..... transitions? lineup? unsure 
-    
+    Determines all pitchers that are "must-starts" from the given lineup.
+
+    This is any probable pitcher in today's games and any reliever, as all relievers
+    could potentially play on any day. Any player currently in an IL slot is excluded.
+    :param Lineup lineup: the lineup to get all must-start pitchers from
+    :param EspnApi espn: access to ESPN for the given lineup
+    :return set: the set of Players that are must-start pitchers today
     """
+    players = lineup.players()
+    pitchers = list(filter(lambda player: player.can_play(LineupSlot.PITCHER), players))
+    probable_pitchers = {p for p in pitchers if espn.is_probable_pitcher(p.espn_id)}
+    relievers = {p for p in pitchers if p.default_position == Position.RELIEVER}
+    return probable_pitchers.union(relievers).difference(lineup.injured())

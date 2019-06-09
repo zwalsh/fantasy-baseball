@@ -146,6 +146,9 @@ class Lineup:
     def benched(self):
         return frozenset(self.player_dict[LineupSlot.BENCH])
 
+    def injured(self):
+        return frozenset(self.player_dict[LineupSlot.INJURED])
+
     def transitions(self, to_lineup):
         """
         Returns a list of all transitions necessary to convert this Lineup into the given one.

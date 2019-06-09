@@ -238,6 +238,16 @@ class EspnApi:
         return f"http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
                f"{self.league_id}?view=kona_playercard"
 
+    def player_request(self, player_id):
+        """
+        Makes the request to ESPN for the player with the player id and returns the raw response (parsed from JSON)
+        :param int player_id: the id of the player to make the request about
+        :return dict: the parsed response from ESPN
+        """
+        filter_header = {"players": {"filterIds": {"value": [player_id]}}}
+        resp = self.espn_get(self.player_url(), {"X-Fantasy-Filter": json.dumps(filter_header)}, check_cache=False)
+        return resp.json()["players"][0]["player"]
+
     def player(self, player_id):
         """
         Given the ESPN id of a Player, this will return the Player object associated with that Player,
@@ -245,12 +255,22 @@ class EspnApi:
         :param int player_id: the id in the ESPN system of the player to be requested
         :return Player: the associated Player object (or None)
         """
-        filter_header = {"players": {"filterIds": {"value": [player_id]}}}
-        resp = self.espn_get(self.player_url(), {"X-Fantasy-Filter": json.dumps(filter_header)}, check_cache=False)
-        player_list = resp.json()["players"]
-        if len(player_list) == 0:
-            return None
-        return roster_entry_to_player(player_list[0]["player"])
+        return roster_entry_to_player(self.player_request(player_id))
+
+    def is_probable_pitcher(self, player_id):
+        """
+        Checks if the Player with the given player id is a probable starting pitcher today.
+        :param int player_id: the ESPN id of the player to check
+        :return bool: whether or not the player is pitching today
+        """
+        player_resp = self.player_request(player_id)
+        name = player_resp["fullName"]
+        LOGGER.debug(f"checking start status for {name}")
+        stats = player_resp["stats"]
+        starter_split = next(filter(lambda s: s["statSplitTypeId"] == 5, stats), {}).get("stats", {})
+        is_starter = starter_split.get("99", None) == 1.0
+        LOGGER.debug(f"starting? {is_starter}")
+        return is_starter
 
     """
     {"bidAmount":0,
@@ -301,9 +321,17 @@ class EspnApi:
     # this will not work at the moment - need to translate LineupSlots back to espn
     # lineup ids
     def set_lineup(self, lineup):
-        url = self.set_lineup_url()
         cur_lineup = self.lineup(self.team_id)
         transitions = cur_lineup.transitions(lineup)
+        return self.execute_transitions(transitions)
+
+    def execute_transitions(self, transitions):
+        """
+        Executes the given transitions, moving players as specified.
+        :param list transitions: the list of LineupTransitions to execute
+        :return: the response returned from the POST request
+        """
+        url = self.set_lineup_url()
         for t in transitions:
             LOGGER.info(f"executing transition {t}")
         payload = self.set_lineup_payload(transitions)
