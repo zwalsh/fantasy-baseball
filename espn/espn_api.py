@@ -7,7 +7,7 @@ import requests
 
 from espn.player_translator import roster_entry_to_player, espn_slot_to_slot, lineup_slot_counts_to_lineup_settings, \
     slot_to_slot_id
-from espn.stats_translator import stat_id_to_stat, create_stats
+from espn.stats_translator import stat_id_to_stat, create_stats, cumulative_stats_from_roster_entries
 from league import League
 from lineup import Lineup
 from scoring_setting import ScoringSetting
@@ -149,6 +149,10 @@ class EspnApi:
         """
         return self.all_lineups()[team_id or self.team_id]
 
+    def scoring_period_info_url(self, scoring_period):
+        return f"http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
+               f"{self.league_id}?scoringPeriodId={scoring_period}&view=mRoster"
+
     def all_lineups_url(self):
         return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
                "{}" \
@@ -177,10 +181,21 @@ class EspnApi:
     def all_info(self):
         return self.espn_get(self.all_info_url())
 
+    def scoring_period_info(self, scoring_period):
+        return self.espn_get(self.scoring_period_info_url(scoring_period))
+
     def scoring_settings(self):
         info = self.all_info().json()
         scoring_items = info['settings']['scoringSettings']['scoringItems']
         return list(map(EspnApi.json_to_scoring_setting, scoring_items))
+
+    def scoring_period_stats(self, scoring_period):
+        teams = self.scoring_period_info(scoring_period).json()["teams"]
+        team_to_stats = dict()
+        for t in teams:
+            stats = cumulative_stats_from_roster_entries(t["roster"]["entries"], scoring_period)
+            team_to_stats[t['id']] = stats
+        return team_to_stats
 
     def year_stats(self):
         """

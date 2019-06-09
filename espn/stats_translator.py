@@ -1,3 +1,5 @@
+from espn.player_translator import espn_slot_to_slot
+from lineup_slot import LineupSlot
 from stats import Stat, Stats
 
 espn_stat_to_stat = {
@@ -44,3 +46,30 @@ def create_stats(espn_stats_dict):
             transformed_stats[stat] = stat_val
 
     return Stats(transformed_stats)
+
+
+def is_starting(roster_entry):
+    """
+    Checks if the given roster entry is a starting one
+    :param roster_entry:
+    :return:
+    """
+    slot_id = roster_entry["lineupSlotId"]
+    slot = espn_slot_to_slot[slot_id]
+    return slot not in {LineupSlot.BENCH, LineupSlot.INJURED}
+
+
+def cumulative_stats_from_roster_entries(entries, scoring_period_id):
+    """
+    Takes a list of roster entries and reconstitutes the cumulative stats produced by that roster.
+    :param list entries: the entries produced
+    :param int scoring_period_id: the scoring period for which stats are being accumulated
+    :return Stats: the sum total of stats produced by starters on that roster
+    """
+    total_stats = Stats({})
+    for e in filter(is_starting, entries):
+        entry_stats_list = e["playerPoolEntry"]["player"]["stats"]
+        stats_dict = next(filter(lambda d: d['scoringPeriodId'] == scoring_period_id, entry_stats_list))
+        stats = create_stats(stats_dict["stats"])
+        total_stats += stats
+    return total_stats
