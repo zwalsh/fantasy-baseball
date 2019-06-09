@@ -1,6 +1,9 @@
-from player import Player
-from lineup_slot import LineupSlot
+import logging
+
 from lineup_settings import LineupSettings
+from lineup_slot import LineupSlot
+from player import Player
+from position import Position
 
 espn_slot_to_slot = {
     0: LineupSlot.CATCHER,
@@ -37,6 +40,7 @@ def roster_entry_to_player(player_map):
     """
     player_id = player_map['id']
     name = player_map['fullName']
+    position = Position(player_map['defaultPositionId'])
     first = player_map['firstName']
     last = player_map['lastName']
     espn_positions = player_map['eligibleSlots']
@@ -45,7 +49,7 @@ def roster_entry_to_player(player_map):
         converted = espn_slot_to_slot.get(espn_pos)
         if converted is not None:
             possible_positions.add(converted)
-    return Player(name, first, last, player_id, possible_positions)
+    return Player(name, first, last, player_id, possible_positions, position)
 
 
 def lineup_slot_counts_to_lineup_settings(settings):

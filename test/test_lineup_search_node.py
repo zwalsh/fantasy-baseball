@@ -6,8 +6,8 @@ from player import Player
 
 
 class Test(unittest.TestCase):
-    rizzo = Player("Anthony Rizzo", None, None, 123, {LineupSlot.FIRST})
-    goldschmidt = Player("Paul Goldschmidt", None, None, 456, {LineupSlot.FIRST})
+    rizzo = Player("Anthony Rizzo", None, None, 123, {LineupSlot.FIRST}, None)
+    goldschmidt = Player("Paul Goldschmidt", None, None, 456, {LineupSlot.FIRST}, None)
 
     empty_lineup = Lineup(dict())
     basic_node = LineupSearchNode(empty_lineup, [rizzo], {LineupSlot.FIRST})

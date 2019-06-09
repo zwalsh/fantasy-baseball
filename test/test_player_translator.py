@@ -4,6 +4,7 @@ from espn.player_translator import roster_entry_to_player, slot_to_slot_id
 from espn.player_translator import lineup_slot_counts_to_lineup_settings
 from lineup_slot import LineupSlot
 from lineup_settings import LineupSettings
+from position import Position
 
 
 class Test(unittest.TestCase):
@@ -24,6 +25,7 @@ class Test(unittest.TestCase):
     }
 
     travis_shaw_entry = {
+        "defaultPositionId": 3,
         'id': 32890,
         'active': True,
         'eligibleSlots': [2, 3, 6, 7, 19, 12, 16, 17],
@@ -38,12 +40,14 @@ class Test(unittest.TestCase):
         nolan = roster_entry_to_player(self.nolan_arenado_entry)
         self.assertEqual(nolan.name, "Nolan Arenado")
         self.assertEqual(nolan.possible_positions, LineupSlot.third() | {LineupSlot.INJURED})
+        self.assertEqual(nolan.default_position, Position.THIRD)
 
         travis = roster_entry_to_player(self.travis_shaw_entry)
         self.assertEqual(travis.name, "Travis Shaw")
         self.assertEqual(travis.first, "Travis")
         self.assertEqual(travis.last, "Shaw")
         self.assertEqual(travis.possible_positions, LineupSlot.second() | LineupSlot.third() | {LineupSlot.INJURED})
+        self.assertEqual(travis.default_position, Position.FIRST)
 
     lineup_slot_response = {'0': 1, '1': 1, '2': 1, '3': 1, '4': 1, '5': 5, '6': 1, '7': 1, '8': 0, '9': 0, '10': 0,
                             '11': 0, '12': 1, '13': 9, '14': 0, '15': 0, '16': 3, '17': 2, '19': 0}
