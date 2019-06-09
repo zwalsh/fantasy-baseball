@@ -29,6 +29,7 @@ DEV_LOGGING = {
         },
         "espn.trade_finder": {},
         "espn.trade_store": {},
+        "espn.stat_store": {},
         'lineup': {},
         'fangraphs.api': {},
         "fangraphs.metrics": {},
