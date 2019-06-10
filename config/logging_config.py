@@ -44,6 +44,7 @@ DEV_LOGGING = {
         "tasks.notify_new_trades": {},
         "tasks.check_fangraphs": {},
         "tasks.archive_daily_stats": {},
+        "tasks.archive_year_stats": {},
     }
 }
 
