@@ -146,14 +146,22 @@ def optimal_pitching_transitions(lineup, espn):
 
     must_start = must_start_pitchers(lineup, espn)
     LOGGER.info(f"{len(must_start)} must-start pitchers found")
+    for p in must_start:
+        LOGGER.info(f"{p}")
     not_started = must_start - lineup.starters()
     LOGGER.info(f"{len(not_started)} not currently started")
+    for p in not_started:
+        LOGGER.info(f"{p}")
 
-    started_unimportant = iter({player for player in lineup.starters() if player.can_play(LineupSlot.PITCHER)})
+    benchables = benchable_pitchers(lineup, must_start)
+    LOGGER.info(f"{len(benchables)} benchable pitchers found")
+    for p in benchables:
+        LOGGER.info(f"{p}")
+    benchables = iter(benchables)
 
     transitions = []
     for ns in not_started:
-        player_to_bench = next(started_unimportant)
+        player_to_bench = next(benchables)
         LOGGER.info(f"starting {ns}, benching {player_to_bench}")
         transitions.append(LineupTransition(ns, LineupSlot.BENCH, LineupSlot.PITCHER))
         transitions.append(LineupTransition(player_to_bench, LineupSlot.PITCHER, LineupSlot.BENCH))
@@ -176,3 +184,15 @@ def must_start_pitchers(lineup, espn):
     probable_pitchers = {p for p in pitchers if espn.is_probable_pitcher(p.espn_id)}
     relievers = {p for p in pitchers if p.default_position == Position.RELIEVER}
     return probable_pitchers.union(relievers).difference(lineup.injured())
+
+
+def benchable_pitchers(lineup, must_start):
+    """
+    Given a lineup and a set of pitchers that must be started, returns the
+    benchable ones.
+    :param Lineup lineup: the lineup in which to find benchable pitchers
+    :param set must_start: set of pitchers that must be started
+    :return set: the group of pitchers that can be safely moved to the bench
+    """
+    started_pitchers = {player for player in lineup.starters() if player.default_position == Position.STARTER}
+    return started_pitchers - set(must_start)

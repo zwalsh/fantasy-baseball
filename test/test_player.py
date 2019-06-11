@@ -1,6 +1,7 @@
 import unittest
 from player import Player
 from lineup_slot import LineupSlot
+from position import Position
 
 
 class PlayerTest(unittest.TestCase):
@@ -23,16 +24,16 @@ class PlayerTest(unittest.TestCase):
                                                              LineupSlot.BENCH}, None)
     jimenez = Player("Eloy Jimenez", None, None, 98653429, {LineupSlot.INJURED,
                                                             LineupSlot.BENCH}, None)
-    degrom = Player("Jacob deGrom", None, None, 189346, LineupSlot.pitcher(), None)
-    kimbrel = Player("Craig Kimbrel", None, None, 3489346, LineupSlot.pitcher(), None)
-    morton = Player("Charlie Morton", None, None, 469346, LineupSlot.pitcher(), None)
-    hill = Player("Rich Hill", None, None, 57346, LineupSlot.pitcher(), None)
-    arrieta = Player("Jake Arrieta", None, None, 189343654, LineupSlot.pitcher(), None)
-    glasnow = Player("Tyler Glasnow", None, None, 469346, LineupSlot.pitcher(), None)
-    barnes = Player("Matt Barnes", None, None, 457346, LineupSlot.pitcher(), None)
-    stripling = Player("Ross Stripling", None, None, 189343423, LineupSlot.pitcher(), None)
-    smith = Player("Caleb Smith", None, None, 24946, LineupSlot.pitcher(), None)
-    paddack = Player("Chris Paddack", None, None, 189345, LineupSlot.pitcher(), None)
+    degrom = Player("Jacob deGrom", None, None, 189346, LineupSlot.pitcher(), Position.STARTER)
+    kimbrel = Player("Craig Kimbrel", None, None, 3489346, LineupSlot.pitcher(), Position.RELIEVER)
+    morton = Player("Charlie Morton", None, None, 469346, LineupSlot.pitcher(), Position.STARTER)
+    hill = Player("Rich Hill", None, None, 57346, LineupSlot.pitcher(), Position.STARTER)
+    arrieta = Player("Jake Arrieta", None, None, 189343654, LineupSlot.pitcher(), Position.STARTER)
+    glasnow = Player("Tyler Glasnow", None, None, 469346, LineupSlot.pitcher(), Position.STARTER)
+    barnes = Player("Matt Barnes", None, None, 457346, LineupSlot.pitcher(), Position.RELIEVER)
+    stripling = Player("Ross Stripling", None, None, 189343423, LineupSlot.pitcher(), Position.RELIEVER)
+    smith = Player("Caleb Smith", None, None, 24946, LineupSlot.pitcher(), Position.STARTER)
+    paddack = Player("Chris Paddack", None, None, 189345, LineupSlot.pitcher(), Position.STARTER)
 
     yelich = Player("Christian Yelich", None, None, 123, {LineupSlot.OUTFIELD}, None)
     shaw = Player("Travis Shaw", None, None, 456, {LineupSlot.SECOND,

@@ -139,7 +139,7 @@ class Lineup:
     def starters(self):
         starters = set()
         for slot, players in self.player_dict.items():
-            if slot != LineupSlot.BENCH:
+            if slot not in {LineupSlot.BENCH, LineupSlot.INJURED}:
                 starters.update(players)
         return frozenset(starters)
 
