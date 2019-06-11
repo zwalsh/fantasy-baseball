@@ -60,7 +60,7 @@ class StatStore:
         team_stat_dir = self.stat_dir(team_id)
         for file in team_stat_dir.iterdir():
             file_name = file.parts[-1]
-            LOGGER.info(f"unpickling stats located at {file_name}")
+            LOGGER.info(f"unpickling stats located at {file}")
             match = re.search("([0-9]*)-stats.p", file_name)
             scoring_period = int(match.group(1))
             all_stats[scoring_period] = pickle.load(file.open("rb"))

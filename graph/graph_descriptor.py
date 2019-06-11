@@ -3,7 +3,6 @@ from plotly import graph_objs as go
 
 
 class GraphDescriptor:
-
     def __init__(self, x_data, lines, title, x_name, y_name):
         """
         Describes a graph of data that can be plotted with plotly. The x_data is a list of common,
@@ -41,7 +40,6 @@ class GraphDescriptor:
 
 
 class GraphLine:
-
     def __init__(self, data, name):
         """
         Represents one line on a graph. Data is a list of the y-values of the data points.
@@ -59,8 +57,8 @@ class GraphLine:
         :return :
         """
         return go.Scatter(
-            x = x_data,
-            y = self.data,
-            mode = 'lines',
-            name = self.name
+            x=x_data,
+            y=self.data,
+            mode='lines',
+            name=self.name
         )
