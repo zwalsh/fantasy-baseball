@@ -36,6 +36,13 @@ class LoginException(Exception):
     pass
 
 
+class EspnApiException(Exception):
+    """
+    Exception to throw when a request to the ESPN API failed
+    """
+    pass
+
+
 class EspnApi:
     LOGIN_URL = "https://registerdisney.go.com/jgc/v6/client/ESPN-ONESITE.WEB-PROD/guest/login?langPref=en-US"
 
@@ -99,7 +106,7 @@ class EspnApi:
                 return stored_key
         return self.login()
 
-    def espn_request(self, method, url, payload, headers=None, check_cache=True):
+    def espn_request(self, method, url, payload, headers=None, check_cache=True, retries=1):
         if check_cache and url in self.cache.keys():
             return self.cache.get(url)
         LOGGER.info(f"making {method} request to {url} in league {self.league_id} with headers {headers}")
@@ -114,6 +121,21 @@ class EspnApi:
             LOGGER.warning("request denied, logging in again.")
             self.login()
             return self.espn_request(method=method, url=url, payload=payload, headers=headers, check_cache=check_cache)
+        if not r.ok:
+            LOGGER.error(f"received {r.status_code} {r.reason}: {r.text} in {start_time - time.time():.3f} seconds")
+            if retries > 0:
+                LOGGER.info(f"retrying request")
+                return self.espn_request(method=method, url=url, payload=payload, headers=headers,
+                                         check_cache=check_cache, retries=retries - 1)
+            else:
+                raise EspnApiException(url)
+        if r.text is None or r.text == "":
+            LOGGER.error(f"the response was blank after {start_time - time.time():.3f} seconds")
+            if retries > 0:
+                return self.espn_request(method=method, url=url, payload=payload, headers=headers,
+                                         check_cache=check_cache, retries=retries - 1)
+            else:
+                raise EspnApiException(url)
         else:
             end_time = time.time()
             LOGGER.info("finished after %(time).3fs", {"time": end_time - start_time})
