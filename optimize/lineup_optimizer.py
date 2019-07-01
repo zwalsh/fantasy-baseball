@@ -41,7 +41,10 @@ def optimize_lineup(espn, fangraphs, notifier):
     hitting_transitions = lineup.transitions(most_pas_from_best.lineup)
     pitching_transitions = optimal_pitching_transitions(lineup, espn)
     notifier.notify_set_lineup(espn.team_name(), most_pas_from_best, hitting_transitions + pitching_transitions, s_settings)
-    espn.execute_transitions(hitting_transitions + pitching_transitions)
+    if len(hitting_transitions + pitching_transitions) == 0:
+        LOGGER.info(f"no transitions to execute")
+    else:
+        espn.execute_transitions(hitting_transitions + pitching_transitions)
 
 
 def best_lineups(current, candidates, scoring_settings):
