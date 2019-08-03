@@ -15,4 +15,4 @@ def password(user, password_dir):
     if not pwd_file.exists():
         LOGGER.error("the password for %(user)s was not found on disk", {"user": user})
         return None
-    return pwd_file.read_text()
+    return pwd_file.read_text().strip()
