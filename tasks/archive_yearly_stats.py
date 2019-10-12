@@ -3,7 +3,7 @@ from pathlib import Path
 
 from config import password_reader, team_reader
 from espn.espn_api import EspnApi
-from espn.espn_session_provider import EspnSessionProvider
+from espn.sessions.espn_session_provider import EspnSessionProvider
 from tasks.archive_daily_stats import ArchiveDailyStats
 from tasks.task import Task
 

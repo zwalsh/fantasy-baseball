@@ -1,12 +1,12 @@
 import logging
 from pathlib import Path
 
+from config import team_reader, password_reader, notifier_config
+from espn.espn_api import EspnApi
+from espn.sessions.espn_session_provider import EspnSessionProvider
 from fangraphs.api import FangraphsApi
 from optimize.lineup_optimizer import optimize_lineup
 from tasks.task import Task
-from config import team_reader, password_reader, notifier_config
-from espn.espn_api import EspnApi
-from espn.espn_session_provider import EspnSessionProvider
 
 LOGGER = logging.getLogger("tasks.set_lineup")
 

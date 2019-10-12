@@ -2,9 +2,9 @@ import logging
 from pathlib import Path
 
 from config import team_reader, password_reader, notifier_config
-from espn.espn_api import EspnApi
-from espn.espn_session_provider import EspnSessionProvider
 from espn import trade_finder
+from espn.espn_api import EspnApi
+from espn.sessions.espn_session_provider import EspnSessionProvider
 from espn.trade_store import TradeStore
 from tasks.task import Task
 

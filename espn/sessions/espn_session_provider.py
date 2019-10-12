@@ -4,7 +4,7 @@ import time
 
 import requests
 
-from espn.espn_session_store import EspnSessionStore
+from espn.sessions.espn_session_store import EspnSessionStore
 
 
 class LoginException(Exception):
