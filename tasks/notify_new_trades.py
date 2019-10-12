@@ -3,6 +3,7 @@ from pathlib import Path
 
 from config import team_reader, password_reader, notifier_config
 from espn.espn_api import EspnApi
+from espn.espn_session_provider import EspnSessionProvider
 from espn import trade_finder
 from espn.trade_store import TradeStore
 from tasks.task import Task
@@ -31,7 +32,7 @@ class NotifyNewTrades(Task):
 
     def check_for_trades(self, config):
         LOGGER.info(f"searching for new trades in league {config.league_id}")
-        espn = EspnApi(self.username, self.password, config.league_id, config.team_id)
+        espn = EspnApi(EspnSessionProvider(self.username, self.password), config.league_id, config.team_id)
         team_name = espn.team_name(config.team_id)
         trade_store = TradeStore(config.league_id)
         cur_trades = trade_finder.all_current_trades(espn)

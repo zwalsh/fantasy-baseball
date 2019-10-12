@@ -3,6 +3,7 @@ from pathlib import Path
 
 from config import password_reader, team_reader
 from espn.espn_api import EspnApi
+from espn.espn_session_provider import EspnSessionProvider
 from tasks.archive_daily_stats import ArchiveDailyStats
 from tasks.task import Task
 
@@ -23,5 +24,5 @@ class ArchiveYearlyStats(Task):
     def create(username):
         password = password_reader.password(username, Path.cwd() / "config/passwords")
         configs = team_reader.all_teams(Path.cwd() / "config/team_configs")
-        scoring_period = EspnApi(username, password, configs[0].league_id, configs[0].team_id).scoring_period() - 1
+        scoring_period = EspnApi(EspnSessionProvider(username, password), configs[0].league_id, configs[0].team_id).scoring_period() - 1
         return ArchiveYearlyStats(username, password, configs, scoring_period)
