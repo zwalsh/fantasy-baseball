@@ -2,8 +2,7 @@ import logging
 from pathlib import Path
 
 from config import team_reader, password_reader, notifier_config
-from espn.espn_api import EspnApi
-from espn.sessions.espn_session_provider import EspnSessionProvider
+from espn.baseball.baseball_api import BaseballApi
 from fangraphs.api import FangraphsApi
 from optimize.lineup_optimizer import optimize_lineup
 from tasks.task import Task
@@ -12,7 +11,6 @@ LOGGER = logging.getLogger("tasks.set_lineup")
 
 
 class SetLineup(Task):
-
     def __init__(self, username, password, configs, notifier, fangraphs):
         self.username = username
         self.password = password
@@ -23,7 +21,9 @@ class SetLineup(Task):
     def run(self):
         for team_config in self.configs:
             LOGGER.info(f"setting lineup for team {team_config.team_id} in league {team_config.league_id}")
-            espn = EspnApi(EspnSessionProvider(self.username, self.password), team_config.league_id, team_config.team_id)
+
+            espn = BaseballApi.Builder().username(self.username).password(self.password).league_id(
+                team_config.league_id).team_id(team_config).team_id().build()
             optimize_lineup(espn, self.fangraphs, self.notifier)
 
     @staticmethod
