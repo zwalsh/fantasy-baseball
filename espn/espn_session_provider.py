@@ -4,6 +4,8 @@ import time
 
 import requests
 
+from espn.espn_session_store import EspnSessionStore
+
 
 class LoginException(Exception):
     """
@@ -20,7 +22,7 @@ class EspnSessionProvider:
     def __init__(self, username, password):
         self.username = username
         self.password = password
-        self.session_store = EspnSessionProvider.SessionStore()
+        self.session_store = EspnSessionStore()
 
     @staticmethod
     def api_key():
@@ -63,21 +65,3 @@ class EspnSessionProvider:
         session = self.__login()
         self.session_store.store_session(self.__session_key(), session)
         return session
-
-    class SessionStore:
-
-        def __init__(self):
-            self.store = {}
-
-        # @staticmethod
-        # def session_dir():
-        #     sessions = Path("espn/sessions")
-        #     if not sessions.exists() or not sessions.is_dir():
-        #         sessions.mkdir()
-        #     return sessions
-
-        def store_session(self, key, session):
-            self.store[key] = session
-
-        def retrieve_session(self, key):
-            return self.store.get(key)
