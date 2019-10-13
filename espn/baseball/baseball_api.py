@@ -27,8 +27,8 @@ url that is hit on page load:
 LOGGER = logging.getLogger("espn.baseball.api")
 
 
-class BaseballApi:
-    def __init__(self, espn, league_id, team_id):
+class BaseballApi(EspnApi):
+    def __init__(self, session_provider, league_id, team_id):
         """
         Provides programmatic access to ESPN's fantasy baseball API for the given league and team,
         making calls to the underlying ESPN object
@@ -36,13 +36,13 @@ class BaseballApi:
         :param int league_id: the league to access
         :param int team_id: the team to access
         """
-        self.espn = espn
+        super().__init__(session_provider)
         self.league_id = league_id
         self.team_id = team_id
 
     def scoring_period(self):
         url = "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/{}".format(self.league_id)
-        return self.espn.espn_get(url).json()['scoringPeriodId']
+        return self.espn_get(url).json()['scoringPeriodId']
 
     def member_id(self):
         return "{84C1CD19-5E2C-4D5D-81CD-195E2C4D5D75}"  # todo fetch when logging in, persist?
@@ -75,7 +75,7 @@ class BaseballApi:
 
     # { team_id: Lineup, ...}
     def all_lineups(self):
-        resp = self.espn.espn_get(self.all_lineups_url()).json()
+        resp = self.espn_get(self.all_lineups_url()).json()
         teams = resp['teams']
         lineup_dict = dict()
         for team in teams:
@@ -93,10 +93,10 @@ class BaseballApi:
                "&view=mPositionalRatings&view=mSettings&view=mTeam".format(self.league_id)
 
     def all_info(self):
-        return self.espn.espn_get(self.all_info_url())
+        return self.espn_get(self.all_info_url())
 
     def scoring_period_info(self, scoring_period):
-        return self.espn.espn_get(self.scoring_period_info_url(scoring_period))
+        return self.espn_get(self.scoring_period_info_url(scoring_period))
 
     def scoring_settings(self):
         info = self.all_info().json()
@@ -130,7 +130,7 @@ class BaseballApi:
 
     def lineup_settings(self):
         url = self.lineup_settings_url()
-        settings = self.espn.espn_get(url).json()['settings']['rosterSettings']['lineupSlotCounts']
+        settings = self.espn_get(url).json()['settings']['rosterSettings']['lineupSlotCounts']
         return lineup_slot_counts_to_lineup_settings(settings)
 
     def set_lineup_url(self):
@@ -174,7 +174,7 @@ class BaseballApi:
         :return dict: the parsed response from ESPN
         """
         filter_header = {"players": {"filterIds": {"value": [player_id]}}}
-        resp = self.espn.espn_get(self.player_url(), {"X-Fantasy-Filter": json.dumps(filter_header)}, check_cache=False)
+        resp = self.espn_get(self.player_url(), {"X-Fantasy-Filter": json.dumps(filter_header)}, check_cache=False)
         return resp.json()["players"][0]["player"]
 
     def player(self, player_id):
@@ -264,7 +264,7 @@ class BaseballApi:
         for t in transitions:
             LOGGER.info(f"executing transition {t}")
         payload = self.set_lineup_payload(transitions)
-        return self.espn.espn_post(url, payload)
+        return self.espn_post(url, payload)
 
     @staticmethod
     def player_list_to_lineup(players):
@@ -297,7 +297,7 @@ class BaseballApi:
     class Builder:
         def __init__(self):
             """
-            Builds a BaseballApi instance, creating the EspnApi and EspnSessionProvider objects under the hood
+            Builds a BaseballApi instance, creating the EspnSessionProvider objects under the hood
             """
             self.__username = ""
             self.__password = ""
@@ -321,5 +321,5 @@ class BaseballApi:
             return self
 
         def build(self):
-            return BaseballApi(EspnApi(EspnSessionProvider(self.__username, self.__password)), self.__league_id,
+            return BaseballApi(EspnSessionProvider(self.__username, self.__password), self.__league_id,
                                self.__team_id)
