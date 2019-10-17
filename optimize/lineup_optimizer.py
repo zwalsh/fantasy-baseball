@@ -1,13 +1,12 @@
+import logging
 import operator
 
-import logging
-
-from lineup_slot import LineupSlot
+from espn.baseball.lineup_slot import LineupSlot
+from espn.baseball.position import Position
 from lineup_transition import LineupTransition
 from optimize.lineup_total import LineupTotal
-from position import Position
 from scoring_setting import ScoringSetting
-from stats import Stats, Stat
+from stats import Stat
 
 # first - log/notify number of lineups to choose from within 95% of max PA
 # then - choose best: first one to appear within some % of max of all categories

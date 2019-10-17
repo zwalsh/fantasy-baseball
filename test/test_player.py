@@ -1,7 +1,8 @@
 import unittest
+
+from espn.baseball.lineup_slot import LineupSlot
+from espn.baseball.position import Position
 from player import Player
-from lineup_slot import LineupSlot
-from position import Position
 
 
 class PlayerTest(unittest.TestCase):

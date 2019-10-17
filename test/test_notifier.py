@@ -1,13 +1,12 @@
 import unittest
 
-from lineup_slot import LineupSlot
+from espn.baseball.lineup_slot import LineupSlot
 from lineup_transition import LineupTransition
-from notifications.client.pushed import PushedClient
 from notifications.notifier import Notifier
 from scoring_setting import ScoringSetting
 from stats import Stat
-from test.test_player import PlayerTest
 from test.test_lineup_total import LineupTotalTest
+from test.test_player import PlayerTest
 
 
 class MockClient:

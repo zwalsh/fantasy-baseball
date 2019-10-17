@@ -1,7 +1,8 @@
 import unittest
+
+from espn.baseball.lineup_slot import LineupSlot
 from lineup import LineupSearchNode, Lineup
 from lineup_settings import LineupSettings
-from lineup_slot import LineupSlot
 from player import Player
 
 

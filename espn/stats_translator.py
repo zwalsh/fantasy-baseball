@@ -1,7 +1,7 @@
 import logging
 
+from espn.baseball.lineup_slot import LineupSlot
 from espn.player_translator import espn_slot_to_slot
-from lineup_slot import LineupSlot
 from stats import Stat, Stats
 
 espn_stat_to_stat = {

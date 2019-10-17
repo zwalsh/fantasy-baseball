@@ -1,7 +1,7 @@
 import unittest
 
+from espn.baseball.position import Position
 from optimize import lineup_optimizer
-from position import Position
 from test.test_lineup import LineupTest
 from test.test_player import PlayerTest
 

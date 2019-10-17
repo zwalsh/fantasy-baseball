@@ -1,8 +1,6 @@
-import traceback
-
 import sys
 
-from lineup_slot import LineupSlot
+from espn.baseball.lineup_slot import LineupSlot
 from stats import Stat
 
 

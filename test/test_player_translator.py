@@ -1,10 +1,10 @@
 import unittest
 
-from espn.player_translator import roster_entry_to_player, slot_to_slot_id
+from espn.baseball.lineup_slot import LineupSlot
+from espn.baseball.position import Position
 from espn.player_translator import lineup_slot_counts_to_lineup_settings
-from lineup_slot import LineupSlot
+from espn.player_translator import roster_entry_to_player, slot_to_slot_id
 from lineup_settings import LineupSettings
-from position import Position
 
 
 class Test(unittest.TestCase):

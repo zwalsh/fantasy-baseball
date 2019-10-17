@@ -1,9 +1,7 @@
-import logging
-
+from espn.baseball.lineup_slot import LineupSlot
+from espn.baseball.position import Position
 from lineup_settings import LineupSettings
-from lineup_slot import LineupSlot
 from player import Player
-from position import Position
 
 espn_slot_to_slot = {
     0: LineupSlot.CATCHER,

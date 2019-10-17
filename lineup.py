@@ -1,10 +1,9 @@
 import copy
 import logging
+import time
 from itertools import combinations
 
-import time
-
-from lineup_slot import LineupSlot
+from espn.baseball.lineup_slot import LineupSlot
 from lineup_transition import LineupTransition
 
 LOGGER = logging.getLogger("lineup")
