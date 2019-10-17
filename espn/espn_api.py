@@ -1,7 +1,10 @@
 import logging
 import time
+from abc import abstractmethod, ABCMeta
 
 import requests
+
+from espn.player_translator import roster_entry_to_player, espn_slot_to_slot
 
 from espn.sessions.espn_session_provider import EspnSessionProvider
 
@@ -15,8 +18,8 @@ class EspnApiException(Exception):
     pass
 
 
-class EspnApi:
-    def __init__(self, session_provider):
+class EspnApi(metaclass=ABCMeta):
+    def __init__(self, session_provider, league_id, team_id):
         """
         Programmatic access to ESPN's (undocumented) API, caching requests that do not need refreshing,
         and automatically fetching a token for the user/password combination.
@@ -24,6 +27,8 @@ class EspnApi:
         :param EspnSessionProvider session_provider: using a username and password, provides and stores session tokens
         """
         self.session_provider = session_provider
+        self.league_id = league_id
+        self.team_id = team_id
         self.cache = dict()
 
     def espn_request(self, method, url, payload, headers=None, check_cache=True, retries=1):
@@ -67,3 +72,83 @@ class EspnApi:
 
     def espn_post(self, url, payload, headers=None):
         return self.espn_request(method='POST', url=url, payload=payload, headers=headers)
+
+    @abstractmethod
+    def api_url_segment(self):
+        """
+        Returns the URL segment for this api, e.g. flb, ffb, etc.
+        :return:
+        """
+        pass
+
+    def base_url(self):
+        return f"http://fantasy.espn.com/apis/v3/games/{self.api_url_segment()}/seasons/2019/segments/0/leagues/" \
+               f"{self.league_id}"
+
+    def scoring_period_info_url(self, scoring_period):
+        return f"{self.base_url()}" \
+               f"?scoringPeriodId={scoring_period}&view=mRoster"
+
+    def lineup_url(self):
+        return f"{self.base_url()}" \
+               f"?forTeamId={self.team_id}" \
+               f"&scoringPeriodId={self.scoring_period()}" \
+               "&view=mRoster"
+
+    def all_lineups_url(self):
+        return self.scoring_period_info_url(self.scoring_period())
+
+    def all_info_url(self):
+        return f"{self.base_url()}" \
+               "?view=mLiveScoring&view=mMatchupScore&view=mPendingTransactions" \
+               "&view=mPositionalRatings&view=mSettings&view=mTeam"
+
+    def lineup_settings_url(self):
+        return f"{self.base_url()}?view=mSettings"
+
+    @staticmethod
+    @abstractmethod
+    def player_list_to_lineup(players):
+        pass
+
+    def scoring_period(self):
+        return self.espn_get(self.base_url()).json()['scoringPeriodId']
+
+    def lineup(self, team_id=None):
+        """
+        Returns the current lineup of the team with the given team id
+        :param int team_id: the id of the team in this league to get the lineup for
+        :return Lineup: Lineup the lineup of the given team
+        """
+        return self.all_lineups()[team_id or self.team_id]
+
+    def all_lineups(self):
+        resp = self.espn_get(self.all_lineups_url()).json()
+        teams = resp['teams']
+        lineup_dict = dict()
+        for team in teams:
+            roster = team['roster']['entries']
+            players = list(map(lambda e: (roster_entry_to_player(e["playerPoolEntry"]["player"]),
+                                          espn_slot_to_slot.get(e['lineupSlotId'])), roster))
+            lineup = self.player_list_to_lineup(players)
+            lineup_dict[team['id']] = lineup
+        return lineup_dict
+
+    def all_info(self):
+        return self.espn_get(self.all_info_url())
+
+    def scoring_period_info(self, scoring_period):
+        return self.espn_get(self.scoring_period_info_url(scoring_period))
+
+    def team_name(self, team_id=None):
+        """
+        Fetches the name of the team with the given id, or the id of the team tied to this object
+        if none is given. The name is the concatenation of the team's "location" and the team's
+        "nickname", per ESPN.
+        :param int team_id: the id of the team whose name is to be fetched
+        :return str: the name fetched from ESPN for the given team
+        """
+        team_id = team_id or self.team_id
+        teams = self.all_info().json()['teams']
+        team = next(filter(lambda t: t['id'] == team_id, teams))
+        return f"{team['location']} {team['nickname']}"

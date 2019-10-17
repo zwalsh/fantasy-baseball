@@ -2,7 +2,7 @@ import json
 import logging
 
 from espn.espn_api import EspnApi
-from espn.player_translator import roster_entry_to_player, espn_slot_to_slot, lineup_slot_counts_to_lineup_settings, \
+from espn.player_translator import roster_entry_to_player, lineup_slot_counts_to_lineup_settings, \
     slot_to_slot_id
 from espn.sessions.espn_session_provider import EspnSessionProvider
 from espn.stats_translator import stat_id_to_stat, create_stats, cumulative_stats_from_roster_entries
@@ -36,67 +36,15 @@ class BaseballApi(EspnApi):
         :param int league_id: the league to access
         :param int team_id: the team to access
         """
-        super().__init__(session_provider)
-        self.league_id = league_id
-        self.team_id = team_id
+        super().__init__(session_provider, league_id, team_id)
 
-    def scoring_period(self):
-        url = "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/{}".format(self.league_id)
-        return self.espn_get(url).json()['scoringPeriodId']
+    def api_url_segment(self):
+        return "flb"
 
     def member_id(self):
         return "{84C1CD19-5E2C-4D5D-81CD-195E2C4D5D75}"  # todo fetch when logging in, persist?
 
-    def lineup_url(self):
-        scoring_period_id = self.scoring_period()
-        return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
-               "{}" \
-               "?forTeamId={}" \
-               "&scoringPeriodId={}" \
-               "&view=mRoster".format(self.league_id, self.team_id, scoring_period_id)
-
-    def lineup(self, team_id=None):
-        """
-        Returns the current lineup of the team with the given team id
-        :param int team_id: the id of the team in this league to get the lineup for
-        :return Lineup: Lineup the lineup of the given team
-        """
-        return self.all_lineups()[team_id or self.team_id]
-
-    def scoring_period_info_url(self, scoring_period):
-        return f"http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
-               f"{self.league_id}?scoringPeriodId={scoring_period}&view=mRoster"
-
-    def all_lineups_url(self):
-        return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
-               "{}" \
-               "?view=mRoster" \
-               "&scoringPeriodId={}".format(self.league_id, self.scoring_period())
-
     # { team_id: Lineup, ...}
-    def all_lineups(self):
-        resp = self.espn_get(self.all_lineups_url()).json()
-        teams = resp['teams']
-        lineup_dict = dict()
-        for team in teams:
-            roster = team['roster']['entries']
-            players = list(map(lambda e: (roster_entry_to_player(e["playerPoolEntry"]["player"]),
-                                          espn_slot_to_slot.get(e['lineupSlotId'])), roster))
-            lineup = BaseballApi.player_list_to_lineup(players)
-            lineup_dict[team['id']] = lineup
-        return lineup_dict
-
-    def all_info_url(self):
-        return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
-               "{}" \
-               "?view=mLiveScoring&view=mMatchupScore&view=mPendingTransactions" \
-               "&view=mPositionalRatings&view=mSettings&view=mTeam".format(self.league_id)
-
-    def all_info(self):
-        return self.espn_get(self.all_info_url())
-
-    def scoring_period_info(self, scoring_period):
-        return self.espn_get(self.scoring_period_info_url(scoring_period))
 
     def scoring_settings(self):
         info = self.all_info().json()
@@ -124,10 +72,6 @@ class BaseballApi(EspnApi):
             team_to_stats[t['id']] = stats
         return team_to_stats
 
-    def lineup_settings_url(self):
-        return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
-               "{}?view=mSettings".format(self.league_id)
-
     def lineup_settings(self):
         url = self.lineup_settings_url()
         settings = self.espn_get(url).json()['settings']['rosterSettings']['lineupSlotCounts']
@@ -149,19 +93,6 @@ class BaseballApi(EspnApi):
             t = Team(team_id, lineups.get(team_id), stats.get(team_id))
             teams.append(t)
         return League(teams)
-
-    def team_name(self, team_id=None):
-        """
-        Fetches the name of the team with the given id, or the id of the team tied to this object
-        if none is given. The name is the concatenation of the team's "location" and the team's
-        "nickname", per ESPN.
-        :param int team_id: the id of the team whose name is to be fetched
-        :return str: the name fetched from ESPN for the given team
-        """
-        team_id = team_id or self.team_id
-        teams = self.all_info().json()['teams']
-        team = next(filter(lambda t: t['id'] == team_id, teams))
-        return f"{team['location']} {team['nickname']}"
 
     def player_url(self):
         return f"http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
