@@ -2,7 +2,7 @@ import logging
 import operator
 
 from espn.baseball.baseball_slot import BaseballSlot
-from espn.baseball.position import Position
+from espn.baseball.baseball_position import BaseballPosition
 from lineup_transition import LineupTransition
 from optimize.lineup_total import LineupTotal
 from scoring_setting import ScoringSetting
@@ -184,7 +184,7 @@ def must_start_pitchers(lineup, espn):
     players = lineup.players()
     pitchers = list(filter(lambda player: player.can_play(BaseballSlot.PITCHER), players))
     probable_pitchers = {p for p in pitchers if espn.is_probable_pitcher(p.espn_id)}
-    relievers = {p for p in pitchers if p.default_position == Position.RELIEVER}
+    relievers = {p for p in pitchers if p.default_position == BaseballPosition.RELIEVER}
     return probable_pitchers.union(relievers).difference(lineup.injured())
 
 
@@ -196,5 +196,5 @@ def benchable_pitchers(lineup, must_start):
     :param set must_start: set of pitchers that must be started
     :return set: the group of pitchers that can be safely moved to the bench
     """
-    started_pitchers = {player for player in lineup.starters() if player.default_position == Position.STARTER}
+    started_pitchers = {player for player in lineup.starters() if player.default_position == BaseballPosition.STARTER}
     return started_pitchers - set(must_start)

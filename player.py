@@ -11,7 +11,7 @@ class Player:
         :param str last: the player's last name
         :param int espn_id: their id as specified by ESPN
         :param set possible_positions: set of LineupSlots they can play
-        :param Position default_position: their typical position
+        :param BaseballPosition default_position: their typical position
         """
         self.name = name
         self.first = first

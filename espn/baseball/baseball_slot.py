@@ -16,6 +16,30 @@ class BaseballSlot(Enum):
     BENCH = "BE"
     INJURED = "IL"
 
+    @staticmethod
+    def slot_id_to_slot():
+        return {
+            0: BaseballSlot.CATCHER,
+            1: BaseballSlot.FIRST,
+            2: BaseballSlot.SECOND,
+            3: BaseballSlot.THIRD,
+            4: BaseballSlot.SHORT,
+            5: BaseballSlot.OUTFIELD,
+            6: BaseballSlot.MIDDLE_INFIELD,
+            7: BaseballSlot.CORNER_INFIELD,
+            12: BaseballSlot.UTIL,
+            13: BaseballSlot.PITCHER,
+            16: BaseballSlot.BENCH,
+            17: BaseballSlot.INJURED
+        }
+
+    @staticmethod
+    def espn_slot_to_slot(slot):
+        return BaseballSlot.slot_id_to_slot().get(slot)
+
+    def slot_id(self):
+        return {v: k for k, v in BaseballSlot.slot_id_to_slot().items()}[self]
+
     def __str__(self):
         return self.value
 

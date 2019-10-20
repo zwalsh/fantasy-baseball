@@ -1,7 +1,7 @@
 import unittest
 
 from espn.baseball.baseball_slot import BaseballSlot
-from espn.baseball.position import Position
+from espn.baseball.baseball_position import BaseballPosition
 from player import Player
 
 
@@ -25,16 +25,16 @@ class PlayerTest(unittest.TestCase):
                                                              BaseballSlot.BENCH}, None)
     jimenez = Player("Eloy Jimenez", None, None, 98653429, {BaseballSlot.INJURED,
                                                             BaseballSlot.BENCH}, None)
-    degrom = Player("Jacob deGrom", None, None, 189346, BaseballSlot.pitcher(), Position.STARTER)
-    kimbrel = Player("Craig Kimbrel", None, None, 3489346, BaseballSlot.pitcher(), Position.RELIEVER)
-    morton = Player("Charlie Morton", None, None, 469346, BaseballSlot.pitcher(), Position.STARTER)
-    hill = Player("Rich Hill", None, None, 57346, BaseballSlot.pitcher(), Position.STARTER)
-    arrieta = Player("Jake Arrieta", None, None, 189343654, BaseballSlot.pitcher(), Position.STARTER)
-    glasnow = Player("Tyler Glasnow", None, None, 469346, BaseballSlot.pitcher(), Position.STARTER)
-    barnes = Player("Matt Barnes", None, None, 457346, BaseballSlot.pitcher(), Position.RELIEVER)
-    stripling = Player("Ross Stripling", None, None, 189343423, BaseballSlot.pitcher(), Position.RELIEVER)
-    smith = Player("Caleb Smith", None, None, 24946, BaseballSlot.pitcher(), Position.STARTER)
-    paddack = Player("Chris Paddack", None, None, 189345, BaseballSlot.pitcher(), Position.STARTER)
+    degrom = Player("Jacob deGrom", None, None, 189346, BaseballSlot.pitcher(), BaseballPosition.STARTER)
+    kimbrel = Player("Craig Kimbrel", None, None, 3489346, BaseballSlot.pitcher(), BaseballPosition.RELIEVER)
+    morton = Player("Charlie Morton", None, None, 469346, BaseballSlot.pitcher(), BaseballPosition.STARTER)
+    hill = Player("Rich Hill", None, None, 57346, BaseballSlot.pitcher(), BaseballPosition.STARTER)
+    arrieta = Player("Jake Arrieta", None, None, 189343654, BaseballSlot.pitcher(), BaseballPosition.STARTER)
+    glasnow = Player("Tyler Glasnow", None, None, 469346, BaseballSlot.pitcher(), BaseballPosition.STARTER)
+    barnes = Player("Matt Barnes", None, None, 457346, BaseballSlot.pitcher(), BaseballPosition.RELIEVER)
+    stripling = Player("Ross Stripling", None, None, 189343423, BaseballSlot.pitcher(), BaseballPosition.RELIEVER)
+    smith = Player("Caleb Smith", None, None, 24946, BaseballSlot.pitcher(), BaseballPosition.STARTER)
+    paddack = Player("Chris Paddack", None, None, 189345, BaseballSlot.pitcher(), BaseballPosition.STARTER)
 
     yelich = Player("Christian Yelich", None, None, 123, {BaseballSlot.OUTFIELD}, None)
     shaw = Player("Travis Shaw", None, None, 456, {BaseballSlot.SECOND,

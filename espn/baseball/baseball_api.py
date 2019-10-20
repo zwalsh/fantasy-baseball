@@ -1,10 +1,9 @@
 import json
 import logging
 
-from espn.baseball.baseball_slot import BaseballSlot
 from espn.espn_api import EspnApi
-from espn.player_translator import roster_entry_to_player, lineup_slot_counts_to_lineup_settings, \
-    slot_to_slot_id
+from espn.baseball.baseball_slot import BaseballSlot
+from espn.baseball.baseball_position import BaseballPosition
 from espn.sessions.espn_session_provider import EspnSessionProvider
 from espn.stats_translator import stat_id_to_stat, create_stats, cumulative_stats_from_roster_entries
 from league import League
@@ -76,7 +75,7 @@ class BaseballApi(EspnApi):
     def lineup_settings(self):
         url = self.lineup_settings_url()
         settings = self.espn_get(url).json()['settings']['rosterSettings']['lineupSlotCounts']
-        return lineup_slot_counts_to_lineup_settings(settings)
+        return self.lineup_slot_counts_to_lineup_settings(settings)
 
     def set_lineup_url(self):
         return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
@@ -116,7 +115,7 @@ class BaseballApi(EspnApi):
         :param int player_id: the id in the ESPN system of the player to be requested
         :return Player: the associated Player object (or None)
         """
-        return roster_entry_to_player(self.player_request(player_id))
+        return self.roster_entry_to_player(self.player_request(player_id))
 
     def is_probable_pitcher(self, player_id):
         """
@@ -166,6 +165,12 @@ class BaseballApi(EspnApi):
     "teamId":7,
     "type":"FREEAGENT"}
     """
+
+    def slot_for_id(self, slot_id):
+        return BaseballSlot.espn_slot_to_slot(slot_id)
+
+    def position(self, position_id):
+        return BaseballPosition(position_id)
 
     @staticmethod
     def possible_slots():
@@ -226,8 +231,8 @@ class BaseballApi(EspnApi):
         return {
             "playerId": transition.player.espn_id,
             "type": "LINEUP",
-            "fromLineupSlotId": slot_to_slot_id(transition.from_slot),
-            "toLineupSlotId": slot_to_slot_id(transition.to_slot)
+            "fromLineupSlotId": BaseballSlot.slot_to_slot_id(transition.from_slot),
+            "toLineupSlotId": BaseballSlot.slot_to_slot_id(transition.to_slot)
         }
 
     class Builder:

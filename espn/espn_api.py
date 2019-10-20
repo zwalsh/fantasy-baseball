@@ -4,9 +4,10 @@ from abc import abstractmethod, ABCMeta
 
 import requests
 
-from espn.player_translator import roster_entry_to_player, espn_slot_to_slot
 
 from espn.sessions.espn_session_provider import EspnSessionProvider
+from lineup_settings import LineupSettings
+from player import Player
 
 LOGGER = logging.getLogger("espn.api")
 
@@ -81,6 +82,10 @@ class EspnApi(metaclass=ABCMeta):
         """
         pass
 
+    @abstractmethod
+    def position(self, position_id):
+        pass
+
     def base_url(self):
         return f"http://fantasy.espn.com/apis/v3/games/{self.api_url_segment()}/seasons/2019/segments/0/leagues/" \
                f"{self.league_id}"
@@ -133,8 +138,8 @@ class EspnApi(metaclass=ABCMeta):
         lineup_dict = dict()
         for team in teams:
             roster = team['roster']['entries']
-            players = list(map(lambda e: (roster_entry_to_player(e["playerPoolEntry"]["player"]),
-                                          espn_slot_to_slot.get(e['lineupSlotId'])), roster))
+            players = list(map(lambda e: (self.roster_entry_to_player(e["playerPoolEntry"]["player"]),
+                                          self.slot_for_id(e['lineupSlotId'])), roster))
             lineup = self.player_list_to_lineup(players)
             lineup_dict[team['id']] = lineup
         return lineup_dict
@@ -157,3 +162,50 @@ class EspnApi(metaclass=ABCMeta):
         teams = self.all_info().json()['teams']
         team = next(filter(lambda t: t['id'] == team_id, teams))
         return f"{team['location']} {team['nickname']}"
+
+    # DATA PARSING
+    def roster_entry_to_player(self, player_map):
+        """
+        Takes an object from the ESPN API that represents a Player
+        and converts it into a Player, including all positions
+        :param player_map: ESPN api player object
+        :return: Player object
+        """
+        player_id = player_map['id']
+        name = player_map['fullName']
+        position = self.position(player_map['defaultPositionId'])
+        first = player_map['firstName']
+        last = player_map['lastName']
+        eligible_slots = player_map['eligibleSlots']
+        possible_positions = set()
+        for slot in eligible_slots:
+            converted = self.slot_for_id(slot)
+            if converted is not None:
+                possible_positions.add(converted)
+        return Player(name, first, last, player_id, possible_positions, position)
+
+    def lineup_slot_counts_to_lineup_settings(self, settings):
+        """
+        Takes an ESPN API dictionary mapping slots (which arrive as strings)
+        to counts (which arrive as ints), and converts it into a LineupSettings object
+        :param dict settings: mapping of slot to count
+        :return LineupSettings: the settings object for the given dictionary
+        """
+        converted_settings = dict()
+
+        for slot_id, count in settings.items():
+            slot = self.slot_for_id(int(slot_id))
+            if slot is not None:
+                converted_settings[slot] = count
+        return LineupSettings(converted_settings)
+
+    @abstractmethod
+    def slot_for_id(self, slot_id):
+        """
+        Returns the lineup slot for the given espn slot id
+        :param int slot_id: the id of the slot
+        :return Enum: a member of an Enum representing a Slot
+        """
+        pass
+
+

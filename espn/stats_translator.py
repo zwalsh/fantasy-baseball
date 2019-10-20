@@ -1,7 +1,6 @@
 import logging
 
 from espn.baseball.baseball_slot import BaseballSlot
-from espn.player_translator import espn_slot_to_slot
 from stats import Stat, Stats
 
 espn_stat_to_stat = {
@@ -58,7 +57,7 @@ def is_starting(roster_entry):
     :return:
     """
     slot_id = roster_entry["lineupSlotId"]
-    slot = espn_slot_to_slot[slot_id]
+    slot = BaseballSlot.espn_slot_to_slot(slot_id)
     return slot not in {BaseballSlot.BENCH, BaseballSlot.INJURED}
 
 
