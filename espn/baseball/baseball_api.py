@@ -1,9 +1,9 @@
 import json
 import logging
 
-from espn.espn_api import EspnApi
-from espn.baseball.baseball_slot import BaseballSlot
 from espn.baseball.baseball_position import BaseballPosition
+from espn.baseball.baseball_slot import BaseballSlot
+from espn.espn_api import EspnApi
 from espn.sessions.espn_session_provider import EspnSessionProvider
 from espn.stats_translator import stat_id_to_stat, create_stats, cumulative_stats_from_roster_entries
 from league import League
@@ -71,11 +71,6 @@ class BaseballApi(EspnApi):
             stats = create_stats(t['valuesByStat'])
             team_to_stats[t['id']] = stats
         return team_to_stats
-
-    def lineup_settings(self):
-        url = self.lineup_settings_url()
-        settings = self.espn_get(url).json()['settings']['rosterSettings']['lineupSlotCounts']
-        return self.lineup_slot_counts_to_lineup_settings(settings)
 
     def set_lineup_url(self):
         return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \

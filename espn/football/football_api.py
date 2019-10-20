@@ -1,8 +1,21 @@
+import logging
+
 from espn.espn_api import EspnApi
+from espn.football.football_position import FootballPosition
+from espn.football.football_slot import FootballSlot
 from espn.sessions.espn_session_provider import EspnSessionProvider
+from lineup import Lineup
+
+LOGGER = logging.getLogger("espn.football.api")
 
 
 class FootballApi(EspnApi):
+
+    def slot_for_id(self, slot_id):
+        return FootballSlot.espn_slot_to_slot(slot_id)
+
+    def position(self, position_id):
+        return FootballPosition(position_id)
 
     @staticmethod
     def possible_slots():
@@ -10,7 +23,12 @@ class FootballApi(EspnApi):
 
     @staticmethod
     def player_list_to_lineup(players):
-        return None
+        player_dict = dict()
+        for (player, slot) in players:
+            cur_list = player_dict.get(slot, list())
+            cur_list.append(player)
+            player_dict[slot] = cur_list
+        return Lineup(player_dict, FootballSlot)
 
     def api_url_segment(self):
         return "ffl"

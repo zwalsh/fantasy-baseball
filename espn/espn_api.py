@@ -138,7 +138,8 @@ class EspnApi(metaclass=ABCMeta):
         lineup_dict = dict()
         for team in teams:
             roster = team['roster']['entries']
-            players = list(map(lambda e: (self.roster_entry_to_player(e["playerPoolEntry"]["player"]),
+            players = list(map(lambda e:
+                               (self.roster_entry_to_player(e["playerPoolEntry"]["player"]),
                                           self.slot_for_id(e['lineupSlotId'])), roster))
             lineup = self.player_list_to_lineup(players)
             lineup_dict[team['id']] = lineup
@@ -173,10 +174,11 @@ class EspnApi(metaclass=ABCMeta):
         """
         player_id = player_map['id']
         name = player_map['fullName']
-        position = self.position(player_map['defaultPositionId'])
+        default_position_id = player_map['defaultPositionId']
+        eligible_slots = player_map['eligibleSlots']
+        position = self.position(default_position_id)
         first = player_map['firstName']
         last = player_map['lastName']
-        eligible_slots = player_map['eligibleSlots']
         possible_positions = set()
         for slot in eligible_slots:
             converted = self.slot_for_id(slot)
@@ -207,5 +209,10 @@ class EspnApi(metaclass=ABCMeta):
         :return Enum: a member of an Enum representing a Slot
         """
         pass
+
+    def lineup_settings(self):
+        url = self.lineup_settings_url()
+        settings = self.espn_get(url).json()['settings']['rosterSettings']['lineupSlotCounts']
+        return self.lineup_slot_counts_to_lineup_settings(settings)
 
 

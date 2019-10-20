@@ -169,9 +169,9 @@ class Lineup:
         result = ""
 
         for slot in self.slot_enum:
-            result += slot.name + "\n"
+            result += f"{slot}\n"
             for player in self.player_dict.get(slot, []):
-                result += player.__str__() + "\n"
+                result += f"{player}\n"
         return result
 
 
