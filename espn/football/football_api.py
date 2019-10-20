@@ -18,10 +18,6 @@ class FootballApi(EspnApi):
         return FootballPosition(position_id)
 
     @staticmethod
-    def possible_slots():
-        return []  # todo fill in with all slots
-
-    @staticmethod
     def player_list_to_lineup(players):
         player_dict = dict()
         for (player, slot) in players:

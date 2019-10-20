@@ -167,10 +167,6 @@ class BaseballApi(EspnApi):
     def position(self, position_id):
         return BaseballPosition(position_id)
 
-    @staticmethod
-    def possible_slots():
-        return [ls for ls in BaseballSlot]
-
     def set_lineup_payload(self, transitions):
         payload = {
             "isLeagueManager": False,
