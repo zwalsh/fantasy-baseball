@@ -1,6 +1,6 @@
 import logging
 
-from espn.baseball.lineup_slot import LineupSlot
+from espn.baseball.baseball_slot import BaseballSlot
 from espn.player_translator import espn_slot_to_slot
 from stats import Stat, Stats
 
@@ -59,7 +59,7 @@ def is_starting(roster_entry):
     """
     slot_id = roster_entry["lineupSlotId"]
     slot = espn_slot_to_slot[slot_id]
-    return slot not in {LineupSlot.BENCH, LineupSlot.INJURED}
+    return slot not in {BaseballSlot.BENCH, BaseballSlot.INJURED}
 
 
 def cumulative_stats_from_roster_entries(entries, scoring_period_id):

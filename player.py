@@ -1,4 +1,4 @@
-from espn.baseball.lineup_slot import LineupSlot
+from espn.baseball.baseball_slot import BaseballSlot
 
 
 class Player:
@@ -27,7 +27,7 @@ class Player:
         """
         Checks if this player can play in the given slot,
         where a slot is an array of Positions.
-        :param LineupSlot slot: slot to see if the player can play in
+        :param BaseballSlot slot: slot to see if the player can play in
         :return: true if one of the player's possible positions matches
         """
         return slot in self.possible_positions

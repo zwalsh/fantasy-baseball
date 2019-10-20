@@ -1,6 +1,6 @@
 import sys
 
-from espn.baseball.lineup_slot import LineupSlot
+from espn.baseball.baseball_slot import BaseballSlot
 from stats import Stat
 
 
@@ -60,9 +60,9 @@ class Notifier:
         :param LineupTransition transition: the transition to be given a sort value
         :return int: a value representing whether the transition should come sooner or later
         """
-        if transition.to_slot == LineupSlot.BENCH:
+        if transition.to_slot == BaseballSlot.BENCH:
             return 0
-        elif transition.from_slot == LineupSlot.BENCH:
+        elif transition.from_slot == BaseballSlot.BENCH:
             return 1
         else:
             return 2

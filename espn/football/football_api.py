@@ -5,6 +5,10 @@ from espn.sessions.espn_session_provider import EspnSessionProvider
 class FootballApi(EspnApi):
 
     @staticmethod
+    def possible_slots():
+        return []  # todo fill in with all slots
+
+    @staticmethod
     def player_list_to_lineup(players):
         return None
 

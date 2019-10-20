@@ -1,6 +1,6 @@
 import unittest
 
-from espn.baseball.lineup_slot import LineupSlot
+from espn.baseball.baseball_slot import BaseballSlot
 from lineup_transition import LineupTransition
 from notifications.notifier import Notifier
 from scoring_setting import ScoringSetting
@@ -22,8 +22,8 @@ class MockClient:
 
 
 class Test(unittest.TestCase):
-    t1 = LineupTransition(PlayerTest.muncy, LineupSlot.CORNER_INFIELD, LineupSlot.BENCH)
-    t2 = LineupTransition(PlayerTest.merrifield, LineupSlot.OUTFIELD, LineupSlot.SECOND)
+    t1 = LineupTransition(PlayerTest.muncy, BaseballSlot.CORNER_INFIELD, BaseballSlot.BENCH)
+    t2 = LineupTransition(PlayerTest.merrifield, BaseballSlot.OUTFIELD, BaseballSlot.SECOND)
 
     lt1 = LineupTotalTest.lt1
 

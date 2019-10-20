@@ -108,6 +108,11 @@ class EspnApi(metaclass=ABCMeta):
 
     @staticmethod
     @abstractmethod
+    def possible_slots():
+        pass
+
+    @staticmethod
+    @abstractmethod
     def player_list_to_lineup(players):
         pass
 

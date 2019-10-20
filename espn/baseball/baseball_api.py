@@ -1,6 +1,7 @@
 import json
 import logging
 
+from espn.baseball.baseball_slot import BaseballSlot
 from espn.espn_api import EspnApi
 from espn.player_translator import roster_entry_to_player, lineup_slot_counts_to_lineup_settings, \
     slot_to_slot_id
@@ -166,6 +167,10 @@ class BaseballApi(EspnApi):
     "type":"FREEAGENT"}
     """
 
+    @staticmethod
+    def possible_slots():
+        return [ls for ls in BaseballSlot]
+
     def set_lineup_payload(self, transitions):
         payload = {
             "isLeagueManager": False,
@@ -204,7 +209,7 @@ class BaseballApi(EspnApi):
             cur_list = player_dict.get(slot, list())
             cur_list.append(player)
             player_dict[slot] = cur_list
-        return Lineup(player_dict)
+        return Lineup(player_dict, BaseballSlot)
 
     @staticmethod
     def json_to_scoring_setting(item):

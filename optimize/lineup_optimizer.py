@@ -1,7 +1,7 @@
 import logging
 import operator
 
-from espn.baseball.lineup_slot import LineupSlot
+from espn.baseball.baseball_slot import BaseballSlot
 from espn.baseball.position import Position
 from lineup_transition import LineupTransition
 from optimize.lineup_total import LineupTotal
@@ -134,7 +134,7 @@ def possible_lineup_totals(lineup, lineup_settings, projections):
     :param dict projections: a mapping of Player to projected Stats
     :return: list
     """
-    possibles = lineup.possible_starting_hitters(lineup_settings)
+    possibles = lineup.possible_lineups(lineup_settings, BaseballSlot.hitting_slots())
     return list(map(lambda l: LineupTotal.total_from_projections(l, projections), possibles))
 
 
@@ -165,8 +165,8 @@ def optimal_pitching_transitions(lineup, espn):
     for ns in not_started:
         player_to_bench = next(benchables)
         LOGGER.info(f"starting {ns}, benching {player_to_bench}")
-        transitions.append(LineupTransition(ns, LineupSlot.BENCH, LineupSlot.PITCHER))
-        transitions.append(LineupTransition(player_to_bench, LineupSlot.PITCHER, LineupSlot.BENCH))
+        transitions.append(LineupTransition(ns, BaseballSlot.BENCH, BaseballSlot.PITCHER))
+        transitions.append(LineupTransition(player_to_bench, BaseballSlot.PITCHER, BaseballSlot.BENCH))
 
     return transitions
 
@@ -182,7 +182,7 @@ def must_start_pitchers(lineup, espn):
     :return set: the set of Players that are must-start pitchers today
     """
     players = lineup.players()
-    pitchers = list(filter(lambda player: player.can_play(LineupSlot.PITCHER), players))
+    pitchers = list(filter(lambda player: player.can_play(BaseballSlot.PITCHER), players))
     probable_pitchers = {p for p in pitchers if espn.is_probable_pitcher(p.espn_id)}
     relievers = {p for p in pitchers if p.default_position == Position.RELIEVER}
     return probable_pitchers.union(relievers).difference(lineup.injured())

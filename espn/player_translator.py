@@ -1,28 +1,28 @@
-from espn.baseball.lineup_slot import LineupSlot
+from espn.baseball.baseball_slot import BaseballSlot
 from espn.baseball.position import Position
 from lineup_settings import LineupSettings
 from player import Player
 
 espn_slot_to_slot = {
-    0: LineupSlot.CATCHER,
-    1: LineupSlot.FIRST,
-    2: LineupSlot.SECOND,
-    3: LineupSlot.THIRD,
-    4: LineupSlot.SHORT,
-    5: LineupSlot.OUTFIELD,
-    6: LineupSlot.MIDDLE_INFIELD,
-    7: LineupSlot.CORNER_INFIELD,
-    12: LineupSlot.UTIL,
-    13: LineupSlot.PITCHER,
-    16: LineupSlot.BENCH,
-    17: LineupSlot.INJURED
+    0: BaseballSlot.CATCHER,
+    1: BaseballSlot.FIRST,
+    2: BaseballSlot.SECOND,
+    3: BaseballSlot.THIRD,
+    4: BaseballSlot.SHORT,
+    5: BaseballSlot.OUTFIELD,
+    6: BaseballSlot.MIDDLE_INFIELD,
+    7: BaseballSlot.CORNER_INFIELD,
+    12: BaseballSlot.UTIL,
+    13: BaseballSlot.PITCHER,
+    16: BaseballSlot.BENCH,
+    17: BaseballSlot.INJURED
 }
 
 
 def slot_to_slot_id(slot):
     """
     Converts a LineupSlot back to an ESPN slot id
-    :param LineupSlot slot: the slot to convert
+    :param BaseballSlot slot: the slot to convert
     :return int: the corresponding slot id
     """
     slot_to_espn_slot = {v: k for k, v in espn_slot_to_slot.items()}
