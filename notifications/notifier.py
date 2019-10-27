@@ -1,7 +1,7 @@
 import sys
 
 from espn.baseball.baseball_slot import BaseballSlot
-from stats import Stat
+from espn.baseball.baseball_stat import BaseballStat
 
 
 class Notifier:
@@ -20,7 +20,7 @@ class Notifier:
         :return:
         """
         stats = lineup_total.stats
-        plate_appearances = stats.value_for_stat(Stat.PA)
+        plate_appearances = stats.value_for_stat(BaseballStat.PA)
         msg = f"{team_name}: {plate_appearances:.02f}PA\n"
 
         for setting in scoring_settings:

@@ -4,7 +4,7 @@ from espn.baseball.baseball_slot import BaseballSlot
 from lineup_transition import LineupTransition
 from notifications.notifier import Notifier
 from scoring_setting import ScoringSetting
-from stats import Stat
+from espn.baseball.baseball_stat import BaseballStat
 from test.test_lineup_total import LineupTotalTest
 from test.test_player import PlayerTest
 
@@ -38,7 +38,7 @@ class Test(unittest.TestCase):
         team = "Team1"
         ts = [self.t1, self.t2]
 
-        n.notify_set_lineup(team, self.lt1, ts, [ScoringSetting(Stat.H, False)])
+        n.notify_set_lineup(team, self.lt1, ts, [ScoringSetting(BaseballStat.H, False)])
 
         msg = team + ": 50.00PA\n10.00H "
         for t in ts:
@@ -56,7 +56,7 @@ class Test(unittest.TestCase):
         team = "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong team name"
         ts = [self.t1, self.t1]
 
-        n.notify_set_lineup(team, self.lt1, ts, [ScoringSetting(Stat.H, False)])
+        n.notify_set_lineup(team, self.lt1, ts, [ScoringSetting(BaseballStat.H, False)])
 
         expected = team + ": 50.00PA\n10.00H "
         expected += "\n" + Notifier.transition_message(self.t1)
@@ -71,7 +71,7 @@ class Test(unittest.TestCase):
         team = "Name"
         ts = [self.t1, self.t2]
 
-        n.notify_set_lineup(team, self.lt1, ts, [ScoringSetting(Stat.WHIP, True)])
+        n.notify_set_lineup(team, self.lt1, ts, [ScoringSetting(BaseballStat.WHIP, True)])
 
         expected = team + ": 50.00PA\n"
         for t in ts:

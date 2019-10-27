@@ -6,7 +6,7 @@ from espn.baseball.baseball_position import BaseballPosition
 from lineup_transition import LineupTransition
 from optimize.lineup_total import LineupTotal
 from scoring_setting import ScoringSetting
-from stats import Stat
+from espn.baseball.baseball_stat import BaseballStat
 
 # first - log/notify number of lineups to choose from within 95% of max PA
 # then - choose best: first one to appear within some % of max of all categories
@@ -26,17 +26,17 @@ def optimize_lineup(espn, fangraphs, notifier):
     lineup = espn.lineup()
     l_settings = espn.lineup_settings()
     s_settings = espn.scoring_settings()
-    hitting_settings = filter(lambda s: s.stat not in {Stat.K, Stat.W, Stat.ERA, Stat.WHIP, Stat.SV}, s_settings)
+    hitting_settings = filter(lambda s: s.stat not in {BaseballStat.K, BaseballStat.W, BaseballStat.ERA, BaseballStat.WHIP, BaseballStat.SV}, s_settings)
 
     possibles = possible_lineup_totals(lineup, l_settings, fangraphs.hitter_projections())
-    best_pa = best_for_stat(lineup, possibles, ScoringSetting(Stat.PA, False))
-    threshold = best_pa.stats.value_for_stat(Stat.PA) * 0.95
-    candidates = above_threshold_for_stat(possibles, ScoringSetting(Stat.PA, False), threshold)
+    best_pa = best_for_stat(lineup, possibles, ScoringSetting(BaseballStat.PA, False))
+    threshold = best_pa.stats.value_for_stat(BaseballStat.PA) * 0.95
+    candidates = above_threshold_for_stat(possibles, ScoringSetting(BaseballStat.PA, False), threshold)
 
     num_candidates = len(candidates)
     LOGGER.info(f"found {num_candidates} candidates within 95% of max PA's (above threshold {threshold})")
     best_list = best_lineups(lineup, candidates, hitting_settings)
-    most_pas_from_best = best_for_stat(lineup, best_list, ScoringSetting(Stat.PA, False))
+    most_pas_from_best = best_for_stat(lineup, best_list, ScoringSetting(BaseballStat.PA, False))
     hitting_transitions = lineup.transitions(most_pas_from_best.lineup)
     pitching_transitions = optimal_pitching_transitions(lineup, espn)
     notifier.notify_set_lineup(espn.team_name(), most_pas_from_best, hitting_transitions + pitching_transitions, s_settings)
