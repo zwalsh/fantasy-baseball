@@ -9,6 +9,6 @@ class Test(unittest.TestCase):
             41: "1.1105",
             5: "2"
         }
-        stats = BaseballApi.create_stats(stats_ex)
+        stats = BaseballApi(None, 0, 0).create_stats(stats_ex)
         self.assertEqual(stats.home_runs(), 2.0)
         self.assertEqual(stats.whip(), 1.111)

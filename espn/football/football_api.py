@@ -3,6 +3,7 @@ import logging
 from espn.espn_api import EspnApi
 from espn.football.football_position import FootballPosition
 from espn.football.football_slot import FootballSlot
+from espn.football.football_stat import FootballStat
 from espn.sessions.espn_session_provider import EspnSessionProvider
 from lineup import Lineup
 
@@ -10,6 +11,14 @@ LOGGER = logging.getLogger("espn.football.api")
 
 
 class FootballApi(EspnApi):
+
+    def is_starting(self, roster_entry):
+        slot_id = roster_entry["lineupSlotId"]
+        slot = self.slot_for_id(slot_id)
+        return slot in FootballSlot.starting_slots()
+
+    def stat_enum(self):
+        return FootballStat
 
     def slot_for_id(self, slot_id):
         return FootballSlot.espn_slot_to_slot(slot_id)

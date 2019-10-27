@@ -219,7 +219,7 @@ class EspnApi(metaclass=ABCMeta):
         transformed_stats = dict()
         for stat_id_str in espn_stats_dict.keys():
             stat_id = int(stat_id_str)
-            stat = BaseballStat.espn_stat_to_stat(stat_id)
+            stat = self.stat_enum().espn_stat_to_stat(stat_id)
             if stat:
                 stat_val = float(espn_stats_dict.get(stat_id_str))
                 transformed_stats[stat] = stat_val
@@ -236,6 +236,42 @@ class EspnApi(metaclass=ABCMeta):
         team_to_stats = dict()
         for t in teams:
             stats = self.create_stats(t['valuesByStat'])
+            team_to_stats[t['id']] = stats
+        return team_to_stats
+
+    @abstractmethod
+    def is_starting(self, roster_entry):
+        """
+        Checks if the given roster entry is a starting one
+        :param roster_entry:
+        :return:
+        """
+        pass
+
+    def cumulative_stats_from_roster_entries(self, entries, scoring_period_id):
+        """
+        Takes a list of roster entries and reconstitutes the cumulative stats produced by that roster.
+        :param list entries: the entries produced
+        :param int scoring_period_id: the scoring period for which stats are being accumulated
+        :return Stats: the sum total of stats produced by starters on that roster
+        """
+        total_stats = Stats({}, self.stat_enum())
+        for e in filter(self.is_starting, entries):
+            entry_stats_list = e["playerPoolEntry"]["player"]["stats"]
+            stats_dict = next(filter(lambda d: d['scoringPeriodId'] == scoring_period_id and d['statSourceId'] == 0, entry_stats_list), None)
+            if stats_dict is None:
+                name = e["playerPoolEntry"]["player"]["fullName"]
+                LOGGER.warning(f"{name} has no stats matching scoring period {scoring_period_id} found in entry {e}")
+                continue
+            stats = self.create_stats(stats_dict["stats"])
+            total_stats += stats
+        return total_stats
+
+    def scoring_period_stats(self, scoring_period):
+        teams = self.scoring_period_info(scoring_period).json()["teams"]
+        team_to_stats = dict()
+        for t in teams:
+            stats = self.cumulative_stats_from_roster_entries(t["roster"]["entries"], scoring_period)
             team_to_stats[t['id']] = stats
         return team_to_stats
 

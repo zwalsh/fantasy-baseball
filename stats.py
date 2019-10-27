@@ -35,10 +35,10 @@ class Stats:
             val = self.value_for_stat(stat)
             if val:
                 print_pairs.append((stat, val))
-        print_pairs.append((BaseballStat.AVG, self.average()))
-        print_pairs.append((BaseballStat.OBP, self.obp()))
-        print_pairs.append((BaseballStat.ERA, self.era()))
-        print_pairs.append((BaseballStat.WHIP, self.whip()))
+        # print_pairs.append((BaseballStat.AVG, self.average()))
+        # print_pairs.append((BaseballStat.OBP, self.obp()))
+        # print_pairs.append((BaseballStat.ERA, self.era()))
+        # print_pairs.append((BaseballStat.WHIP, self.whip()))
         s = ""
         for (name, stat) in print_pairs:
             if stat:

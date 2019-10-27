@@ -9,7 +9,6 @@ from espn.sessions.espn_session_provider import EspnSessionProvider
 from league import League
 from lineup import Lineup
 from scoring_setting import ScoringSetting
-from stats import Stats
 from team import Team
 
 """
@@ -51,14 +50,6 @@ class BaseballApi(EspnApi):
         info = self.all_info().json()
         scoring_items = info['settings']['scoringSettings']['scoringItems']
         return list(map(BaseballApi.json_to_scoring_setting, scoring_items))
-
-    def scoring_period_stats(self, scoring_period):
-        teams = self.scoring_period_info(scoring_period).json()["teams"]
-        team_to_stats = dict()
-        for t in teams:
-            stats = self.cumulative_stats_from_roster_entries(t["roster"]["entries"], scoring_period)
-            team_to_stats[t['id']] = stats
-        return team_to_stats
 
     def set_lineup_url(self):
         return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
@@ -203,35 +194,15 @@ class BaseballApi(EspnApi):
         stat = BaseballStat.espn_stat_to_stat(item['statId'])
         return ScoringSetting(stat, item['isReverseItem'])
 
-    @staticmethod
-    def is_starting(roster_entry):
+    def is_starting(self, roster_entry):
         """
         Checks if the given roster entry is a starting one
         :param roster_entry:
         :return:
         """
         slot_id = roster_entry["lineupSlotId"]
-        slot = BaseballSlot.espn_slot_to_slot(slot_id)
+        slot = self.slot_for_id(slot_id)
         return slot in BaseballSlot.starting_slots()
-
-    def cumulative_stats_from_roster_entries(self, entries, scoring_period_id):
-        """
-        Takes a list of roster entries and reconstitutes the cumulative stats produced by that roster.
-        :param list entries: the entries produced
-        :param int scoring_period_id: the scoring period for which stats are being accumulated
-        :return Stats: the sum total of stats produced by starters on that roster
-        """
-        total_stats = Stats({}, BaseballStat)
-        for e in filter(BaseballApi.is_starting, entries):
-            entry_stats_list = e["playerPoolEntry"]["player"]["stats"]
-            stats_dict = next(filter(lambda d: d['scoringPeriodId'] == scoring_period_id, entry_stats_list), None)
-            if stats_dict is None:
-                name = e["playerPoolEntry"]["player"]["fullName"]
-                LOGGER.warning(f"{name} has no stats matching scoring period {scoring_period_id} found in entry {e}")
-                continue
-            stats = self.create_stats(stats_dict["stats"])
-            total_stats += stats
-        return total_stats
 
     @staticmethod
     def transition_to_item(transition):
