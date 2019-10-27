@@ -4,10 +4,11 @@ from abc import abstractmethod, ABCMeta
 
 import requests
 
-
+from espn.baseball.baseball_stat import BaseballStat
 from espn.sessions.espn_session_provider import EspnSessionProvider
 from lineup_settings import LineupSettings
 from player import Player
+from stats import Stats
 
 LOGGER = logging.getLogger("espn.api")
 
@@ -205,9 +206,36 @@ class EspnApi(metaclass=ABCMeta):
         """
         pass
 
+    @abstractmethod
+    def stat_enum(self):
+        pass
+
     def lineup_settings(self):
         url = self.lineup_settings_url()
         settings = self.espn_get(url).json()['settings']['rosterSettings']['lineupSlotCounts']
         return self.lineup_slot_counts_to_lineup_settings(settings)
 
+    def create_stats(self, espn_stats_dict):
+        transformed_stats = dict()
+        for stat_id_str in espn_stats_dict.keys():
+            stat_id = int(stat_id_str)
+            stat = BaseballStat.espn_stat_to_stat(stat_id)
+            if stat:
+                stat_val = float(espn_stats_dict.get(stat_id_str))
+                transformed_stats[stat] = stat_val
+
+        return Stats(transformed_stats, self.stat_enum())
+
+    def year_stats(self):
+        """
+        Returns a dictionary of all stats for all teams on the year.
+        Maps team id to Stats object
+        :return: mapping of team id to Stats for the year
+        """
+        teams = self.all_info().json()['teams']
+        team_to_stats = dict()
+        for t in teams:
+            stats = self.create_stats(t['valuesByStat'])
+            team_to_stats[t['id']] = stats
+        return team_to_stats
 

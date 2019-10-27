@@ -56,20 +56,7 @@ class BaseballApi(EspnApi):
         teams = self.scoring_period_info(scoring_period).json()["teams"]
         team_to_stats = dict()
         for t in teams:
-            stats = BaseballApi.cumulative_stats_from_roster_entries(t["roster"]["entries"], scoring_period)
-            team_to_stats[t['id']] = stats
-        return team_to_stats
-
-    def year_stats(self):
-        """
-        Returns a dictionary of all stats for all teams on the year.
-        Maps team id to Stats object
-        :return: mapping of team id to Stats for the year
-        """
-        teams = self.all_info().json()['teams']
-        team_to_stats = dict()
-        for t in teams:
-            stats = BaseballApi.create_stats(t['valuesByStat'])
+            stats = self.cumulative_stats_from_roster_entries(t["roster"]["entries"], scoring_period)
             team_to_stats[t['id']] = stats
         return team_to_stats
 
@@ -162,6 +149,9 @@ class BaseballApi(EspnApi):
     "type":"FREEAGENT"}
     """
 
+    def stat_enum(self):
+        return BaseballStat
+
     def slot_for_id(self, slot_id):
         return BaseballSlot.espn_slot_to_slot(slot_id)
 
@@ -214,18 +204,6 @@ class BaseballApi(EspnApi):
         return ScoringSetting(stat, item['isReverseItem'])
 
     @staticmethod
-    def create_stats(espn_stats_dict):
-        transformed_stats = dict()
-        for stat_id_str in espn_stats_dict.keys():
-            stat_id = int(stat_id_str)
-            stat = BaseballStat.espn_stat_to_stat(stat_id)
-            if stat:
-                stat_val = float(espn_stats_dict.get(stat_id_str))
-                transformed_stats[stat] = stat_val
-
-        return Stats(transformed_stats, BaseballStat)
-
-    @staticmethod
     def is_starting(roster_entry):
         """
         Checks if the given roster entry is a starting one
@@ -236,8 +214,7 @@ class BaseballApi(EspnApi):
         slot = BaseballSlot.espn_slot_to_slot(slot_id)
         return slot in BaseballSlot.starting_slots()
 
-    @staticmethod
-    def cumulative_stats_from_roster_entries(entries, scoring_period_id):
+    def cumulative_stats_from_roster_entries(self, entries, scoring_period_id):
         """
         Takes a list of roster entries and reconstitutes the cumulative stats produced by that roster.
         :param list entries: the entries produced
@@ -252,7 +229,7 @@ class BaseballApi(EspnApi):
                 name = e["playerPoolEntry"]["player"]["fullName"]
                 LOGGER.warning(f"{name} has no stats matching scoring period {scoring_period_id} found in entry {e}")
                 continue
-            stats = BaseballApi.create_stats(stats_dict["stats"])
+            stats = self.create_stats(stats_dict["stats"])
             total_stats += stats
         return total_stats
 
