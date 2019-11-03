@@ -27,6 +27,7 @@ DEV_LOGGING = {
             'level': 'DEBUG',
             'propagate': True
         },
+        "espn.football.api": {},
         "espn.stats_translator": {},
         "espn.trade_finder": {},
         "espn.trade_store": {},

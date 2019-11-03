@@ -1,13 +1,14 @@
 import unittest
 
-from espn.player_translator import roster_entry_to_player, slot_to_slot_id
-from espn.player_translator import lineup_slot_counts_to_lineup_settings
-from lineup_slot import LineupSlot
+from espn.baseball.baseball_api import BaseballApi
+from espn.baseball.baseball_slot import BaseballSlot
+from espn.baseball.baseball_position import BaseballPosition
 from lineup_settings import LineupSettings
-from position import Position
 
 
 class Test(unittest.TestCase):
+    bb_api = BaseballApi(None, 0, 0)
+
     nolan_arenado_entry = {
         "defaultPositionId": 5,
         "eligibleSlots": [
@@ -37,39 +38,39 @@ class Test(unittest.TestCase):
     }
 
     def test_conversion(self):
-        nolan = roster_entry_to_player(self.nolan_arenado_entry)
+        nolan = Test.bb_api.roster_entry_to_player(self.nolan_arenado_entry)
         self.assertEqual(nolan.name, "Nolan Arenado")
-        self.assertEqual(nolan.possible_positions, LineupSlot.third() | {LineupSlot.INJURED})
-        self.assertEqual(nolan.default_position, Position.THIRD)
+        self.assertEqual(nolan.possible_positions, BaseballSlot.third() | {BaseballSlot.INJURED})
+        self.assertEqual(nolan.default_position, BaseballPosition.THIRD)
 
-        travis = roster_entry_to_player(self.travis_shaw_entry)
+        travis = Test.bb_api.roster_entry_to_player(self.travis_shaw_entry)
         self.assertEqual(travis.name, "Travis Shaw")
         self.assertEqual(travis.first, "Travis")
         self.assertEqual(travis.last, "Shaw")
-        self.assertEqual(travis.possible_positions, LineupSlot.second() | LineupSlot.third() | {LineupSlot.INJURED})
-        self.assertEqual(travis.default_position, Position.FIRST)
+        self.assertEqual(travis.possible_positions, BaseballSlot.second() | BaseballSlot.third() | {BaseballSlot.INJURED})
+        self.assertEqual(travis.default_position, BaseballPosition.FIRST)
 
     lineup_slot_response = {'0': 1, '1': 1, '2': 1, '3': 1, '4': 1, '5': 5, '6': 1, '7': 1, '8': 0, '9': 0, '10': 0,
                             '11': 0, '12': 1, '13': 9, '14': 0, '15': 0, '16': 3, '17': 2, '19': 0}
 
     def test_convert_lineup_slot_counts(self):
         settings = {
-            LineupSlot.CATCHER: 1,
-            LineupSlot.FIRST: 1,
-            LineupSlot.SECOND: 1,
-            LineupSlot.THIRD: 1,
-            LineupSlot.SHORT: 1,
-            LineupSlot.MIDDLE_INFIELD: 1,
-            LineupSlot.CORNER_INFIELD: 1,
-            LineupSlot.OUTFIELD: 5,
-            LineupSlot.UTIL: 1,
-            LineupSlot.PITCHER: 9,
-            LineupSlot.BENCH: 3,
-            LineupSlot.INJURED: 2,
+            BaseballSlot.CATCHER: 1,
+            BaseballSlot.FIRST: 1,
+            BaseballSlot.SECOND: 1,
+            BaseballSlot.THIRD: 1,
+            BaseballSlot.SHORT: 1,
+            BaseballSlot.MIDDLE_INFIELD: 1,
+            BaseballSlot.CORNER_INFIELD: 1,
+            BaseballSlot.OUTFIELD: 5,
+            BaseballSlot.UTIL: 1,
+            BaseballSlot.PITCHER: 9,
+            BaseballSlot.BENCH: 3,
+            BaseballSlot.INJURED: 2,
         }
-        self.assertEqual(lineup_slot_counts_to_lineup_settings(self.lineup_slot_response).slot_counts,
+        self.assertEqual(Test.bb_api.lineup_slot_counts_to_lineup_settings(self.lineup_slot_response).slot_counts,
                          LineupSettings(settings).slot_counts)
 
     def test_slot_to_slot_id(self):
-        self.assertEqual(slot_to_slot_id(LineupSlot.CATCHER), 0)
-        self.assertEqual(slot_to_slot_id(LineupSlot.UTIL), 12)
+        self.assertEqual(BaseballSlot.CATCHER.slot_id(), 0)
+        self.assertEqual(BaseballSlot.UTIL.slot_id(), 12)

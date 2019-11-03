@@ -21,7 +21,7 @@ class LineupTotal:
         :param dict projections: the projected stats that those players will accrue
         :return Stats: a Stats object holding their cumulative totals
         """
-        stats = Stats({})
+        stats = Stats({}, BaseballStat)
 
         for starter in lineup.starters():
             projection = projections.get(starter.name)

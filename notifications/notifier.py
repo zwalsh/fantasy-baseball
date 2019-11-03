@@ -1,9 +1,7 @@
-import traceback
-
 import sys
 
-from lineup_slot import LineupSlot
-from stats import Stat
+from espn.baseball.baseball_slot import BaseballSlot
+from espn.baseball.baseball_stat import BaseballStat
 
 
 class Notifier:
@@ -22,7 +20,7 @@ class Notifier:
         :return:
         """
         stats = lineup_total.stats
-        plate_appearances = stats.value_for_stat(Stat.PA)
+        plate_appearances = stats.value_for_stat(BaseballStat.PA)
         msg = f"{team_name}: {plate_appearances:.02f}PA\n"
 
         for setting in scoring_settings:
@@ -62,9 +60,9 @@ class Notifier:
         :param LineupTransition transition: the transition to be given a sort value
         :return int: a value representing whether the transition should come sooner or later
         """
-        if transition.to_slot == LineupSlot.BENCH:
+        if transition.to_slot == BaseballSlot.BENCH:
             return 0
-        elif transition.from_slot == LineupSlot.BENCH:
+        elif transition.from_slot == BaseballSlot.BENCH:
             return 1
         else:
             return 2

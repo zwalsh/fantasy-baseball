@@ -1,60 +1,39 @@
 import copy
 import logging
+import time
 from itertools import combinations
 
-import time
-
-from lineup_slot import LineupSlot
+from espn.baseball.baseball_slot import BaseballSlot
 from lineup_transition import LineupTransition
 
 LOGGER = logging.getLogger("lineup")
 
 
 class Lineup:
-    slots = [LineupSlot.CATCHER,
-             LineupSlot.FIRST,
-             LineupSlot.SECOND,
-             LineupSlot.THIRD,
-             LineupSlot.SHORT,
-             LineupSlot.MIDDLE_INFIELD,
-             LineupSlot.CORNER_INFIELD,
-             LineupSlot.OUTFIELD,
-             LineupSlot.UTIL,
-             LineupSlot.BENCH,
-             LineupSlot.PITCHER,
-             LineupSlot.INJURED]
-
-    hitting_slots = {LineupSlot.CATCHER,
-                     LineupSlot.FIRST,
-                     LineupSlot.SECOND,
-                     LineupSlot.THIRD,
-                     LineupSlot.SHORT,
-                     LineupSlot.MIDDLE_INFIELD,
-                     LineupSlot.CORNER_INFIELD,
-                     LineupSlot.OUTFIELD,
-                     LineupSlot.UTIL}
-
-    def __init__(self, player_dict):
+    def __init__(self, player_dict, slot_enum):
         """
         Accepts a map from LineupSlot to list of Player saying which players are
         currently lined up in each slot
+        :param slot_enum:
         :param dict player_dict: map from LineupSlot to list of players
         """
         self.player_dict = player_dict
+        self.slot_enum = slot_enum
 
-    def possible_starting_hitters(self, lineup_settings):
+    def possible_lineups(self, lineup_settings, slots_to_fill):
         """
-        Calculates all possible sets of starting hitters.
+        Calculates all possible sets of lineups that fill the given slots.
          For each set of starting hitters, it calculates the lineup with that set
          of starters that is closest to this one.
         Returns a set of such lineups.
-        :param LineupSettings lineup_settings:
+        :param LineupSettings lineup_settings: the settings for the lineups to generate
+        :param set slots_to_fill: the slots to fill up with players
         :return set: set of lineups with all combinations of starters
         """
-        initial_node = LineupSearchNode(Lineup(dict()), self.players(), Lineup.hitting_slots.copy())
+        initial_node = LineupSearchNode(Lineup(dict(), self.slot_enum), self.players(), slots_to_fill)
         # stack of nodes representing the frontier of the search graph
         frontier = [initial_node]
-        max_starters = lineup_settings.total_for_slots(Lineup.hitting_slots)
+        max_starters = lineup_settings.total_for_slots(slots_to_fill)
 
         all_starters = dict()
         total_proc = 0
@@ -94,7 +73,7 @@ class Lineup:
         """
         Generates all possible lineups that are the same as this one except
         count players from remaining_players have been added in slot
-        :param LineupSlot slot: the slot in which to add players
+        :param BaseballSlot slot: the slot in which to add players
         :param int count: the number of players to add
         :param list remaining_players: the players from which to choose
         :return: list of tuples, where each tuple is the new lineup and the remaining players
@@ -117,7 +96,7 @@ class Lineup:
         """
         Filters the given list of players to the ones eligible to play in
         the given Slot
-        :param LineupSlot slot: the Slot that must match
+        :param BaseballSlot slot: the Slot that must match
         :param list players: players available to play
         :return:
         """
@@ -128,7 +107,7 @@ class Lineup:
         for slot in self.player_dict.keys():
             new_list = copy.copy(self.player_dict.get(slot))
             new_dict[slot] = new_list
-        return Lineup(new_dict)
+        return Lineup(new_dict, self.slot_enum)
 
     def players(self):
         all_players = []
@@ -139,15 +118,15 @@ class Lineup:
     def starters(self):
         starters = set()
         for slot, players in self.player_dict.items():
-            if slot not in {LineupSlot.BENCH, LineupSlot.INJURED}:
+            if slot in self.slot_enum.starting_slots():
                 starters.update(players)
         return frozenset(starters)
 
     def benched(self):
-        return frozenset(self.player_dict[LineupSlot.BENCH])
+        return frozenset(self.player_dict[self.slot_enum.BENCH])
 
     def injured(self):
-        return frozenset(self.player_dict[LineupSlot.INJURED])
+        return frozenset(self.player_dict[self.slot_enum.INJURED])
 
     def transitions(self, to_lineup):
         """
@@ -163,8 +142,8 @@ class Lineup:
             for player in players:
                 if player not in to_lineup.player_dict.get(slot, []):
                     to_slots = to_lineup.player_dict.keys()
-                    to_slot = next(filter(lambda s: player in to_lineup.player_dict[s], to_slots), LineupSlot.BENCH)
-                    if slot != to_slot and slot != LineupSlot.PITCHER and slot != LineupSlot.INJURED:
+                    to_slot = next(filter(lambda s: player in to_lineup.player_dict[s], to_slots), self.slot_enum.BENCH)
+                    if slot != to_slot and slot != BaseballSlot.PITCHER and slot != BaseballSlot.INJURED: # todo remove BaseballSlot references
                         transitions.append(LineupTransition(player, slot, to_slot))
 
         return transitions
@@ -189,10 +168,10 @@ class Lineup:
     def __str__(self):
         result = ""
 
-        for slot in Lineup.slots:
-            result += slot.name + "\n"
+        for slot in self.slot_enum:
+            result += f"{slot}\n"
             for player in self.player_dict.get(slot, []):
-                result += player.__str__() + "\n"
+                result += f"{player}\n"
         return result
 
 

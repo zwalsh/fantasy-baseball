@@ -1,7 +1,7 @@
 import unittest
 
+from espn.baseball.baseball_position import BaseballPosition
 from optimize import lineup_optimizer
-from position import Position
 from test.test_lineup import LineupTest
 from test.test_player import PlayerTest
 
@@ -26,7 +26,7 @@ class TestLineupOptimizer(unittest.TestCase):
         # includes all probable starters
         self.assertTrue(paddack in must_starts)
 
-        relievers = [p for p in l.players() if p.default_position is Position.RELIEVER]
+        relievers = [p for p in l.players() if p.default_position is BaseballPosition.RELIEVER]
 
         # includes all relievers
         self.assertTrue(all(map(lambda r: r in must_starts, relievers)))

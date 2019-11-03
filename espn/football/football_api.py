@@ -1,0 +1,69 @@
+import logging
+
+from espn.espn_api import EspnApi
+from espn.football.football_position import FootballPosition
+from espn.football.football_slot import FootballSlot
+from espn.football.football_stat import FootballStat
+from espn.sessions.espn_session_provider import EspnSessionProvider
+from lineup import Lineup
+
+LOGGER = logging.getLogger("espn.football.api")
+
+
+class FootballApi(EspnApi):
+
+    def is_starting(self, roster_entry):
+        slot_id = roster_entry["lineupSlotId"]
+        slot = self.slot_for_id(slot_id)
+        return slot in FootballSlot.starting_slots()
+
+    def stat_enum(self):
+        return FootballStat
+
+    def slot_for_id(self, slot_id):
+        return FootballSlot.espn_slot_to_slot(slot_id)
+
+    def position(self, position_id):
+        return FootballPosition(position_id)
+
+    @staticmethod
+    def player_list_to_lineup(players):
+        player_dict = dict()
+        for (player, slot) in players:
+            cur_list = player_dict.get(slot, list())
+            cur_list.append(player)
+            player_dict[slot] = cur_list
+        return Lineup(player_dict, FootballSlot)
+
+    def api_url_segment(self):
+        return "ffl"
+
+    class Builder:
+        def __init__(self):
+            """
+            Builds a BaseballApi instance, creating the EspnSessionProvider objects under the hood
+            """
+            self.__username = ""
+            self.__password = ""
+            self.__league_id = 0
+            self.__team_id = 0
+
+        def username(self, username):
+            self.__username = username
+            return self
+
+        def password(self, password):
+            self.__password = password
+            return self
+
+        def league_id(self, league_id):
+            self.__league_id = league_id
+            return self
+
+        def team_id(self, team_id):
+            self.__team_id = team_id
+            return self
+
+        def build(self):
+            return FootballApi(EspnSessionProvider(self.__username, self.__password), self.__league_id,
+                               self.__team_id)

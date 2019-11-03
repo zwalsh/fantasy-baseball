@@ -3,6 +3,7 @@ import logging
 import datetime
 import time
 
+from espn.baseball.baseball_stat import BaseballStat
 from stats import Stats
 from requests_html import HTMLSession
 
@@ -39,7 +40,7 @@ class FangraphsApi:
             proj = FangraphsApi.row_to_hitter_projections(cells)
             name = cells[0].text
             # if there's a doubleheader, we want to sum the stats
-            cur_stats = projections.get(name, Stats({}))
+            cur_stats = projections.get(name, Stats({}, BaseballStat))
             projections[name] = proj + cur_stats
 
         return projections
@@ -53,7 +54,24 @@ class FangraphsApi:
         rbi = float(row[11].text)
         sb = float(row[12].text)
         bb = float(row[14].text)
-        return Stats.hitter_stats(pa, h, hr, r, rbi, sb, bb)
+        return FangraphsApi.hitter_stats(pa, h, hr, r, rbi, sb, bb)
+
+    @staticmethod
+    def hitter_stats(pa, h, hr, r, rbi, sb, bb):
+        ab = pa - bb
+        stats_dict = {
+            BaseballStat.AB: ab,
+            BaseballStat.H: h,
+            BaseballStat.AVG: h / ab,
+            BaseballStat.HR: hr,
+            BaseballStat.BB: bb,
+            BaseballStat.PA: pa,
+            BaseballStat.OBP: (h + bb) / pa,
+            BaseballStat.R: r,
+            BaseballStat.RBI: rbi,
+            BaseballStat.SB: sb,
+        }
+        return Stats(stats_dict, BaseballStat)
 
     @staticmethod
     def pitcher_projections():
@@ -87,7 +105,29 @@ class FangraphsApi:
         hr = float(row[10].text)
         walks = float(row[11].text)
         strikeouts = float(row[12].text)
-        return Stats.pitcher_stats(wins, ip, total_batters, hits, hr, walks, strikeouts)
+        return FangraphsApi.pitcher_stats(wins, ip, total_batters, hits, hr, walks, strikeouts)
+
+    @staticmethod
+    def pitcher_stats(wins, innings, batters, hits, homers, walks, strikeouts):
+        # component era calculation from Bill James https://en.wikipedia.org/wiki/Component_ERA
+        # pitcher_total_bases = 0.89 * (1.255 * (hits - homers) + 4 * homers) + 0.475 * walks
+        # unadjusted_comp_era = 9 * ((hits + walks) * pitcher_total_bases) / (batters * innings)
+        # component_era = unadjusted_comp_era - 0.56
+        # if component_era < 2.24:
+        #     component_era = unadjusted_comp_era * 0.75
+        component_era = 3.00 + (13 * homers + 3 * walks - 2 * strikeouts) / innings
+
+        stats_dict = {
+            BaseballStat.OUTS: innings * 3,
+            BaseballStat.P_H: hits,
+            BaseballStat.P_BB: walks,
+            BaseballStat.WHIP: (walks + hits) / innings,
+            BaseballStat.ERA: component_era,
+            BaseballStat.P_HR: homers,
+            BaseballStat.K: strikeouts,
+            BaseballStat.W: wins,
+        }
+        return Stats(stats_dict, BaseballStat)
 
     @staticmethod
     def last_updated():

@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 
 from config import password_reader, team_reader
-from espn.espn_api import EspnApi
+from espn.baseball.baseball_api import BaseballApi
 from espn.stat_store import StatStore
 from tasks.task import Task
 
@@ -10,7 +10,6 @@ LOGGER = logging.getLogger("tasks.archive_daily_stats")
 
 
 class ArchiveDailyStats(Task):
-
     def __init__(self, username, password, team_configs, scoring_period):
         """
         Archives the stats accumulated by all users accessible via the given ESPN API access object
@@ -26,14 +25,15 @@ class ArchiveDailyStats(Task):
 
     def run(self):
         for cfg in self.team_configs:
-            espn = EspnApi(self.username, self.password, cfg.league_id, cfg.team_id)
+            espn = BaseballApi.Builder().username(self.username).password(self.password).league_id(
+                cfg.league_id).team_id(cfg.team_id).build()
             LOGGER.info(f"archiving for league {cfg.league_id} in period {self.scoring_period}")
             self.archive(espn, cfg)
 
     def archive(self, espn, config):
         """
         Archives the stats found with the given EspnApi object.
-        :param EspnApi espn: access to ESPN's API
+        :param BaseballApi espn: access to ESPN's API
         :param TeamConfig config: the config currently being used to archive
         """
         period_stats = espn.scoring_period_stats(self.scoring_period)
@@ -46,5 +46,6 @@ class ArchiveDailyStats(Task):
     def create(username):
         password = password_reader.password(username, Path.cwd() / "config/passwords")
         configs = team_reader.all_teams(Path.cwd() / "config/team_configs")
-        scoring_period = EspnApi(username, password, configs[0].league_id, configs[0].team_id).scoring_period() - 1
+        scoring_period = BaseballApi.Builder().username(username).password(password).league_id(
+            configs[0].league_id).team_id(configs[0].team_id).build().scoring_period() - 1
         return ArchiveDailyStats(username, password, configs, scoring_period)

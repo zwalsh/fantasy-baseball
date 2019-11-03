@@ -1,5 +1,5 @@
 import unittest
-import espn.stats_translator
+from espn.baseball.baseball_api import BaseballApi
 
 
 class Test(unittest.TestCase):
@@ -9,6 +9,6 @@ class Test(unittest.TestCase):
             41: "1.1105",
             5: "2"
         }
-        stats = espn.stats_translator.create_stats(stats_ex)
+        stats = BaseballApi(None, 0, 0).create_stats(stats_ex)
         self.assertEqual(stats.home_runs(), 2.0)
         self.assertEqual(stats.whip(), 1.111)

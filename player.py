@@ -1,4 +1,4 @@
-from lineup_slot import LineupSlot
+from espn.baseball.baseball_slot import BaseballSlot
 
 
 class Player:
@@ -11,7 +11,7 @@ class Player:
         :param str last: the player's last name
         :param int espn_id: their id as specified by ESPN
         :param set possible_positions: set of LineupSlots they can play
-        :param Position default_position: their typical position
+        :param BaseballPosition default_position: their typical position
         """
         self.name = name
         self.first = first
@@ -27,7 +27,7 @@ class Player:
         """
         Checks if this player can play in the given slot,
         where a slot is an array of Positions.
-        :param LineupSlot slot: slot to see if the player can play in
+        :param BaseballSlot slot: slot to see if the player can play in
         :return: true if one of the player's possible positions matches
         """
         return slot in self.possible_positions

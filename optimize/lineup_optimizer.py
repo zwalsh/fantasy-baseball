@@ -1,13 +1,12 @@
+import logging
 import operator
 
-import logging
-
-from lineup_slot import LineupSlot
+from espn.baseball.baseball_slot import BaseballSlot
+from espn.baseball.baseball_position import BaseballPosition
 from lineup_transition import LineupTransition
 from optimize.lineup_total import LineupTotal
-from position import Position
 from scoring_setting import ScoringSetting
-from stats import Stats, Stat
+from espn.baseball.baseball_stat import BaseballStat
 
 # first - log/notify number of lineups to choose from within 95% of max PA
 # then - choose best: first one to appear within some % of max of all categories
@@ -27,17 +26,17 @@ def optimize_lineup(espn, fangraphs, notifier):
     lineup = espn.lineup()
     l_settings = espn.lineup_settings()
     s_settings = espn.scoring_settings()
-    hitting_settings = filter(lambda s: s.stat not in {Stat.K, Stat.W, Stat.ERA, Stat.WHIP, Stat.SV}, s_settings)
+    hitting_settings = filter(lambda s: s.stat not in {BaseballStat.K, BaseballStat.W, BaseballStat.ERA, BaseballStat.WHIP, BaseballStat.SV}, s_settings)
 
     possibles = possible_lineup_totals(lineup, l_settings, fangraphs.hitter_projections())
-    best_pa = best_for_stat(lineup, possibles, ScoringSetting(Stat.PA, False))
-    threshold = best_pa.stats.value_for_stat(Stat.PA) * 0.95
-    candidates = above_threshold_for_stat(possibles, ScoringSetting(Stat.PA, False), threshold)
+    best_pa = best_for_stat(lineup, possibles, ScoringSetting(BaseballStat.PA, False))
+    threshold = best_pa.stats.value_for_stat(BaseballStat.PA) * 0.95
+    candidates = above_threshold_for_stat(possibles, ScoringSetting(BaseballStat.PA, False), threshold)
 
     num_candidates = len(candidates)
     LOGGER.info(f"found {num_candidates} candidates within 95% of max PA's (above threshold {threshold})")
     best_list = best_lineups(lineup, candidates, hitting_settings)
-    most_pas_from_best = best_for_stat(lineup, best_list, ScoringSetting(Stat.PA, False))
+    most_pas_from_best = best_for_stat(lineup, best_list, ScoringSetting(BaseballStat.PA, False))
     hitting_transitions = lineup.transitions(most_pas_from_best.lineup)
     pitching_transitions = optimal_pitching_transitions(lineup, espn)
     notifier.notify_set_lineup(espn.team_name(), most_pas_from_best, hitting_transitions + pitching_transitions, s_settings)
@@ -135,7 +134,7 @@ def possible_lineup_totals(lineup, lineup_settings, projections):
     :param dict projections: a mapping of Player to projected Stats
     :return: list
     """
-    possibles = lineup.possible_starting_hitters(lineup_settings)
+    possibles = lineup.possible_lineups(lineup_settings, BaseballSlot.hitting_slots())
     return list(map(lambda l: LineupTotal.total_from_projections(l, projections), possibles))
 
 
@@ -166,8 +165,8 @@ def optimal_pitching_transitions(lineup, espn):
     for ns in not_started:
         player_to_bench = next(benchables)
         LOGGER.info(f"starting {ns}, benching {player_to_bench}")
-        transitions.append(LineupTransition(ns, LineupSlot.BENCH, LineupSlot.PITCHER))
-        transitions.append(LineupTransition(player_to_bench, LineupSlot.PITCHER, LineupSlot.BENCH))
+        transitions.append(LineupTransition(ns, BaseballSlot.BENCH, BaseballSlot.PITCHER))
+        transitions.append(LineupTransition(player_to_bench, BaseballSlot.PITCHER, BaseballSlot.BENCH))
 
     return transitions
 
@@ -183,9 +182,9 @@ def must_start_pitchers(lineup, espn):
     :return set: the set of Players that are must-start pitchers today
     """
     players = lineup.players()
-    pitchers = list(filter(lambda player: player.can_play(LineupSlot.PITCHER), players))
+    pitchers = list(filter(lambda player: player.can_play(BaseballSlot.PITCHER), players))
     probable_pitchers = {p for p in pitchers if espn.is_probable_pitcher(p.espn_id)}
-    relievers = {p for p in pitchers if p.default_position == Position.RELIEVER}
+    relievers = {p for p in pitchers if p.default_position == BaseballPosition.RELIEVER}
     return probable_pitchers.union(relievers).difference(lineup.injured())
 
 
@@ -197,5 +196,5 @@ def benchable_pitchers(lineup, must_start):
     :param set must_start: set of pitchers that must be started
     :return set: the group of pitchers that can be safely moved to the bench
     """
-    started_pitchers = {player for player in lineup.starters() if player.default_position == Position.STARTER}
+    started_pitchers = {player for player in lineup.starters() if player.default_position == BaseballPosition.STARTER}
     return started_pitchers - set(must_start)

@@ -1,39 +1,19 @@
 import json
 import logging
 import time
-from pathlib import Path
+from abc import abstractmethod, ABCMeta
 
 import requests
 
-from espn.player_translator import roster_entry_to_player, espn_slot_to_slot, lineup_slot_counts_to_lineup_settings, \
-    slot_to_slot_id
-from espn.stats_translator import stat_id_to_stat, create_stats, cumulative_stats_from_roster_entries
+from espn.sessions.espn_session_provider import EspnSessionProvider
 from league import League
-from lineup import Lineup
+from lineup_settings import LineupSettings
+from player import Player
 from scoring_setting import ScoringSetting
+from stats import Stats
 from team import Team
 
-"""
-http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/<LEAGUE_ID>
-- members[i].displayName == "zcwalsh" 
-    -> id == ownerId
-- scoringPeriodId
-
-
-
-url that is hit on page load:
-"http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/<LEAGUE_ID>?view=mMatchupScore" \
-              "&view=mLiveScoring"
-
-"""
 LOGGER = logging.getLogger("espn.api")
-
-
-class LoginException(Exception):
-    """
-    Exception to throw when Login to ESPN was unsuccessful
-    """
-    pass
 
 
 class EspnApiException(Exception):
@@ -43,75 +23,25 @@ class EspnApiException(Exception):
     pass
 
 
-class EspnApi:
-    LOGIN_URL = "https://registerdisney.go.com/jgc/v6/client/ESPN-ONESITE.WEB-PROD/guest/login?langPref=en-US"
+class EspnApi(metaclass=ABCMeta):
+    def __init__(self, session_provider, league_id, team_id):
+        """
+        Programmatic access to ESPN's (undocumented) API, caching requests that do not need refreshing,
+        and automatically fetching a token for the user/password combination.
 
-    def __init__(self, username, password, league_id, team_id):
-        self.username = username
-        self.password = password
+        :param EspnSessionProvider session_provider: using a username and password, provides and stores session tokens
+        """
+        self.session_provider = session_provider
         self.league_id = league_id
         self.team_id = team_id
         self.cache = dict()
 
-    def session_file_name(self):
-        return "espn_s2_{u}.txt".format(u=self.username)
-
-    @staticmethod
-    def api_key():
-        key_url = "https://registerdisney.go.com/jgc/v6/client/ESPN-ONESITE.WEB-PROD/api-key?langPref=en-US"
-        resp = requests.post(key_url)
-        return "APIKEY " + resp.headers["api-key"]
-
-    @staticmethod
-    def session_dir():
-        sessions = Path("espn/sessions")
-        if not sessions.exists() or not sessions.is_dir():
-            sessions.mkdir()
-        return sessions
-
-    def user_session_file(self):
-        return EspnApi.session_dir() / self.session_file_name()
-
-    def login(self):
-        login_payload = {
-            "loginValue": self.username,
-            "password": self.password
-        }
-        login_headers = {
-            "authorization": EspnApi.api_key(),
-            "content-type": "application/json",
-        }
-        LOGGER.info("logging into ESPN for %(user)s...", {"user": self.username})
-        start = time.time()
-        resp = requests.post(EspnApi.LOGIN_URL, data=json.dumps(login_payload), headers=login_headers)
-        end = time.time()
-        if resp.status_code != 200:
-            LOGGER.error("could not log into ESPN: %(msg)s", {"msg": resp.reason})
-            LOGGER.error(resp.text)
-            raise LoginException
-        key = resp.json().get('data').get('s2')
-        LOGGER.info("logged in for %(user)s after %(time).3fs", {"user": self.username, "time": end - start})
-
-        session = self.user_session_file()
-        cache_file = session.open("w+")
-        cache_file.truncate()
-        cache_file.write(key)
-        return key
-
-    def key(self):
-        session = self.user_session_file()
-        if session.is_file():
-            stored_key = session.read_text()
-            if len(stored_key) > 0:
-                return stored_key
-        return self.login()
-
     def espn_request(self, method, url, payload, headers=None, check_cache=True, retries=1):
         if check_cache and url in self.cache.keys():
             return self.cache.get(url)
-        LOGGER.info(f"making {method} request to {url} in league {self.league_id} with headers {headers}")
+        LOGGER.info(f"making {method} request to {url} in with headers {headers}")
         start_time = time.time()
-        k = self.key()
+        k = self.session_provider.get_session()
         cookies = {"espn_s2": k}
         if method == 'GET':
             r = requests.get(url, headers=headers or {}, cookies=cookies)
@@ -119,7 +49,7 @@ class EspnApi:
             r = requests.post(url, headers=headers or {}, cookies=cookies, json=payload)
         if r.status_code == 401:
             LOGGER.warning("request denied, logging in again.")
-            self.login()
+            self.session_provider.refresh_session()
             return self.espn_request(method=method, url=url, payload=payload, headers=headers, check_cache=check_cache)
         if not r.ok:
             LOGGER.error(f"received {r.status_code} {r.reason}: {r.text} in {start_time - time.time():.3f} seconds")
@@ -148,20 +78,50 @@ class EspnApi:
     def espn_post(self, url, payload, headers=None):
         return self.espn_request(method='POST', url=url, payload=payload, headers=headers)
 
-    def scoring_period(self):
-        url = "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/{}".format(self.league_id)
-        return self.espn_get(url).json()['scoringPeriodId']
+    @abstractmethod
+    def api_url_segment(self):
+        """
+        Returns the URL segment for this api, e.g. flb, ffb, etc.
+        :return:
+        """
+        pass
 
-    def member_id(self):
-        return "{84C1CD19-5E2C-4D5D-81CD-195E2C4D5D75}"  # todo fetch when logging in, persist?
+    @abstractmethod
+    def position(self, position_id):
+        pass
+
+    def base_url(self):
+        return f"http://fantasy.espn.com/apis/v3/games/{self.api_url_segment()}/seasons/2019/segments/0/leagues/" \
+               f"{self.league_id}"
+
+    def scoring_period_info_url(self, scoring_period):
+        return f"{self.base_url()}" \
+               f"?scoringPeriodId={scoring_period}&view=mRoster"
 
     def lineup_url(self):
-        scoring_period_id = self.scoring_period()
-        return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
-               "{}" \
-               "?forTeamId={}" \
-               "&scoringPeriodId={}" \
-               "&view=mRoster".format(self.league_id, self.team_id, scoring_period_id)
+        return f"{self.base_url()}" \
+               f"?forTeamId={self.team_id}" \
+               f"&scoringPeriodId={self.scoring_period()}" \
+               "&view=mRoster"
+
+    def all_lineups_url(self):
+        return self.scoring_period_info_url(self.scoring_period())
+
+    def all_info_url(self):
+        return f"{self.base_url()}" \
+               "?view=mLiveScoring&view=mMatchupScore&view=mPendingTransactions" \
+               "&view=mPositionalRatings&view=mSettings&view=mTeam"
+
+    def lineup_settings_url(self):
+        return f"{self.base_url()}?view=mSettings"
+
+    @staticmethod
+    @abstractmethod
+    def player_list_to_lineup(players):
+        pass
+
+    def scoring_period(self):
+        return self.espn_get(self.base_url()).json()['scoringPeriodId']
 
     def lineup(self, team_id=None):
         """
@@ -171,92 +131,24 @@ class EspnApi:
         """
         return self.all_lineups()[team_id or self.team_id]
 
-    def scoring_period_info_url(self, scoring_period):
-        return f"http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
-               f"{self.league_id}?scoringPeriodId={scoring_period}&view=mRoster"
-
-    def all_lineups_url(self):
-        return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
-               "{}" \
-               "?view=mRoster" \
-               "&scoringPeriodId={}".format(self.league_id, self.scoring_period())
-
-    # { team_id: Lineup, ...}
     def all_lineups(self):
         resp = self.espn_get(self.all_lineups_url()).json()
         teams = resp['teams']
         lineup_dict = dict()
         for team in teams:
             roster = team['roster']['entries']
-            players = list(map(lambda e: (roster_entry_to_player(e["playerPoolEntry"]["player"]),
-                                          espn_slot_to_slot.get(e['lineupSlotId'])), roster))
-            lineup = EspnApi.player_list_to_lineup(players)
+            players = list(map(lambda e:
+                               (self.roster_entry_to_player(e["playerPoolEntry"]["player"]),
+                                          self.slot_for_id(e['lineupSlotId'])), roster))
+            lineup = self.player_list_to_lineup(players)
             lineup_dict[team['id']] = lineup
         return lineup_dict
-
-    def all_info_url(self):
-        return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
-               "{}" \
-               "?view=mLiveScoring&view=mMatchupScore&view=mPendingTransactions" \
-               "&view=mPositionalRatings&view=mSettings&view=mTeam".format(self.league_id)
 
     def all_info(self):
         return self.espn_get(self.all_info_url())
 
     def scoring_period_info(self, scoring_period):
         return self.espn_get(self.scoring_period_info_url(scoring_period))
-
-    def scoring_settings(self):
-        info = self.all_info().json()
-        scoring_items = info['settings']['scoringSettings']['scoringItems']
-        return list(map(EspnApi.json_to_scoring_setting, scoring_items))
-
-    def scoring_period_stats(self, scoring_period):
-        teams = self.scoring_period_info(scoring_period).json()["teams"]
-        team_to_stats = dict()
-        for t in teams:
-            stats = cumulative_stats_from_roster_entries(t["roster"]["entries"], scoring_period)
-            team_to_stats[t['id']] = stats
-        return team_to_stats
-
-    def year_stats(self):
-        """
-        Returns a dictionary of all stats for all teams on the year.
-        Maps team id to Stats object
-        :return: mapping of team id to Stats for the year
-        """
-        teams = self.all_info().json()['teams']
-        team_to_stats = dict()
-        for t in teams:
-            stats = create_stats(t['valuesByStat'])
-            team_to_stats[t['id']] = stats
-        return team_to_stats
-
-    def lineup_settings_url(self):
-        return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
-               "{}?view=mSettings".format(self.league_id)
-
-    def lineup_settings(self):
-        url = self.lineup_settings_url()
-        settings = self.espn_get(url).json()['settings']['rosterSettings']['lineupSlotCounts']
-        return lineup_slot_counts_to_lineup_settings(settings)
-
-    def set_lineup_url(self):
-        return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
-               "{}/transactions/".format(self.league_id)
-
-    def league(self):
-        """
-        Fetches the whole league, including each team's current lineup and yearly stats
-        :return: League - the whole league
-        """
-        stats = self.year_stats()
-        lineups = self.all_lineups()
-        teams = []
-        for team_id in stats.keys():
-            t = Team(team_id, lineups.get(team_id), stats.get(team_id))
-            teams.append(t)
-        return League(teams)
 
     def team_name(self, team_id=None):
         """
@@ -271,9 +163,133 @@ class EspnApi:
         team = next(filter(lambda t: t['id'] == team_id, teams))
         return f"{team['location']} {team['nickname']}"
 
+    # DATA PARSING
+    def roster_entry_to_player(self, player_map):
+        """
+        Takes an object from the ESPN API that represents a Player
+        and converts it into a Player, including all positions
+        :param player_map: ESPN api player object
+        :return: Player object
+        """
+        player_id = player_map['id']
+        name = player_map['fullName']
+        default_position_id = player_map['defaultPositionId']
+        eligible_slots = player_map['eligibleSlots']
+        position = self.position(default_position_id)
+        first = player_map['firstName']
+        last = player_map['lastName']
+        possible_positions = set()
+        for slot in eligible_slots:
+            converted = self.slot_for_id(slot)
+            if converted is not None:
+                possible_positions.add(converted)
+        return Player(name, first, last, player_id, possible_positions, position)
+
+    def lineup_slot_counts_to_lineup_settings(self, settings):
+        """
+        Takes an ESPN API dictionary mapping slots (which arrive as strings)
+        to counts (which arrive as ints), and converts it into a LineupSettings object
+        :param dict settings: mapping of slot to count
+        :return LineupSettings: the settings object for the given dictionary
+        """
+        converted_settings = dict()
+
+        for slot_id, count in settings.items():
+            slot = self.slot_for_id(int(slot_id))
+            if slot is not None:
+                converted_settings[slot] = count
+        return LineupSettings(converted_settings)
+
+    @abstractmethod
+    def slot_for_id(self, slot_id):
+        """
+        Returns the lineup slot for the given espn slot id
+        :param int slot_id: the id of the slot
+        :return Enum: a member of an Enum representing a Slot
+        """
+        pass
+
+    @abstractmethod
+    def stat_enum(self):
+        pass
+
+    def lineup_settings(self):
+        url = self.lineup_settings_url()
+        settings = self.espn_get(url).json()['settings']['rosterSettings']['lineupSlotCounts']
+        return self.lineup_slot_counts_to_lineup_settings(settings)
+
+    def create_stats(self, espn_stats_dict):
+        transformed_stats = dict()
+        for stat_id_str in espn_stats_dict.keys():
+            stat_id = int(stat_id_str)
+            stat = self.stat_enum().espn_stat_to_stat(stat_id)
+            if stat:
+                stat_val = float(espn_stats_dict.get(stat_id_str))
+                transformed_stats[stat] = stat_val
+
+        return Stats(transformed_stats, self.stat_enum())
+
+    def year_stats(self):
+        """
+        Returns a dictionary of all stats for all teams on the year.
+        Maps team id to Stats object
+        :return: mapping of team id to Stats for the year
+        """
+        teams = self.all_info().json()['teams']
+        team_to_stats = dict()
+        for t in teams:
+            stats = self.create_stats(t['valuesByStat'])
+            team_to_stats[t['id']] = stats
+        return team_to_stats
+
+    @abstractmethod
+    def is_starting(self, roster_entry):
+        """
+        Checks if the given roster entry is a starting one
+        :param roster_entry:
+        :return:
+        """
+        pass
+
+    def cumulative_stats_from_roster_entries(self, entries, scoring_period_id):
+        """
+        Takes a list of roster entries and reconstitutes the cumulative stats produced by that roster.
+        :param list entries: the entries produced
+        :param int scoring_period_id: the scoring period for which stats are being accumulated
+        :return Stats: the sum total of stats produced by starters on that roster
+        """
+        total_stats = Stats({}, self.stat_enum())
+        for e in filter(self.is_starting, entries):
+            entry_stats_list = e["playerPoolEntry"]["player"]["stats"]
+            stats_dict = next(filter(lambda d: d['scoringPeriodId'] == scoring_period_id and d['statSourceId'] == 0, entry_stats_list), None)
+            if stats_dict is None:
+                name = e["playerPoolEntry"]["player"]["fullName"]
+                LOGGER.warning(f"{name} has no stats matching scoring period {scoring_period_id} found in entry {e}")
+                continue
+            stats = self.create_stats(stats_dict["stats"])
+            total_stats += stats
+        return total_stats
+
+    def scoring_period_stats(self, scoring_period):
+        teams = self.scoring_period_info(scoring_period).json()["teams"]
+        team_to_stats = dict()
+        for t in teams:
+            stats = self.cumulative_stats_from_roster_entries(t["roster"]["entries"], scoring_period)
+            team_to_stats[t['id']] = stats
+        return team_to_stats
+
+    def scoring_settings(self):
+        info = self.all_info().json()
+        scoring_items = info['settings']['scoringSettings']['scoringItems']
+        return list(map(self.json_to_scoring_setting, scoring_items))
+
+    def json_to_scoring_setting(self, item):
+        stat = self.stat_enum().espn_stat_to_stat(item['statId'])
+        LOGGER.debug(f"processing {item} = {stat}")
+        return ScoringSetting(stat, item['isReverseItem'])
+
     def player_url(self):
-        return f"http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
-               f"{self.league_id}?view=kona_playercard"
+        return f"{self.base_url()}?view=kona_playercard"
 
     def player_request(self, player_id):
         """
@@ -292,112 +308,18 @@ class EspnApi:
         :param int player_id: the id in the ESPN system of the player to be requested
         :return Player: the associated Player object (or None)
         """
-        return roster_entry_to_player(self.player_request(player_id))
+        return self.roster_entry_to_player(self.player_request(player_id))
 
-    def is_probable_pitcher(self, player_id):
+    def league(self):
         """
-        Checks if the Player with the given player id is a probable starting pitcher today.
-        :param int player_id: the ESPN id of the player to check
-        :return bool: whether or not the player is pitching today
+        Fetches the whole league, including each team's current lineup and yearly stats
+        :return: League - the whole league
         """
-        player_resp = self.player_request(player_id)
-        name = player_resp["fullName"]
-        LOGGER.debug(f"checking start status for {name}")
-        stats = player_resp["stats"]
-        starter_split = next(filter(lambda s: s["statSplitTypeId"] == 5, stats), {}).get("stats", {})
-        is_starter = starter_split.get("99", None) == 1.0
-        LOGGER.debug(f"starting? {is_starter}")
-        return is_starter
+        stats = self.year_stats()
+        lineups = self.all_lineups()
+        teams = []
+        for team_id in stats.keys():
+            t = Team(team_id, lineups.get(team_id), stats.get(team_id))
+            teams.append(t)
+        return League(teams)
 
-    """
-    {"bidAmount":0,
-    "executionType":"EXECUTE",
-    "id":"e2d156d6-94c3-4fa0-9cac-4aaacbce1444",
-    "isActingAsTeamOwner":false,
-    "isLeagueManager":false,
-    "isPending":false,
-    "items":[{"fromLineupSlotId":-1,
-                "fromTeamId":0,
-                "isKeeper":false,
-                "overallPickNumber":0,
-                "playerId":35983,
-                "toLineupSlotId":-1,
-                "toTeamId":7,
-                "type":"ADD"},
-                {"fromLineupSlotId":-1,
-                "fromTeamId":7,
-                "isKeeper":false,
-                "overallPickNumber":0,
-                "playerId":32620,
-                "toLineupSlotId":-1,
-                "toTeamId":0,
-                "type":"DROP"}],
-    "memberId":"{84C1CD19-5E2C-4D5D-81CD-195E2C4D5D75}",
-    "proposedDate":1553703820851,
-    "rating":0,
-    "scoringPeriodId":8,
-    "skipTransactionCounters":false,
-    "status":"EXECUTED",
-    "subOrder":0,
-    "teamId":7,
-    "type":"FREEAGENT"}
-    """
-
-    def set_lineup_payload(self, transitions):
-        payload = {
-            "isLeagueManager": False,
-            "teamId": self.team_id,
-            "type": "ROSTER",
-            "memberId": self.member_id(),
-            "scoringPeriodId": self.scoring_period(),
-            "executionType": "EXECUTE",
-            "items": list(map(EspnApi.transition_to_item, transitions))
-        }
-        return payload
-
-    # this will not work at the moment - need to translate LineupSlots back to espn
-    # lineup ids
-    def set_lineup(self, lineup):
-        cur_lineup = self.lineup(self.team_id)
-        transitions = cur_lineup.transitions(lineup)
-        return self.execute_transitions(transitions)
-
-    def execute_transitions(self, transitions):
-        """
-        Executes the given transitions, moving players as specified.
-        :param list transitions: the list of LineupTransitions to execute
-        :return: the response returned from the POST request
-        """
-        url = self.set_lineup_url()
-        for t in transitions:
-            LOGGER.info(f"executing transition {t}")
-        payload = self.set_lineup_payload(transitions)
-        return self.espn_post(url, payload)
-
-    @staticmethod
-    def player_list_to_lineup(players):
-        player_dict = dict()
-        for (player, slot) in players:
-            cur_list = player_dict.get(slot, list())
-            cur_list.append(player)
-            player_dict[slot] = cur_list
-        return Lineup(player_dict)
-
-    @staticmethod
-    def json_to_scoring_setting(item):
-        stat = stat_id_to_stat(item['statId'])
-        return ScoringSetting(stat, item['isReverseItem'])
-
-    @staticmethod
-    def transition_to_item(transition):
-        """
-        Creates the ESPN API item for a transition out of a LineupTransition object.
-        :param LineupTransition transition:
-        :return:
-        """
-        return {
-            "playerId": transition.player.espn_id,
-            "type": "LINEUP",
-            "fromLineupSlotId": slot_to_slot_id(transition.from_slot),
-            "toLineupSlotId": slot_to_slot_id(transition.to_slot)
-        }
