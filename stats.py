@@ -1,4 +1,5 @@
 from espn.baseball.baseball_stat import BaseballStat
+from espn.basketball.basketball_stat import BasketballStat
 
 
 class Stats:
@@ -7,6 +8,8 @@ class Stats:
         BaseballStat.OBP: lambda s: s.obp(),
         BaseballStat.WHIP: lambda s: s.whip(),
         BaseballStat.ERA: lambda s: s.era(),
+        BasketballStat.FTPCT: lambda s: s.divide(BasketballStat.FTM, BasketballStat.FTA),
+        BasketballStat.FGPCT: lambda s: s.divide(BasketballStat.FGM, BasketballStat.FGA),
     }
 
     def __init__(self, stat_dict, stat_enum):
@@ -44,6 +47,18 @@ class Stats:
             if stat:
                 s += "{}\t{}\n".format(name, stat)
         return s
+
+    def divide(self, s_num, s_denom):
+        """
+        Returns the result of dividing the numerator stat by the denominator stat, returning zero if the denominator is zero
+        :param s_num:
+        :param s_denom:
+        :return:
+        """
+        denom_val = self.stat_dict.get(s_denom)
+        if denom_val is None or denom_val == 0.0:
+            return 0.0
+        return self.stat_dict.get(s_num, 0.0) / denom_val
 
     def average(self):
         return round(self.stat_dict.get(BaseballStat.AVG, self.stat_dict.get(BaseballStat.H) / self.stat_dict.get(

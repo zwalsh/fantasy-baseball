@@ -22,6 +22,7 @@ class StatStore:
         """
         self.league_id = league_id
         self.year = year
+        self.stat_cache = {}
 
     @staticmethod
     def check_dir(path):
@@ -49,6 +50,9 @@ class StatStore:
         team_dir = self.check_dir(league_dir / str(team_id))
         return team_dir
 
+    def check_cache(self, file_name):
+        return self.stat_cache.get(file_name)
+
     def retrieve_stats(self, team_id):
         """
         Retrieves all stored stats for the given team, returning them as a dictionary
@@ -60,10 +64,18 @@ class StatStore:
         team_stat_dir = self.stat_dir(team_id)
         for file in team_stat_dir.iterdir():
             file_name = file.parts[-1]
-            LOGGER.info(f"unpickling stats located at {file}")
             match = re.search("([0-9]*)-stats.p", file_name)
             scoring_period = int(match.group(1))
-            all_stats[scoring_period] = pickle.load(file.open("rb"))
+
+            cached = self.stat_cache.get(str(file))
+            if cached:
+                LOGGER.info(f"using cached stats for {file}")
+                all_stats[scoring_period] = cached
+            else:
+                LOGGER.info(f"unpickling stats located at {file}")
+                unpickled_stats = pickle.load(file.open("rb"))
+                self.stat_cache[str(file)] = unpickled_stats
+                all_stats[scoring_period] = unpickled_stats
         return all_stats
 
     def store_stats(self, stats, team_id, scoring_period):
