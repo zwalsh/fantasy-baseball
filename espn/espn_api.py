@@ -7,6 +7,7 @@ import requests
 
 from espn.sessions.espn_session_provider import EspnSessionProvider
 from league import League
+from lineup import Lineup
 from lineup_settings import LineupSettings
 from player import Player
 from scoring_setting import ScoringSetting
@@ -24,7 +25,7 @@ class EspnApiException(Exception):
 
 
 class EspnApi(metaclass=ABCMeta):
-    def __init__(self, session_provider, league_id, team_id):
+    def __init__(self, session_provider, league_id, team_id, year=2019):
         """
         Programmatic access to ESPN's (undocumented) API, caching requests that do not need refreshing,
         and automatically fetching a token for the user/password combination.
@@ -34,6 +35,7 @@ class EspnApi(metaclass=ABCMeta):
         self.session_provider = session_provider
         self.league_id = league_id
         self.team_id = team_id
+        self.year = year
         self.cache = dict()
 
     def espn_request(self, method, url, payload, headers=None, check_cache=True, retries=1):
@@ -91,7 +93,7 @@ class EspnApi(metaclass=ABCMeta):
         pass
 
     def base_url(self):
-        return f"http://fantasy.espn.com/apis/v3/games/{self.api_url_segment()}/seasons/2019/segments/0/leagues/" \
+        return f"http://fantasy.espn.com/apis/v3/games/{self.api_url_segment()}/seasons/{self.year}/segments/0/leagues/" \
                f"{self.league_id}"
 
     def scoring_period_info_url(self, scoring_period):
@@ -114,11 +116,6 @@ class EspnApi(metaclass=ABCMeta):
 
     def lineup_settings_url(self):
         return f"{self.base_url()}?view=mSettings"
-
-    @staticmethod
-    @abstractmethod
-    def player_list_to_lineup(players):
-        pass
 
     def scoring_period(self):
         return self.espn_get(self.base_url()).json()['scoringPeriodId']
@@ -201,15 +198,6 @@ class EspnApi(metaclass=ABCMeta):
         return LineupSettings(converted_settings)
 
     @abstractmethod
-    def slot_for_id(self, slot_id):
-        """
-        Returns the lineup slot for the given espn slot id
-        :param int slot_id: the id of the slot
-        :return Enum: a member of an Enum representing a Slot
-        """
-        pass
-
-    @abstractmethod
     def stat_enum(self):
         pass
 
@@ -242,15 +230,6 @@ class EspnApi(metaclass=ABCMeta):
             team_to_stats[t['id']] = stats
         return team_to_stats
 
-    @abstractmethod
-    def is_starting(self, roster_entry):
-        """
-        Checks if the given roster entry is a starting one
-        :param roster_entry:
-        :return:
-        """
-        pass
-
     def cumulative_stats_from_roster_entries(self, entries, scoring_period_id):
         """
         Takes a list of roster entries and reconstitutes the cumulative stats produced by that roster.
@@ -261,7 +240,11 @@ class EspnApi(metaclass=ABCMeta):
         total_stats = Stats({}, self.stat_enum())
         for e in filter(self.is_starting, entries):
             entry_stats_list = e["playerPoolEntry"]["player"]["stats"]
-            stats_dict = next(filter(lambda d: d['scoringPeriodId'] == scoring_period_id and d['statSourceId'] == 0, entry_stats_list), None)
+            stats_dict = next(filter(lambda d: d['scoringPeriodId'] == scoring_period_id
+                                               and d['statSourceId'] == 0
+                                               and d['statSplitTypeId'] == 5,
+                                     entry_stats_list),
+                              None)
             if stats_dict is None:
                 name = e["playerPoolEntry"]["player"]["fullName"]
                 LOGGER.warning(f"{name} has no stats matching scoring period {scoring_period_id} found in entry {e}")
@@ -285,7 +268,6 @@ class EspnApi(metaclass=ABCMeta):
 
     def json_to_scoring_setting(self, item):
         stat = self.stat_enum().espn_stat_to_stat(item['statId'])
-        LOGGER.debug(f"processing {item} = {stat}")
         return ScoringSetting(stat, item['isReverseItem'])
 
     def player_url(self):
@@ -323,3 +305,22 @@ class EspnApi(metaclass=ABCMeta):
             teams.append(t)
         return League(teams)
 
+    @abstractmethod
+    def slot_enum(self):
+        pass
+
+    def player_list_to_lineup(self, players):
+        player_dict = dict()
+        for (player, slot) in players:
+            cur_list = player_dict.get(slot, list())
+            cur_list.append(player)
+            player_dict[slot] = cur_list
+        return Lineup(player_dict, self.slot_enum())
+
+    def slot_for_id(self, slot_id):
+        return self.slot_enum().espn_slot_to_slot(slot_id)
+
+    def is_starting(self, roster_entry):
+        slot_id = roster_entry["lineupSlotId"]
+        slot = self.slot_for_id(slot_id)
+        return slot in self.slot_enum().starting_slots()
