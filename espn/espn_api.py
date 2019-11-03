@@ -318,7 +318,7 @@ class EspnApi(metaclass=ABCMeta):
         return Lineup(player_dict, self.slot_enum())
 
     def slot_for_id(self, slot_id):
-        return self.slot_enum().espn_slot_to_slot(slot_id) or slot_id
+        return self.slot_enum().espn_slot_to_slot(slot_id)
 
     def is_starting(self, roster_entry):
         slot_id = roster_entry["lineupSlotId"]
