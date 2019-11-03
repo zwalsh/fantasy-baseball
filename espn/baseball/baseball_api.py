@@ -95,11 +95,11 @@ class BaseballApi(EspnApi):
     "type":"FREEAGENT"}
     """
 
+    def slot_enum(self):
+        return BaseballSlot
+
     def stat_enum(self):
         return BaseballStat
-
-    def slot_for_id(self, slot_id):
-        return BaseballSlot.espn_slot_to_slot(slot_id)
 
     def position(self, position_id):
         return BaseballPosition(position_id)
@@ -134,25 +134,6 @@ class BaseballApi(EspnApi):
             LOGGER.info(f"executing transition {t}")
         payload = self.set_lineup_payload(transitions)
         return self.espn_post(url, payload)
-
-    @staticmethod
-    def player_list_to_lineup(players):
-        player_dict = dict()
-        for (player, slot) in players:
-            cur_list = player_dict.get(slot, list())
-            cur_list.append(player)
-            player_dict[slot] = cur_list
-        return Lineup(player_dict, BaseballSlot)
-
-    def is_starting(self, roster_entry):
-        """
-        Checks if the given roster entry is a starting one
-        :param roster_entry:
-        :return:
-        """
-        slot_id = roster_entry["lineupSlotId"]
-        slot = self.slot_for_id(slot_id)
-        return slot in BaseballSlot.starting_slots()
 
     @staticmethod
     def transition_to_item(transition):
