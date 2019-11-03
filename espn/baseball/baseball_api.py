@@ -1,4 +1,3 @@
-import json
 import logging
 
 from espn.baseball.baseball_position import BaseballPosition
@@ -6,10 +5,7 @@ from espn.baseball.baseball_slot import BaseballSlot
 from espn.baseball.baseball_stat import BaseballStat
 from espn.espn_api import EspnApi
 from espn.sessions.espn_session_provider import EspnSessionProvider
-from league import League
 from lineup import Lineup
-from scoring_setting import ScoringSetting
-from team import Team
 
 """
 http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/<LEAGUE_ID>
@@ -46,50 +42,9 @@ class BaseballApi(EspnApi):
 
     # { team_id: Lineup, ...}
 
-    def scoring_settings(self):
-        info = self.all_info().json()
-        scoring_items = info['settings']['scoringSettings']['scoringItems']
-        return list(map(BaseballApi.json_to_scoring_setting, scoring_items))
-
     def set_lineup_url(self):
         return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
                "{}/transactions/".format(self.league_id)
-
-    def league(self):
-        """
-        Fetches the whole league, including each team's current lineup and yearly stats
-        :return: League - the whole league
-        """
-        stats = self.year_stats()
-        lineups = self.all_lineups()
-        teams = []
-        for team_id in stats.keys():
-            t = Team(team_id, lineups.get(team_id), stats.get(team_id))
-            teams.append(t)
-        return League(teams)
-
-    def player_url(self):
-        return f"http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
-               f"{self.league_id}?view=kona_playercard"
-
-    def player_request(self, player_id):
-        """
-        Makes the request to ESPN for the player with the player id and returns the raw response (parsed from JSON)
-        :param int player_id: the id of the player to make the request about
-        :return dict: the parsed response from ESPN
-        """
-        filter_header = {"players": {"filterIds": {"value": [player_id]}}}
-        resp = self.espn_get(self.player_url(), {"X-Fantasy-Filter": json.dumps(filter_header)}, check_cache=False)
-        return resp.json()["players"][0]["player"]
-
-    def player(self, player_id):
-        """
-        Given the ESPN id of a Player, this will return the Player object associated with that Player,
-        or None if no such player exists.
-        :param int player_id: the id in the ESPN system of the player to be requested
-        :return Player: the associated Player object (or None)
-        """
-        return self.roster_entry_to_player(self.player_request(player_id))
 
     def is_probable_pitcher(self, player_id):
         """
@@ -188,11 +143,6 @@ class BaseballApi(EspnApi):
             cur_list.append(player)
             player_dict[slot] = cur_list
         return Lineup(player_dict, BaseballSlot)
-
-    @staticmethod
-    def json_to_scoring_setting(item):
-        stat = BaseballStat.espn_stat_to_stat(item['statId'])
-        return ScoringSetting(stat, item['isReverseItem'])
 
     def is_starting(self, roster_entry):
         """

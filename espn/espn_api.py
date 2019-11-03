@@ -1,14 +1,17 @@
+import json
 import logging
 import time
 from abc import abstractmethod, ABCMeta
 
 import requests
 
-from espn.baseball.baseball_stat import BaseballStat
 from espn.sessions.espn_session_provider import EspnSessionProvider
+from league import League
 from lineup_settings import LineupSettings
 from player import Player
+from scoring_setting import ScoringSetting
 from stats import Stats
+from team import Team
 
 LOGGER = logging.getLogger("espn.api")
 
@@ -274,4 +277,49 @@ class EspnApi(metaclass=ABCMeta):
             stats = self.cumulative_stats_from_roster_entries(t["roster"]["entries"], scoring_period)
             team_to_stats[t['id']] = stats
         return team_to_stats
+
+    def scoring_settings(self):
+        info = self.all_info().json()
+        scoring_items = info['settings']['scoringSettings']['scoringItems']
+        return list(map(self.json_to_scoring_setting, scoring_items))
+
+    def json_to_scoring_setting(self, item):
+        stat = self.stat_enum().espn_stat_to_stat(item['statId'])
+        LOGGER.debug(f"processing {item} = {stat}")
+        return ScoringSetting(stat, item['isReverseItem'])
+
+    def player_url(self):
+        return f"{self.base_url()}?view=kona_playercard"
+
+    def player_request(self, player_id):
+        """
+        Makes the request to ESPN for the player with the player id and returns the raw response (parsed from JSON)
+        :param int player_id: the id of the player to make the request about
+        :return dict: the parsed response from ESPN
+        """
+        filter_header = {"players": {"filterIds": {"value": [player_id]}}}
+        resp = self.espn_get(self.player_url(), {"X-Fantasy-Filter": json.dumps(filter_header)}, check_cache=False)
+        return resp.json()["players"][0]["player"]
+
+    def player(self, player_id):
+        """
+        Given the ESPN id of a Player, this will return the Player object associated with that Player,
+        or None if no such player exists.
+        :param int player_id: the id in the ESPN system of the player to be requested
+        :return Player: the associated Player object (or None)
+        """
+        return self.roster_entry_to_player(self.player_request(player_id))
+
+    def league(self):
+        """
+        Fetches the whole league, including each team's current lineup and yearly stats
+        :return: League - the whole league
+        """
+        stats = self.year_stats()
+        lineups = self.all_lineups()
+        teams = []
+        for team_id in stats.keys():
+            t = Team(team_id, lineups.get(team_id), stats.get(team_id))
+            teams.append(t)
+        return League(teams)
 
