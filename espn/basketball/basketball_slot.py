@@ -37,3 +37,7 @@ class BasketballSlot(Enum):
     @staticmethod
     def espn_slot_to_slot(slot_id):
         return BasketballSlot.slot_id_to_slot_map().get(slot_id)
+
+    @staticmethod
+    def slot_to_slot_id(slot):
+        return {v: k for k, v in BasketballSlot.slot_id_to_slot_map().items()}[slot]

@@ -5,7 +5,6 @@ from espn.baseball.baseball_slot import BaseballSlot
 from espn.baseball.baseball_stat import BaseballStat
 from espn.espn_api import EspnApi
 from espn.sessions.espn_session_provider import EspnSessionProvider
-from lineup import Lineup
 
 """
 http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/<LEAGUE_ID>
@@ -37,14 +36,7 @@ class BaseballApi(EspnApi):
     def api_url_segment(self):
         return "flb"
 
-    def member_id(self):
-        return "{84C1CD19-5E2C-4D5D-81CD-195E2C4D5D75}"  # todo fetch when logging in, persist?
-
     # { team_id: Lineup, ...}
-
-    def set_lineup_url(self):
-        return "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/" \
-               "{}/transactions/".format(self.league_id)
 
     def is_probable_pitcher(self, player_id):
         """
@@ -103,51 +95,6 @@ class BaseballApi(EspnApi):
 
     def position(self, position_id):
         return BaseballPosition(position_id)
-
-    def set_lineup_payload(self, transitions):
-        payload = {
-            "isLeagueManager": False,
-            "teamId": self.team_id,
-            "type": "ROSTER",
-            "memberId": self.member_id(),
-            "scoringPeriodId": self.scoring_period(),
-            "executionType": "EXECUTE",
-            "items": list(map(BaseballApi.transition_to_item, transitions))
-        }
-        return payload
-
-    # this will not work at the moment - need to translate LineupSlots back to espn
-    # lineup ids
-    def set_lineup(self, lineup):
-        cur_lineup = self.lineup(self.team_id)
-        transitions = cur_lineup.transitions(lineup)
-        return self.execute_transitions(transitions)
-
-    def execute_transitions(self, transitions):
-        """
-        Executes the given transitions, moving players as specified.
-        :param list transitions: the list of LineupTransitions to execute
-        :return: the response returned from the POST request
-        """
-        url = self.set_lineup_url()
-        for t in transitions:
-            LOGGER.info(f"executing transition {t}")
-        payload = self.set_lineup_payload(transitions)
-        return self.espn_post(url, payload)
-
-    @staticmethod
-    def transition_to_item(transition):
-        """
-        Creates the ESPN API item for a transition out of a LineupTransition object.
-        :param LineupTransition transition:
-        :return:
-        """
-        return {
-            "playerId": transition.player.espn_id,
-            "type": "LINEUP",
-            "fromLineupSlotId": BaseballSlot.slot_to_slot_id(transition.from_slot),
-            "toLineupSlotId": BaseballSlot.slot_to_slot_id(transition.to_slot)
-        }
 
     class Builder:
         def __init__(self):
