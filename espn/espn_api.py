@@ -117,6 +117,9 @@ class EspnApi(metaclass=ABCMeta):
     def lineup_settings_url(self):
         return f"{self.base_url()}?view=mSettings"
 
+    def set_lineup_url(self):
+        return f"{self.base_url()}/transactions/"
+
     def scoring_period(self):
         return self.espn_get(self.base_url()).json()['scoringPeriodId']
 
@@ -159,8 +162,8 @@ class EspnApi(metaclass=ABCMeta):
         teams = self.all_info().json()['teams']
         team = next(filter(lambda t: t['id'] == team_id, teams))
         return f"{team['location']} {team['nickname']}"
-
     # DATA PARSING
+
     def roster_entry_to_player(self, player_map):
         """
         Takes an object from the ESPN API that represents a Player
@@ -324,3 +327,48 @@ class EspnApi(metaclass=ABCMeta):
         slot_id = roster_entry["lineupSlotId"]
         slot = self.slot_for_id(slot_id)
         return slot in self.slot_enum().starting_slots()
+
+    def member_id(self):
+        return "{84C1CD19-5E2C-4D5D-81CD-195E2C4D5D75}"  # todo fetch when logging in, persist?
+
+    def set_lineup_payload(self, transitions):
+        payload = {
+            "isLeagueManager": False,
+            "teamId": self.team_id,
+            "type": "ROSTER",
+            "memberId": self.member_id(),
+            "scoringPeriodId": self.scoring_period(),
+            "executionType": "EXECUTE",
+            "items": list(map(self.transition_to_item, transitions))
+        }
+        return payload
+
+    def execute_transitions(self, transitions):
+        """
+        Executes the given transitions, moving players as specified.
+        :param list transitions: the list of LineupTransitions to execute
+        :return: the response returned from the POST request
+        """
+        url = self.set_lineup_url()
+        for t in transitions:
+            LOGGER.info(f"executing transition {t}")
+        payload = self.set_lineup_payload(transitions)
+        return self.espn_post(url, payload)
+
+    def set_lineup(self, lineup):
+        cur_lineup = self.lineup(self.team_id)
+        transitions = cur_lineup.transitions(lineup)
+        return self.execute_transitions(transitions)
+
+    def transition_to_item(self, transition):
+        """
+        Creates the ESPN API item for a transition out of a LineupTransition object.
+        :param LineupTransition transition:
+        :return:
+        """
+        return {
+            "playerId": transition.player.espn_id,
+            "type": "LINEUP",
+            "fromLineupSlotId": self.slot_enum().slot_to_slot_id(transition.from_slot),
+            "toLineupSlotId": self.slot_enum().slot_to_slot_id(transition.to_slot)
+        }
