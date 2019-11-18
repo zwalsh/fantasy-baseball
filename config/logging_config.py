@@ -40,6 +40,7 @@ DEV_LOGGING = {
         "notifications": {},
         "notifications.client.dev": {},
         "notifications.client.pushed": {},
+        "numberfire.api": {},
         'optimize.optimizer': {},
         "tasks.set_lineup": {},
         "tasks.notify_new_trades": {},
