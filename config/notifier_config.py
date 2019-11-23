@@ -32,4 +32,4 @@ def user_pushed_id(user):
 
 def read_text(rel_path_str):
     abs_path = Path.cwd() / rel_path_str
-    return abs_path.read_text()
+    return abs_path.read_text().rstrip()
