@@ -27,16 +27,6 @@ class FantasySPApi:
         r = session.get("https://www.fantasysp.com/projections/basketball/daily/")
         LOGGER.info(f"Rendering after {time.time() - start_time:.3f} seconds")
         r.html.render(timeout=20)
-        # print(r.cookies)
-        #
-        # r = requests.post("https://www.fantasysp.com/a_fsp_main.php",
-        #                   data="ajax-load=free-projections-ajax&sport=nba&thetype=daily&position=&tehdesc=basketball&ppr=",
-        #                   cookies=r.cookies)
-        #
-        #
-        # "crisp-client%2Fsession%2F4a077e48-707b-4d40-ac54-5223bb3c8950"
-        # "session_5050d2ec-2399-45e0-b263-7c32a83fc684"
-
         LOGGER.info(f"Finished after {time.time() - start_time:.3f} seconds")
         self.cache = r.html
         return r.html

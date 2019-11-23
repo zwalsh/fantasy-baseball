@@ -49,6 +49,7 @@ DEV_LOGGING = {
         "tasks.check_fangraphs": {},
         "tasks.archive_daily_stats": {},
         "tasks.archive_year_stats": {},
+        "tasks.set_fba_lineup": {},
     }
 }
 
