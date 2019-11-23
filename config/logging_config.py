@@ -40,12 +40,16 @@ DEV_LOGGING = {
         "notifications": {},
         "notifications.client.dev": {},
         "notifications.client.pushed": {},
+        "numberfire.api": {},
         'optimize.optimizer': {},
+        "optimize.optimize_fp": {},
+        "fantasysp.api": {},
         "tasks.set_lineup": {},
         "tasks.notify_new_trades": {},
         "tasks.check_fangraphs": {},
         "tasks.archive_daily_stats": {},
         "tasks.archive_year_stats": {},
+        "tasks.set_fba_lineup": {},
     }
 }
 

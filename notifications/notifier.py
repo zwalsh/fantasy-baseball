@@ -2,11 +2,28 @@ import sys
 
 from espn.baseball.baseball_slot import BaseballSlot
 from espn.baseball.baseball_stat import BaseballStat
+from espn.basketball.basketball_slot import BasketballSlot
 
 
 class Notifier:
     def __init__(self, client):
         self.client = client
+
+    def notify_set_fba_lineup(self, team_name, transitions, total_points, player_to_fp):
+        """
+        Sends a message to the client detailing that a basketball lineup has been set.
+
+        Includes the team name, the transitions, and the projection for the whole team/each player.
+
+        :param str team_name: the name of the team being set
+        :param list transitions: the LineupTransitions executed
+        :param float total_points: the score of the whole team
+        :param dict player_to_fp: maps player name to their number of fantasy points
+        """
+        msg = f"{team_name}: {total_points:.1f} points"
+        for tr in sorted(transitions, key=Notifier.transition_sort_value):
+            msg += "\n" + self.transition_message(tr) + f" ({player_to_fp.get(tr.player.name):.1f})"
+        self.client.send_message(msg)
 
     def notify_set_lineup(self, team_name, lineup_total, transitions, scoring_settings):
         """
@@ -60,9 +77,9 @@ class Notifier:
         :param LineupTransition transition: the transition to be given a sort value
         :return int: a value representing whether the transition should come sooner or later
         """
-        if transition.to_slot == BaseballSlot.BENCH:
+        if transition.to_slot in {BaseballSlot.BENCH, BasketballSlot.BENCH}:
             return 0
-        elif transition.from_slot == BaseballSlot.BENCH:
+        elif transition.from_slot in {BaseballSlot.BENCH, BasketballSlot.BENCH}:
             return 1
         else:
             return 2
