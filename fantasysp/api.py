@@ -12,13 +12,21 @@ LOGGER = logging.getLogger("fantasysp.api")
 
 
 class FantasySPApi:
+    def __init__(self):
+        self.cache = None
+
     def page(self):
+        if self.cache is not None:
+            LOGGER.info("Using cached page")
+            return self.cache
+
         start_time = time.time()
         LOGGER.info("Fetching daily projections page from FantasySP")
 
         session = HTMLSession()
         r = session.get("https://www.fantasysp.com/projections/basketball/daily/")
-        r.html.render()
+        LOGGER.info(f"Rendering after {time.time() - start_time:.3f} seconds")
+        r.html.render(timeout=20)
         # print(r.cookies)
         #
         # r = requests.post("https://www.fantasysp.com/a_fsp_main.php",
@@ -30,6 +38,7 @@ class FantasySPApi:
         # "session_5050d2ec-2399-45e0-b263-7c32a83fc684"
 
         LOGGER.info(f"Finished after {time.time() - start_time:.3f} seconds")
+        self.cache = r.html
         return r.html
 
     def table(self):
