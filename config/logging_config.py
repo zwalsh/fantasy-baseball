@@ -35,6 +35,7 @@ DEV_LOGGING = {
         'lineup': {},
         'fangraphs.api': {},
         "fangraphs.metrics": {},
+        'fantasypros.api': {},
         'config.team_reader': {},
         "config.password_reader": {},
         "notifications": {},
