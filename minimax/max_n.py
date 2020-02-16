@@ -6,7 +6,7 @@ from minimax.state_evaluator import StateEvaluator
 
 
 def max_n(node: GameState, player: int, upper_bound: int, game_info: GameInfo, state_evaluator: StateEvaluator,
-          answer_now=lambda: True) -> List[int]:
+          answer_now=lambda: False) -> List[int]:
     """
     Runs the MAX^N algorithm (expansion of minimax) to determine the value of the given game state
     when it is the given player's turn.
@@ -34,9 +34,9 @@ def max_n(node: GameState, player: int, upper_bound: int, game_info: GameInfo, s
 
     children = node.children()
     next_player_index = (player + 1) % game_info.total_players
-    best = max_n(children.pop(), next_player_index, game_info.max_value, game_info, state_evaluator, answer_now)
+    best = max_n(children[0], next_player_index, game_info.max_value, game_info, state_evaluator, answer_now)
 
-    for child in children:
+    for child in children[1:]:
         if best[player] >= upper_bound:
             return best
         current = max_n(child, next_player_index, game_info.max_value - best[player], game_info, state_evaluator,
