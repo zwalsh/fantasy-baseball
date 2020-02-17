@@ -6,7 +6,7 @@ class GameState(object):
     def __init__(self):
         return
 
-    def children(self) -> List['GameState']:
+    def children(self, player) -> List['GameState']:
         pass
 
     def is_terminal(self) -> bool:
