@@ -7,7 +7,7 @@ from minimax.game_state import GameState
 
 
 class DraftState(GameState):
-    def __init__(self, game_info: DraftGameInfo, players: dict, drafted: set, lineups: list):
+    def __init__(self, game_info: DraftGameInfo, players: set, drafted: set, lineups: list):
         super().__init__()
         self.game_info = game_info
         self.players = players
@@ -42,7 +42,7 @@ class DraftState(GameState):
                 open_slots.append(ls)
 
         possible_additions = []
-        for player in self.players.keys():
+        for player in self.players:
             if player in self.drafted:
                 continue
             fillable_slots = filter(lambda slot: player.can_play(slot), open_slots)
@@ -55,7 +55,7 @@ class DraftState(GameState):
         return possible_additions
 
     def is_terminal(self) -> bool:
-        draftable_slots = filter(lambda tup: tup[0] != BaseballSlot.INJURED, self.game_info.lineup_settings.items())
+        draftable_slots = filter(lambda tup: tup[0] != BaseballSlot.INJURED, self.game_info.lineup_settings.slot_counts.items())
         total_slots = sum(map(lambda tup: tup[1], draftable_slots)) * self.game_info.total_players
         return len(self.drafted) == total_slots
 

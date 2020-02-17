@@ -3,10 +3,8 @@ from unittest import TestCase
 from draft.draft_game_info import DraftGameInfo
 from draft.draft_state import DraftState
 from espn.baseball.baseball_slot import BaseballSlot
-from espn.baseball.baseball_stat import BaseballStat
 from lineup import Lineup
 from lineup_settings import LineupSettings
-from stats import Stats
 from test.test_player import PlayerTest
 
 
@@ -40,17 +38,17 @@ class TestDraftState(TestCase):
     state = DraftState(
         DraftGameInfo(3, 100, ls),
         {
-            PlayerTest.springer: Stats({}, BaseballStat),
-            PlayerTest.rosario: Stats({}, BaseballStat),
-            PlayerTest.degrom: Stats({}, BaseballStat),
-            PlayerTest.segura: Stats({}, BaseballStat),
-            PlayerTest.rizzo: Stats({}, BaseballStat),
-            PlayerTest.peraza: Stats({}, BaseballStat),
-            PlayerTest.choo: Stats({}, BaseballStat),
-            PlayerTest.morton: Stats({}, BaseballStat),
-            PlayerTest.yelich: Stats({}, BaseballStat),
-            PlayerTest.braun: Stats({}, BaseballStat),
-            PlayerTest.santana: Stats({}, BaseballStat),
+            PlayerTest.springer,
+            PlayerTest.rosario,
+            PlayerTest.degrom,
+            PlayerTest.segura,
+            PlayerTest.rizzo,
+            PlayerTest.peraza,
+            PlayerTest.choo,
+            PlayerTest.morton,
+            PlayerTest.yelich,
+            PlayerTest.braun,
+            PlayerTest.santana,
         },
         {
             PlayerTest.springer,
@@ -70,9 +68,9 @@ class TestDraftState(TestCase):
     sl2 = Lineup({BaseballSlot.OUTFIELD: [PlayerTest.yelich]}, BaseballSlot)
     terminal_state = DraftState(DraftGameInfo(3, 1000, small_lineup_settings),
                                 {
-                                    PlayerTest.springer: None,
-                                    PlayerTest.rosario: None,
-                                    PlayerTest.yelich: None
+                                    PlayerTest.springer,
+                                    PlayerTest.rosario,
+                                    PlayerTest.yelich
                                 },
                                 {
                                     PlayerTest.springer, PlayerTest.rosario, PlayerTest.yelich
