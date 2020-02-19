@@ -41,6 +41,8 @@ class FantasyProsApi:
             BaseballStat.H: int(cells[8].text),
             BaseballStat.BB: int(cells[11].text),
         }
+        # approximate plate appearances as at-bats plus walks
+        stats_dict[BaseballStat.PA] = stats_dict[BaseballStat.AB] + stats_dict[BaseballStat.BB]
         return Stats(stats_dict, BaseballStat)
 
     @staticmethod
