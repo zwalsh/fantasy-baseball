@@ -1,4 +1,7 @@
 import logging
+import pickle
+from datetime import date
+from pathlib import Path
 
 from requests_html import HTMLSession
 
@@ -13,6 +16,14 @@ class FantasyProsApi:
 
     def __init__(self):
         pass
+
+    @staticmethod
+    def _path_segment(url):
+        if 'hitters' in url:
+            return 'hitters'
+        if 'pitchers' in url:
+            return 'pitchers'
+        return None
 
     @timed(LOGGER)
     def page(self, url):
@@ -64,6 +75,16 @@ class FantasyProsApi:
                 Scrape the given url for year-long projections, converting with the given function
                 :return dict: dictionary of name to Stats object
                 """
+        today = date.today()
+        date_string = str(today)
+        LOGGER.debug(f'Using date_str: {date_string}')
+        cache_key = f'fantasypros/{FantasyProsApi._path_segment(url)}/{date_string}.p'
+        LOGGER.debug(f'Looking in path {cache_key}')
+        cache_location = Path(cache_key)
+        if cache_location.exists():
+            f = cache_location.open('rb')
+            return pickle.load(f)
+
         results = {}
         for tr in self.table_rows(url):
             name = FantasyProsApi.name_from_row(tr)
@@ -72,6 +93,8 @@ class FantasyProsApi:
             stats = stats_from_row(tr)
             results[name] = stats
 
+        f = cache_location.open('wb+')
+        pickle.dump(results, f)
         return results
 
     def year_hitter_projections(self):
