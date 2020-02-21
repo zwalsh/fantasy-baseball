@@ -41,24 +41,34 @@ class DraftStateEvaluator(StateEvaluator):
         return []
 
     def terminal_state_value(self, game_state: DraftState, game_info: DraftGameInfo):
-        totals = map(self._cumulative_stats, game_state.lineups)
+        totals = list(map(self._cumulative_stats, game_state.lineups))
         values = [0] * game_info.total_players
+        stat_std_devs = {
+            BaseballStat.R: 50.0,
+            BaseballStat.RBI: 100.0,
+            BaseballStat.AVG: 0.003,
+            BaseballStat.AB: 1000.0,
+            BaseballStat.H: 200.0,
+            BaseballStat.HR: 40.0,
+            BaseballStat.SB: 10.0,
+            BaseballStat.BB: 50.0,
+            BaseballStat.OBP: 0.008,
+            BaseballStat.W: 7.0,
+            BaseballStat.K: 100.0,
+            BaseballStat.SV: 10.0,
+            BaseballStat.ER: 50.0,
+            BaseballStat.OUTS: 200.0,
+            BaseballStat.ERA: 0.01,
+            BaseballStat.WHIP: 0.008,
+        }
         for ss in self.scoring_settings:
-            values += self._accrued_value_in_league(list(map(lambda t: t.stat_dict[ss.stat], totals)),
-                                                    ss.is_reverse,
-                                                    {
-                                                        BaseballStat.W: 7.0,
-                                                        BaseballStat.RBI: 100.0,
-                                                        BaseballStat.OUTS: 200.0,
-                                                        BaseballStat.AB: 1000.0,
-                                                        BaseballStat.H: 200.0,
-                                                        BaseballStat.HR: 40.0,
-                                                        BaseballStat.SV: 10.0,
-                                                        BaseballStat.ER: 50.0,
-                                                        BaseballStat.R: 50.0,
-                                                        BaseballStat.BB: 50.0,
-                                                        BaseballStat.OBP: 0.008
-                                                    }[ss.stat])
+            values_for_stat = self._accrued_value_in_league(list(map(lambda stats: stats.unrounded_value_for_stat(ss.stat), totals)),
+                                                            ss.is_reverse,
+                                                            stat_std_devs[ss.stat])
+            LOGGER.debug(f'Accrued for {ss.stat}:')
+            LOGGER.debug(values_for_stat)
+            for i, val in enumerate(values_for_stat):
+                values[i] += val
         return values
 
     def _accrued_value_in_league(self, stat_values: List[float], is_reverse: bool, std_dev) -> List[float]:
