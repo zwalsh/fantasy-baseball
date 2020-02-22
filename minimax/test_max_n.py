@@ -13,11 +13,11 @@ class BasicGame(GameState):
         self.values = values
         self.children_list = children
 
-    def children(self, player) -> List['GameState']:
+    def children(self) -> List['GameState']:
         return self.children_list
 
     def is_terminal(self) -> bool:
-        return len(self.children(0)) == 0
+        return len(self.children()) == 0
 
 
 class BasicStateEvaluator(StateEvaluator):
@@ -29,7 +29,7 @@ class BasicStateEvaluator(StateEvaluator):
 
 
 class ExplodingGame(GameState):
-    def children(self, player) -> List['GameState']:
+    def children(self) -> List['GameState']:
         raise ValueError
 
     def is_terminal(self) -> bool:

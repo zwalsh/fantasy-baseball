@@ -32,7 +32,7 @@ def max_n(node: GameState, player: int, upper_bound: int, game_info: GameInfo, s
     if answer_now():
         return state_evaluator.heuristic(node, game_info)
 
-    children = node.children(player)
+    children = node.children()
     next_player_index = (player + 1) % game_info.total_players
     best = max_n(children[0], next_player_index, game_info.max_value, game_info, state_evaluator, answer_now)
 
