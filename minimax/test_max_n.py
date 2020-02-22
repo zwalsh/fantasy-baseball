@@ -68,27 +68,27 @@ class Test(TestCase):
     state_evaluator = BasicStateEvaluator()
 
     def test_max_n_no_children(self):
-        vals_c = max_n(state_c, 2, 9, self.game_info, self.state_evaluator)
+        vals_c = max_n(state_c, 2, 9, self.game_info, self.state_evaluator).values
         self.assertEqual(state_c.values, vals_c)
-        vals_g = max_n(state_g, 2, 9, self.game_info, self.state_evaluator)
+        vals_g = max_n(state_g, 2, 9, self.game_info, self.state_evaluator).values
         self.assertEqual(state_g.values, vals_g)
-        vals_i = max_n(state_i, 2, 9, self.game_info, self.state_evaluator)
+        vals_i = max_n(state_i, 2, 9, self.game_info, self.state_evaluator).values
         self.assertEqual(state_i.values, vals_i)
 
     def test_max_n_no_prune(self):
-        vals_b = max_n(state_b, 1, 9, self.game_info, self.state_evaluator)
+        vals_b = max_n(state_b, 1, 9, self.game_info, self.state_evaluator).values
         self.assertEqual([3, 3, 3], vals_b)
 
     def test_max_n_pruning(self):
         # f should stop evaluating after the first child, where 7 (from state_g) >= 6 (upper bound)
-        vals_f = max_n(state_f, 1, 6, self.game_info, self.state_evaluator)
+        vals_f = max_n(state_f, 1, 6, self.game_info, self.state_evaluator).values
         self.assertEqual([1, 7, 1], vals_f)
 
     def test_max_n_prune_from_top(self):
         # f and h should both prune based on the values from b
-        vals_a = max_n(state_a, 0, 9, self.game_info, self.state_evaluator)
+        vals_a = max_n(state_a, 0, 9, self.game_info, self.state_evaluator).values
         self.assertEqual([3, 3, 3], vals_a)
 
     def test_uses_heuristic(self):
-        vals_a = max_n(state_a, 0, 9, self.game_info, self.state_evaluator, lambda: True)
+        vals_a = max_n(state_a, 0, 9, self.game_info, self.state_evaluator, lambda: True).values
         self.assertEqual([], vals_a)
