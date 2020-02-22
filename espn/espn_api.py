@@ -276,6 +276,9 @@ class EspnApi(metaclass=ABCMeta):
     def player_url(self):
         return f"{self.base_url()}?view=kona_playercard"
 
+    def all_players_url(self):
+        return f"{self.base_url()}?view=kona_player_info"
+
     def player_request(self, player_id):
         """
         Makes the request to ESPN for the player with the player id and returns the raw response (parsed from JSON)
@@ -294,6 +297,14 @@ class EspnApi(metaclass=ABCMeta):
         :return Player: the associated Player object (or None)
         """
         return self.roster_entry_to_player(self.player_request(player_id))
+
+    def all_players_sorted(self):
+        resp = self.espn_get(self.all_players_url())
+        players_json_array = resp.json()["players"]
+        players_list = list(map(lambda p: (p["player"], p.get("ratings", {}).get('0', {}).get('totalRanking', 9999)), players_json_array))
+        relevant_players = filter(lambda p: p[1] not in {0, 9999}, players_list)
+        sorted_list = sorted(relevant_players, key=lambda tup: tup[1])
+        return list(map(lambda tup: self.roster_entry_to_player(tup[0]), sorted_list))
 
     def league(self):
         """

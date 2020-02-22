@@ -36,6 +36,9 @@ class Stats:
             scaled[k] = self.stat_dict[k] * other
         return Stats(scaled, self.stat_enum)
 
+    def __truediv__(self, other):
+        return self * (1 / other)
+
     def __str__(self):
         print_pairs = list()
         for stat in self.stat_enum.sum_stats():

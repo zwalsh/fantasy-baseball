@@ -1,15 +1,18 @@
 import logging
+from functools import reduce
 from math import isclose, sqrt
 from statistics import NormalDist
 from typing import List, Optional
 
 from draft.draft_game_info import DraftGameInfo
-from draft.draft_state import DraftState
+from draft.draft_state import DraftState, slot_value
 from espn.baseball.baseball_position import BaseballPosition
 from espn.baseball.baseball_slot import BaseballSlot
 from espn.baseball.baseball_stat import BaseballStat
 from lineup import Lineup
+from lineup_settings import LineupSettings
 from minimax.state_evaluator import StateEvaluator
+from player import Player
 from scoring_setting import ScoringSetting
 from stats import Stats
 
@@ -18,14 +21,16 @@ LOGGER = logging.getLogger('draft.draft_state_evaluator')
 
 class DraftStateEvaluator(StateEvaluator):
 
-    def __init__(self, player_projections: dict, scoring_settings: List[ScoringSetting]):
+    def __init__(self, player_projections: dict, scoring_settings: List[ScoringSetting], players_ranked: List[Player]):
         """
         Evaluates different draft states for the value they represent to all players of a draft.
         Bases values on given player projections.
+        :param players_ranked: list of player names, ranking them best to worst
         :param player_projections: maps player names to their year's projections
         """
         self.player_projections = player_projections
         self.scoring_settings = scoring_settings
+        self.players_ranked = players_ranked
 
     def _get_projection(self, name: str) -> Optional[Stats]:
         replaced_name = {
@@ -38,10 +43,47 @@ class DraftStateEvaluator(StateEvaluator):
         return proj
 
     def heuristic(self, game_state: DraftState, game_info: DraftGameInfo):
-        return []
+        empty_slots = slots_to_fill(game_state.lineups, game_info.lineup_settings)
+        available_players = list(filter(lambda p: p not in game_state.drafted, self.players_ranked))
+
+        best_available = dict()
+        players_taken = set()
+        # fill slots
+        slot_counts = game_info.lineup_settings.slot_counts
+        draftable_slots = filter(lambda s: s != BaseballSlot.INJURED, slot_counts.keys())
+        for slot in sorted(draftable_slots, key=slot_value, reverse=True):
+            players_needed = empty_slots[slot]
+            available_index = 0
+            while players_needed > 0 and available_index < len(available_players):
+                next_best = available_players[available_index]
+                if next_best not in players_taken and next_best.can_play(slot):
+                    best_available[slot] = best_available.get(slot, []) + [next_best]
+                    players_taken.add(next_best)
+                    players_needed -= 1
+                available_index += 1
+
+        averages = {}
+        for slot, players in best_available.items():
+            projections = list(map(self._get_projection, map(lambda p: p.name, players)))
+            total = reduce(Stats.__add__, projections)
+            average = total / len(players)
+            averages[slot] = average
+
+        totals = []
+        for lineup in game_state.lineups:
+            so_far = self._cumulative_stats(lineup)
+            for slot, count in slot_counts.items():
+                count_to_fill = count - len(lineup.player_dict.get(slot, []))
+                amount_to_add = averages.get(slot, Stats({}, BaseballStat)) * count_to_fill
+                so_far += amount_to_add
+            totals += [so_far]
+        return self.values_from_totals(game_info, totals)
 
     def terminal_state_value(self, game_state: DraftState, game_info: DraftGameInfo):
         totals = list(map(self._cumulative_stats, game_state.lineups))
+        return self.values_from_totals(game_info, totals)
+
+    def values_from_totals(self, game_info, totals):
         values = [0] * game_info.total_players
         stat_std_devs = {
             BaseballStat.R: 50.0,
@@ -62,9 +104,10 @@ class DraftStateEvaluator(StateEvaluator):
             BaseballStat.WHIP: 0.008,
         }
         for ss in self.scoring_settings:
-            values_for_stat = self._accrued_value_in_league(list(map(lambda stats: stats.unrounded_value_for_stat(ss.stat), totals)),
-                                                            ss.is_reverse,
-                                                            stat_std_devs[ss.stat])
+            values_for_stat = self._accrued_value_in_league(
+                list(map(lambda stats: stats.unrounded_value_for_stat(ss.stat), totals)),
+                ss.is_reverse,
+                stat_std_devs[ss.stat])
             LOGGER.debug(f'Accrued for {ss.stat}:')
             LOGGER.debug(values_for_stat)
             for i, val in enumerate(values_for_stat):
@@ -150,3 +193,14 @@ def rank_values(values: List[float], is_reverse: bool) -> List[float]:
             points[positions_ranked[points_index]] = points_to_split / len(range(i, j))
         i = j
     return points
+
+
+def slots_to_fill(lineups: List[Lineup], settings: LineupSettings) -> dict:
+    """
+    Determines the total count to fill for each slot across all lineups
+    """
+    empty_counts = dict()
+    for lineup in lineups:
+        for slot, count in settings.slot_counts.items():
+            empty_counts[slot] = empty_counts.get(slot, 0) + count - len(lineup.player_dict.get(slot, []))
+    return empty_counts
