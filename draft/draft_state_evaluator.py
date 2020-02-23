@@ -15,6 +15,7 @@ from minimax.state_evaluator import StateEvaluator
 from player import Player
 from scoring_setting import ScoringSetting
 from stats import Stats
+from timing.timed import timed
 
 LOGGER = logging.getLogger('draft.draft_state_evaluator')
 
@@ -42,6 +43,7 @@ class DraftStateEvaluator(StateEvaluator):
             LOGGER.warning(f'NO PROJECTIONS FOR {name}')
         return proj
 
+    # @timed(LOGGER)
     def heuristic(self, game_state: DraftState, game_info: DraftGameInfo):
         empty_slots = slots_to_fill(game_state.lineups, game_info.lineup_settings)
         available_players = list(filter(lambda p: p not in game_state.drafted, self.players_ranked))
@@ -108,8 +110,6 @@ class DraftStateEvaluator(StateEvaluator):
                 list(map(lambda stats: stats.unrounded_value_for_stat(ss.stat), totals)),
                 ss.is_reverse,
                 stat_std_devs[ss.stat])
-            LOGGER.debug(f'Accrued for {ss.stat}:')
-            LOGGER.debug(values_for_stat)
             for i, val in enumerate(values_for_stat):
                 values[i] += val
         return values

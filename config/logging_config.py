@@ -39,6 +39,7 @@ DEV_LOGGING = {
         'fantasypros.api': {},
         'config.team_reader': {},
         "config.password_reader": {},
+        'minimax.max_n': {},
         "notifications": {},
         "notifications.client.dev": {},
         "notifications.client.pushed": {},
