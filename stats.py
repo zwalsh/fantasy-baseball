@@ -21,13 +21,9 @@ class Stats:
 
     def __add__(self, other):
         combined = dict()
-        my_keys = set(self.stat_dict.keys()).intersection(self.stat_enum.sum_stats())
-        for k in my_keys:
-            combined[k] = self.stat_dict.get(k) + other.stat_dict.get(k, 0.0)
-
-        other_keys = set(other.stat_dict.keys() - my_keys).intersection(self.stat_enum.sum_stats())
-        for k in other_keys:
-            combined[k] = other.stat_dict[k]
+        sum_stats = self.stat_enum.sum_stats()
+        for k in sum_stats:
+            combined[k] = self.stat_dict.get(k, 0.0) + other.stat_dict.get(k, 0.0)
         return Stats(combined, self.stat_enum)
 
     def __mul__(self, other):

@@ -19,6 +19,7 @@ from timing.timed import timed
 
 LOGGER = logging.getLogger('draft.draft_state_evaluator')
 
+total_heuristics = 0
 
 class DraftStateEvaluator(StateEvaluator):
 
@@ -32,6 +33,7 @@ class DraftStateEvaluator(StateEvaluator):
         self.player_projections = player_projections
         self.scoring_settings = scoring_settings
         self.players_ranked = players_ranked
+        self.averages_cache = dict()
 
     def _get_projection(self, name: str) -> Optional[Stats]:
         replaced_name = {
@@ -45,6 +47,10 @@ class DraftStateEvaluator(StateEvaluator):
 
     # @timed(LOGGER)
     def heuristic(self, game_state: DraftState, game_info: DraftGameInfo):
+        global total_heuristics
+        total_heuristics += 1
+        if total_heuristics % 1000 == 0:
+            LOGGER.info(f'Calculated {total_heuristics} heuristics')
         empty_slots = slots_to_fill(game_state.lineups, game_info.lineup_settings)
         available_players = list(filter(lambda p: p not in game_state.drafted, self.players_ranked))
 
@@ -54,6 +60,9 @@ class DraftStateEvaluator(StateEvaluator):
         slot_counts = game_info.lineup_settings.slot_counts
         draftable_slots = filter(lambda s: s != BaseballSlot.INJURED, slot_counts.keys())
         for slot in sorted(draftable_slots, key=slot_value, reverse=True):
+            if (slot, empty_slots[slot]) in self.averages_cache.keys():
+                best_available[slot] = []
+                continue
             players_needed = empty_slots[slot]
             available_index = 0
             while players_needed > 0 and available_index < len(available_players):
@@ -66,10 +75,17 @@ class DraftStateEvaluator(StateEvaluator):
 
         averages = {}
         for slot, players in best_available.items():
+            averages_cache_key = (slot, empty_slots[slot])
+            cached = self.averages_cache.get(averages_cache_key)
+            if cached is not None:
+                averages[slot] = cached
+                continue
+            # self.averages_cache[(slot, len(players))] = self.averages_cache.get((slot, len(players)), 0) + 1
             projections = list(map(self._get_projection, map(lambda p: p.name, players)))
             total = reduce(Stats.__add__, projections)
             average = total / len(players)
             averages[slot] = average
+            self.averages_cache[averages_cache_key] = average
 
         totals = []
         for lineup in game_state.lineups:

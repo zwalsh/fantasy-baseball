@@ -51,8 +51,9 @@ def max_n(node: GameState, player: int, upper_bound: int, game_info: GameInfo, s
     children = node.children()
     next_player_index = (player + 1) % game_info.total_players
     best = max_n(children[0], next_player_index, game_info.max_value, game_info, state_evaluator, depth + 1, answer_now)
-    for child in children[1:]:
+    for i, child in enumerate(children[1:]):
         if best.values[player] >= upper_bound:
+            LOGGER.info(f'Pruned {i} at depth {depth}')
             return best
         current = max_n(child, next_player_index, game_info.max_value - best.values[player], game_info, state_evaluator,
                         depth + 1, answer_now)

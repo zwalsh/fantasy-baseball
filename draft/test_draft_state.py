@@ -35,7 +35,8 @@ class TestDraftState(TestCase):
         },
         BaseballSlot
     )
-    state = DraftState(DraftGameInfo(3, 100, ls), {
+    info = DraftGameInfo(3, 100, ls)
+    state = DraftState(info, {
         PlayerTest.springer,
         PlayerTest.rosario,
         PlayerTest.degrom,
@@ -106,3 +107,17 @@ class TestDraftState(TestCase):
     def test_is_terminal(self):
         self.assertFalse(self.state.is_terminal())
         self.assertTrue(self.terminal_state.is_terminal())
+
+    def test__next_player(self):
+        self.assertEqual(1, self.state._next_player())
+
+    def test__next_player_end_returning(self):
+        ds = DraftState(self.info, [], {}, [], 2, False)
+        self.assertEqual(1, ds._next_player())
+
+    def test__next_direction(self):
+        self.assertTrue(self.state._next_direction())
+
+    def test__next_direction_returning(self):
+        ds = DraftState(self.info, [], {}, [], 2, False)
+        self.assertFalse(ds._next_direction())

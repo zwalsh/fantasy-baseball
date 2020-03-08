@@ -1,4 +1,5 @@
 from copy import copy, deepcopy
+from itertools import islice
 from typing import List
 
 from draft.draft_game_info import DraftGameInfo
@@ -7,15 +8,15 @@ from minimax.game_state import GameState
 
 
 class DraftState(GameState):
-    def __init__(self, game_info: DraftGameInfo, players: set, drafted: set, lineups: list, current_player: int,
+    def __init__(self, game_info: DraftGameInfo, ranked_players: list, drafted: set, lineups: list, current_player: int,
                  is_next_larger):
         super().__init__()
         self.game_info = game_info
-        self.players = players
+        self.ranked_players = ranked_players
         self.lineups = lineups
         self.drafted = drafted
         self.current_player = current_player
-        self.is_next_larger = True
+        self.is_next_larger = is_next_larger
 
     def children(self) -> List['GameState']:
         # for player who's playing, get lineup, run over top x players at each position
@@ -33,7 +34,7 @@ class DraftState(GameState):
             # add player to copy of drafted
             successor_drafted = copy(self.drafted)
             successor_drafted.add(baseball_player)
-            next_state = DraftState(self.game_info, self.players, successor_drafted, successor_lineups,
+            next_state = DraftState(self.game_info, self.ranked_players, successor_drafted, successor_lineups,
                                     self._next_player(), self._next_direction())
             new_states.append(next_state)
         return new_states
@@ -58,9 +59,8 @@ class DraftState(GameState):
                 open_slots.append(ls)
 
         possible_additions = []
-        for player in self.players:
-            if player in self.drafted:
-                continue
+
+        for player in first_n_not_drafted(self.ranked_players, self.drafted, 5):
             fillable_slots = filter(lambda slot: player.can_play(slot), open_slots)
             sorted_bench_last = sorted(fillable_slots, key=slot_value, reverse=True)
             slot_to_fill = next(iter(sorted_bench_last), None)
@@ -76,6 +76,9 @@ class DraftState(GameState):
         total_slots = sum(map(lambda tup: tup[1], draftable_slots)) * self.game_info.total_players
         return len(self.drafted) == total_slots
 
+
+def first_n_not_drafted(players, drafted, n):
+    return islice(filter(lambda p: p not in drafted, players), n)
 
 def slot_value(slot):
     return {
