@@ -7,6 +7,7 @@ class Stats:
         BaseballStat.OBP: lambda s: s.obp(),
         BaseballStat.WHIP: lambda s: s.whip(),
         BaseballStat.ERA: lambda s: s.era(),
+        BaseballStat.PA: lambda s: s.plate_appearances(),
     }
 
     def __init__(self, stat_dict, stat_enum):
@@ -20,14 +21,19 @@ class Stats:
 
     def __add__(self, other):
         combined = dict()
-        my_keys = set(self.stat_dict.keys()).intersection(self.stat_enum.sum_stats())
-        for k in my_keys:
-            combined[k] = self.stat_dict.get(k) + other.stat_dict.get(k, 0.0)
-
-        other_keys = set(other.stat_dict.keys() - my_keys).intersection(self.stat_enum.sum_stats())
-        for k in other_keys:
-            combined[k] = other.stat_dict[k]
+        sum_stats = self.stat_enum.sum_stats()
+        for k in sum_stats:
+            combined[k] = self.stat_dict.get(k, 0.0) + other.stat_dict.get(k, 0.0)
         return Stats(combined, self.stat_enum)
+
+    def __mul__(self, other):
+        scaled = dict()
+        for k in self.stat_enum.sum_stats().intersection(self.stat_dict.keys()):
+            scaled[k] = self.stat_dict[k] * other
+        return Stats(scaled, self.stat_enum)
+
+    def __truediv__(self, other):
+        return self * (1 / other)
 
     def __str__(self):
         print_pairs = list()
@@ -95,6 +101,11 @@ class Stats:
         outs = self.stat_dict.get(BaseballStat.OUTS, 1.0)
 
         return round((walks + hits) / outs * 3.0, 3)
+
+    def plate_appearances(self):
+        return self.stat_dict.get(BaseballStat.PA,
+                                  self.unrounded_value_for_stat(BaseballStat.AB) +
+                                  self.unrounded_value_for_stat(BaseballStat.BB))
 
     def unrounded_value_for_stat(self, stat):
         if stat in self.stat_enum.sum_stats():

@@ -123,7 +123,7 @@ class Lineup:
         return frozenset(starters)
 
     def benched(self):
-        return frozenset(self.player_dict[self.slot_enum.BENCH])
+        return frozenset(self.player_dict.get(self.slot_enum.BENCH, []))
 
     def injured(self):
         return frozenset(self.player_dict[self.slot_enum.INJURED])
