@@ -90,5 +90,5 @@ class Test(TestCase):
         self.assertEqual([3, 3, 3], vals_a)
 
     def test_uses_heuristic(self):
-        vals_a = max_n(state_a, 0, 9, self.game_info, self.state_evaluator, 0, lambda: True).values
+        vals_a = max_n(state_a, 0, 9, self.game_info, self.state_evaluator, 0, lambda x: True).values
         self.assertEqual([], vals_a)
