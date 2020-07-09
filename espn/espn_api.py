@@ -25,7 +25,7 @@ class EspnApiException(Exception):
 
 
 class EspnApi(metaclass=ABCMeta):
-    def __init__(self, session_provider, league_id, team_id, year=2019):
+    def __init__(self, session_provider, league_id, team_id, year=2020):
         """
         Programmatic access to ESPN's (undocumented) API, caching requests that do not need refreshing,
         and automatically fetching a token for the user/password combination.
@@ -139,7 +139,7 @@ class EspnApi(metaclass=ABCMeta):
             roster = team['roster']['entries']
             players = list(map(lambda e:
                                (self.roster_entry_to_player(e["playerPoolEntry"]["player"]),
-                                          self.slot_for_id(e['lineupSlotId'])), roster))
+                                self.slot_for_id(e['lineupSlotId'])), roster))
             lineup = self.player_list_to_lineup(players)
             lineup_dict[team['id']] = lineup
         return lineup_dict
@@ -162,6 +162,7 @@ class EspnApi(metaclass=ABCMeta):
         teams = self.all_info().json()['teams']
         team = next(filter(lambda t: t['id'] == team_id, teams))
         return f"{team['location']} {team['nickname']}"
+
     # DATA PARSING
 
     def roster_entry_to_player(self, player_map):
@@ -301,7 +302,11 @@ class EspnApi(metaclass=ABCMeta):
     def all_players_sorted(self):
         resp = self.espn_get(self.all_players_url())
         players_json_array = resp.json()["players"]
-        players_list = list(map(lambda p: (p["player"], p.get("ratings", {}).get('0', {}).get('totalRanking', 9999)), players_json_array))
+        players_list = list(map(lambda p: (p["player"], p.get("player", {})
+                                           .get("draftRanksByRankType", {})
+                                           .get('STANDARD', {})
+                                           .get('rank', 9999)),
+                                players_json_array))
         relevant_players = filter(lambda p: p[1] not in {0, 9999}, players_list)
         sorted_list = sorted(relevant_players, key=lambda tup: tup[1])
         return list(map(lambda tup: self.roster_entry_to_player(tup[0]), sorted_list))
