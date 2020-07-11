@@ -22,7 +22,7 @@ class ArchiveYearlyStats(Task):
     @staticmethod
     def create(username):
         password = password_reader.password(username, Path.cwd() / "config/passwords")
-        configs = team_reader.all_teams(Path.cwd() / "config/team_configs")
+        configs = team_reader.all_teams(Path.cwd() / "config/team_configs/baseball")
         scoring_period = BaseballApi.Builder().username(username).password(password).league_id(
             configs[0].league_id).team_id(configs[0].team_id).build().scoring_period() - 1
         return ArchiveYearlyStats(username, password, configs, scoring_period)

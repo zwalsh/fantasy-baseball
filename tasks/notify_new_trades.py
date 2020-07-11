@@ -20,7 +20,7 @@ class NotifyNewTrades(Task):
     @staticmethod
     def create(username):
         password = password_reader.password(username, Path.cwd() / "config/passwords")
-        configs = team_reader.all_teams(Path.cwd() / "config/team_configs")
+        configs = team_reader.all_teams(Path.cwd() / "config/team_configs/baseball")
         notifier = notifier_config.current_notifier(username)
         return NotifyNewTrades(username, password, configs, notifier)
 
