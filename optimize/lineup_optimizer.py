@@ -24,11 +24,13 @@ def optimize_lineup(espn, fangraphs, notifier):
     :param Notifier notifier: wrapper around a Notifier client
     """
     lineup = espn.lineup()
+    LOGGER.info(f'Current lineup: {lineup}')
     l_settings = espn.lineup_settings()
     s_settings = espn.scoring_settings()
     hitting_settings = filter(lambda s: s.stat not in {BaseballStat.K, BaseballStat.W, BaseballStat.ERA, BaseballStat.WHIP, BaseballStat.SV}, s_settings)
 
-    possibles = possible_lineup_totals(lineup, l_settings, fangraphs.hitter_projections())
+    hitter_projections = fangraphs.hitter_projections()
+    possibles = possible_lineup_totals(lineup, l_settings, hitter_projections)
     best_pa = best_for_stat(lineup, possibles, ScoringSetting(BaseballStat.PA, False))
     threshold = best_pa.stats.value_for_stat(BaseballStat.PA) * 0.95
     candidates = above_threshold_for_stat(possibles, ScoringSetting(BaseballStat.PA, False), threshold)
@@ -37,6 +39,8 @@ def optimize_lineup(espn, fangraphs, notifier):
     LOGGER.info(f"found {num_candidates} candidates within 95% of max PA's (above threshold {threshold})")
     best_list = best_lineups(lineup, candidates, hitting_settings)
     most_pas_from_best = best_for_stat(lineup, best_list, ScoringSetting(BaseballStat.PA, False))
+    LOGGER.info(f'Using lineup {most_pas_from_best.lineup}')
+
     hitting_transitions = lineup.transitions(most_pas_from_best.lineup)
     pitching_transitions = optimal_pitching_transitions(lineup, espn)
     notifier.notify_set_lineup(espn.team_name(), most_pas_from_best, hitting_transitions + pitching_transitions, s_settings)

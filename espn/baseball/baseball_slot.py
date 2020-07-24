@@ -86,3 +86,7 @@ class BaseballSlot(Enum):
     @staticmethod
     def pitcher():
         return {BaseballSlot.PITCHER, BaseballSlot.BENCH}
+
+    @staticmethod
+    def slot_to_slot_id(slot):
+        return {v: k for k, v in BaseballSlot.slot_id_to_slot().items()}[slot]
