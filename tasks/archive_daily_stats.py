@@ -38,7 +38,7 @@ class ArchiveDailyStats(Task):
         """
         period_stats = espn.scoring_period_stats(self.scoring_period)
         LOGGER.info(f"storing {len(period_stats)} teams' stats")
-        store = StatStore(config.league_id, 2019)
+        store = StatStore(config.league_id, espn.year)
         for team, stats in period_stats.items():
             store.store_stats(stats, team, self.scoring_period)
 
