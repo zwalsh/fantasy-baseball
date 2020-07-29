@@ -1,9 +1,14 @@
 pipeline {
-    agent { docker { image 'python:3.8.1' } }
+    agent any
     stages {
-        stage('build') {
+        stage('test') {
             steps {
-                sh 'python --version'
+                sh 'python3.8 -m unittest'
+            }
+        }
+        stage('lint') {
+            steps {
+
             }
         }
     }
