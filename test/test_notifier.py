@@ -49,21 +49,6 @@ class Test(unittest.TestCase):
         self.assertEqual(msg, msg_rec)
         self.assertEqual(None, url_rec)
 
-    def test_notify_set_lineup_truncate(self):
-        mock_client = MockClient()
-        n = Notifier(mock_client)
-
-        team = "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong team name"
-        ts = [self.t1, self.t1]
-
-        n.notify_set_lineup(team, self.lt1, ts, [ScoringSetting(BaseballStat.H, False)])
-
-        expected = team + ": 50.00PA\n10.00H "
-        expected += "\n" + Notifier.transition_message(self.t1)
-        expected += "\n" + "Muncy: ..."
-
-        self.assertEqual(expected, mock_client.messages[0][0])
-
     def test_notify_ignore_non_hitting_stat(self):
         mock_client = MockClient()
         n = Notifier(mock_client)
