@@ -1,3 +1,4 @@
+from espn.baseball.baseball_stat import BaseballStat
 from espn.basketball.basketball_stat import BasketballStat
 from graph.graph_descriptor import GraphDescriptor, GraphLine
 from stats import Stats
@@ -45,9 +46,9 @@ def graph_line(team_id, name, stat_store, stat, period_range):
     cumul_total = 0.0
     data = []
     for pd in period_range:
-        period_stats = stats_dict.get(pd, Stats({}, BasketballStat))
+        period_stats = stats_dict.get(pd, Stats({}, BaseballStat))
         period_value = period_stats.value_for_stat(stat) or 0.0
-        if stat in BasketballStat.sum_stats():
+        if stat in BaseballStat.sum_stats():
             cumul_total += period_value
             data.append(cumul_total)
         else:

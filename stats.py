@@ -98,6 +98,9 @@ class Stats:
         earned_runs = self.stat_dict.get(BaseballStat.ER, 0)
         outs = self.stat_dict.get(BaseballStat.OUTS, 1.0)
 
+        if outs == 0.0:
+            return 0.0
+
         return round(earned_runs * 27.0 / outs, 3)
 
     def whip(self):
@@ -108,6 +111,10 @@ class Stats:
         hits = self.stat_dict.get(BaseballStat.P_H, 0)
         walks = self.stat_dict.get(BaseballStat.P_BB, 0)
         outs = self.stat_dict.get(BaseballStat.OUTS, 1.0)
+
+        if outs == 0.0:
+            return 0.0
+
 
         return round((walks + hits) / outs * 3.0, 3)
 

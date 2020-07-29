@@ -25,7 +25,7 @@ class EspnApiException(Exception):
 
 
 class EspnApi(metaclass=ABCMeta):
-    def __init__(self, session_provider, league_id, team_id, year=2019):
+    def __init__(self, session_provider, league_id, team_id, year=2020):
         """
         Programmatic access to ESPN's (undocumented) API, caching requests that do not need refreshing,
         and automatically fetching a token for the user/password combination.
