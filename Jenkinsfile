@@ -1,6 +1,12 @@
 pipeline {
     agent any
+    environment {
+        GITHUB_TOKEN = credentials('github-personal-access-token')
+    }
     stages {
+        stage('start') {
+            setBuildStatus('pending')
+        }
         stage('test') {
             steps {
                 sh 'python3.8 -m unittest'
@@ -15,26 +21,25 @@ pipeline {
     post {
         success {
             echo 'Success!'
-            setBuildStatus('Success', 'SUCCESS')
+            setBuildStatus('SUCCESS')
         }
         unstable {
             echo 'I am unstable :/'
-            setBuildStatus('Unstable', 'UNSTABLE')
+            setBuildStatus('UNSTABLE')
         }
         failure {
             echo 'I failed :('
-            setBuildStatus('Build failure', 'FAILURE')
+            setBuildStatus('FAILURE')
         }
     }
 }
 
-// taken from the Github pipeline example
-void setBuildStatus(String message, String state) {
-  step([
-      $class: "GitHubCommitStatusSetter",
-      reposSource: [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/zwalsh/fantasy-baseball"],
-      contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "ci/jenkins/build-status"],
-      errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
-      statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
-  ]);
+void setBuildStatus(state) {
+    sh """
+        curl "https://api.GitHub.com/repos/zwalsh/fantasy-baseball/statuses/$GIT_COMMIT?access_token=$GITHUB_TOKEN" \
+                -H "Content-Type: application/json" \
+                -X POST \
+                -d "{\"state\": \"$state\",\"context\": \"continuous-integration/jenkins\", \"description\": \"Jenkins\", \"target_url\": \"https://jenkins.zachwal.sh/job/fantasy-baseball/$BUILD_NUMBER/console\"}"
+            '''
+    """
 }
