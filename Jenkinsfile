@@ -5,7 +5,9 @@ pipeline {
     }
     stages {
         stage('start') {
-            setBuildStatus('pending')
+            steps {
+                setBuildStatus('pending')
+            }
         }
         stage('test') {
             steps {
