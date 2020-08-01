@@ -23,15 +23,15 @@ pipeline {
     post {
         success {
             echo 'Success!'
-            setBuildStatus('SUCCESS')
+            setBuildStatus('success')
         }
         unstable {
             echo 'I am unstable :/'
-            setBuildStatus('UNSTABLE')
+            setBuildStatus('failure')
         }
         failure {
             echo 'I failed :('
-            setBuildStatus('FAILURE')
+            setBuildStatus('failure')
         }
     }
 }
