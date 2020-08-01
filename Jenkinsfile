@@ -42,6 +42,5 @@ void setBuildStatus(state) {
                 -H "Content-Type: application/json" \
                 -X POST \
                 -d "{\"state\": \"$state\",\"context\": \"continuous-integration/jenkins\", \"description\": \"Jenkins\", \"target_url\": \"https://jenkins.zachwal.sh/job/fantasy-baseball/$BUILD_NUMBER/console\"}"
-            '''
     """
 }
