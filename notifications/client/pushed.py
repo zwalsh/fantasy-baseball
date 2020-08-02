@@ -2,11 +2,10 @@ import logging
 
 from pushed import Pushed
 
-LOGGER = logging.getLogger('notifications.client.pushed')
+LOGGER = logging.getLogger("notifications.client.pushed")
 
 
 class PushedClient:
-
     def __init__(self, user, pushed_id, app_key, app_secret):
         """
         Represents a PushedClient that can be used to push message to a Pushed app client
@@ -23,7 +22,10 @@ class PushedClient:
         :param str content: the message text
         :param str content_url: Optional - the URL that the user will be redirected to if they open the notification
         """
-        LOGGER.info("sending message: %(content)s to user: %(user)s", {"content": content, "user": self.user})
+        LOGGER.info(
+            "sending message: %(content)s to user: %(user)s",
+            {"content": content, "user": self.user},
+        )
         if len(content) > 140:
             content = content[:137] + "..."
         self.pushed.push_pushed_id(content, self.pushed_id, content_url)

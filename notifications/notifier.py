@@ -22,7 +22,11 @@ class Notifier:
         """
         msg = f"{team_name}: {total_points:.1f} points"
         for tr in sorted(transitions, key=Notifier.transition_sort_value):
-            msg += "\n" + self.transition_message(tr) + f" ({player_to_fp.get(tr.player.name):.1f})"
+            msg += (
+                "\n"
+                + self.transition_message(tr)
+                + f" ({player_to_fp.get(tr.player.name):.1f})"
+            )
         self.client.send_message(msg)
 
     def notify_set_lineup(self, team_name, lineup_total, transitions, scoring_settings):
