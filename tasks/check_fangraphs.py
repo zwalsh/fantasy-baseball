@@ -8,7 +8,6 @@ LOGGER = logging.getLogger("tasks.check_fangraphs")
 
 
 class CheckFangraphs(Task):
-
     def __init__(self, username, fg_api, fg_metrics):
         self.username = username
         self.api = fg_api
@@ -24,7 +23,9 @@ class CheckFangraphs(Task):
         cur_last_updated = self.api.last_updated()
         metrics_last_updated = self.metrics.last_seen_update()
         if cur_last_updated != metrics_last_updated:
-            LOGGER.info(f"new time found: {cur_last_updated} old time: {metrics_last_updated}")
+            LOGGER.info(
+                f"new time found: {cur_last_updated} old time: {metrics_last_updated}"
+            )
             self.metrics.record_update(cur_last_updated)
 
     @staticmethod

@@ -11,7 +11,6 @@ LOGGER = logging.getLogger("tasks.set_fba_lineup")
 
 
 class SetFbaLineup(Task):
-
     def __init__(self, username, password, configs, notifier, fantasysp):
         self.username = username
         self.password = password
@@ -21,10 +20,18 @@ class SetFbaLineup(Task):
 
     def run(self):
         for team_config in self.configs:
-            LOGGER.info(f"setting lineup for team {team_config.team_id} in league {team_config.league_id}")
+            LOGGER.info(
+                f"setting lineup for team {team_config.team_id} in league {team_config.league_id}"
+            )
 
-            espn = BasketballApi.Builder().username(self.username).password(self.password).league_id(
-                team_config.league_id).team_id(team_config.team_id).build()
+            espn = (
+                BasketballApi.Builder()
+                .username(self.username)
+                .password(self.password)
+                .league_id(team_config.league_id)
+                .team_id(team_config.team_id)
+                .build()
+            )
             optimize_fp(espn, self.fantasysp, self.notifier)
 
     @staticmethod

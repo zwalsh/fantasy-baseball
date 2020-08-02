@@ -31,8 +31,14 @@ class NotifyNewTrades(Task):
     def check_for_trades(self, config):
         LOGGER.info(f"searching for new trades in league {config.league_id}")
 
-        espn = BaseballApi.Builder().username(self.username).password(self.password).league_id(
-            config.league_id).team_id(config.team_id).build()
+        espn = (
+            BaseballApi.Builder()
+            .username(self.username)
+            .password(self.password)
+            .league_id(config.league_id)
+            .team_id(config.team_id)
+            .build()
+        )
         team_name = espn.team_name(config.team_id)
         trade_store = TradeStore(config.league_id)
         cur_trades = trade_finder.all_current_trades(espn)
