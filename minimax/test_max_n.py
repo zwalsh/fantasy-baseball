@@ -13,7 +13,7 @@ class BasicGame(GameState):
         self.values = values
         self.children_list = children
 
-    def children(self) -> List['GameState']:
+    def children(self) -> List["GameState"]:
         return self.children_list
 
     def is_terminal(self) -> bool:
@@ -29,7 +29,7 @@ class BasicStateEvaluator(StateEvaluator):
 
 
 class ExplodingGame(GameState):
-    def children(self) -> List['GameState']:
+    def children(self) -> List["GameState"]:
         raise ValueError
 
     def is_terminal(self) -> bool:
@@ -55,12 +55,20 @@ state_g = BasicGame([1, 7, 1], [])
 state_i = BasicGame([1, 6, 2], [])
 
 # middle layer - player 1's choice
-state_b = BasicGame([], [state_c, state_d, state_e])  # effective values = [3,3,3] from c
-state_f = BasicGame([], [state_g, state_x, state_x])  # effective values = [1,7,1] from g, state_x pruned
-state_h = BasicGame([], [state_i, state_x, state_x])  # effective values = [1,6,2] from i, state_x pruned
+state_b = BasicGame(
+    [], [state_c, state_d, state_e]
+)  # effective values = [3,3,3] from c
+state_f = BasicGame(
+    [], [state_g, state_x, state_x]
+)  # effective values = [1,7,1] from g, state_x pruned
+state_h = BasicGame(
+    [], [state_i, state_x, state_x]
+)  # effective values = [1,6,2] from i, state_x pruned
 
 # top layer - player 0's choice
-state_a = BasicGame([], [state_b, state_f, state_h])  # effective values = [3,3,3] from b
+state_a = BasicGame(
+    [], [state_b, state_f, state_h]
+)  # effective values = [3,3,3] from b
 
 
 class Test(TestCase):
@@ -90,5 +98,7 @@ class Test(TestCase):
         self.assertEqual([3, 3, 3], vals_a)
 
     def test_uses_heuristic(self):
-        vals_a = max_n(state_a, 0, 9, self.game_info, self.state_evaluator, 0, lambda x: True).values
+        vals_a = max_n(
+            state_a, 0, 9, self.game_info, self.state_evaluator, 0, lambda x: True
+        ).values
         self.assertEqual([], vals_a)
