@@ -9,20 +9,19 @@ from espn.baseball.baseball_stat import BaseballStat
 from stats import Stats
 from timing.timed import timed
 
-LOGGER = logging.getLogger('fantasypros.api')
+LOGGER = logging.getLogger("fantasypros.api")
 
 
 class FantasyProsApi:
-
     def __init__(self):
         pass
 
     @staticmethod
     def _path_segment(url):
-        if 'hitters' in url:
-            return 'hitters'
-        if 'pitchers' in url:
-            return 'pitchers'
+        if "hitters" in url:
+            return "hitters"
+        if "pitchers" in url:
+            return "pitchers"
         return None
 
     @timed(LOGGER)
@@ -37,7 +36,9 @@ class FantasyProsApi:
     @staticmethod
     def name_from_row(row):
         links = row.find("a")
-        player_name_link = next(filter(lambda a: 'player-name' in a.attrs.get('class', []), links), None)
+        player_name_link = next(
+            filter(lambda a: "player-name" in a.attrs.get("class", []), links), None
+        )
         return player_name_link.text if player_name_link is not None else None
 
     @staticmethod
@@ -53,7 +54,9 @@ class FantasyProsApi:
             BaseballStat.BB: int(cells[11].text),
         }
         # approximate plate appearances as at-bats plus walks
-        stats_dict[BaseballStat.PA] = stats_dict[BaseballStat.AB] + stats_dict[BaseballStat.BB]
+        stats_dict[BaseballStat.PA] = (
+            stats_dict[BaseballStat.AB] + stats_dict[BaseballStat.BB]
+        )
         return Stats(stats_dict, BaseballStat)
 
     @staticmethod
@@ -77,12 +80,12 @@ class FantasyProsApi:
                 """
         today = date.today()
         date_string = str(today)
-        LOGGER.debug(f'Using date_str: {date_string}')
-        cache_key = f'fantasypros/{FantasyProsApi._path_segment(url)}/{date_string}.p'
-        LOGGER.debug(f'Looking in path {cache_key}')
+        LOGGER.debug(f"Using date_str: {date_string}")
+        cache_key = f"fantasypros/{FantasyProsApi._path_segment(url)}/{date_string}.p"
+        LOGGER.debug(f"Looking in path {cache_key}")
         cache_location = Path(cache_key)
         if cache_location.exists():
-            f = cache_location.open('rb')
+            f = cache_location.open("rb")
             return pickle.load(f)
 
         results = {}
@@ -93,7 +96,7 @@ class FantasyProsApi:
             stats = stats_from_row(tr)
             results[name] = stats
 
-        f = cache_location.open('wb+')
+        f = cache_location.open("wb+")
         pickle.dump(results, f)
         return results
 
@@ -102,9 +105,13 @@ class FantasyProsApi:
         Scrape https://www.fantasypros.com/mlb/projections/hitters.php for year-long projections
         :return dict: dictionary of name to Stats object
         """
-        return self.year_projections('https://www.fantasypros.com/mlb/projections/hitters.php',
-                                     FantasyProsApi.hitter_stats_from_row)
+        return self.year_projections(
+            "https://www.fantasypros.com/mlb/projections/hitters.php",
+            FantasyProsApi.hitter_stats_from_row,
+        )
 
     def year_pitcher_projections(self):
-        return self.year_projections('https://www.fantasypros.com/mlb/projections/pitchers.php',
-                                     FantasyProsApi.pitcher_stats_from_row)
+        return self.year_projections(
+            "https://www.fantasypros.com/mlb/projections/pitchers.php",
+            FantasyProsApi.pitcher_stats_from_row,
+        )
