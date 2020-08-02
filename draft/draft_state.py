@@ -10,8 +10,15 @@ from player import Player
 
 
 class DraftState(GameState):
-    def __init__(self, game_info: DraftGameInfo, ranked_players: list, drafted: set, lineups: list, current_player: int,
-                 is_next_larger):
+    def __init__(
+        self,
+        game_info: DraftGameInfo,
+        ranked_players: list,
+        drafted: set,
+        lineups: list,
+        current_player: int,
+        is_next_larger,
+    ):
         super().__init__()
         self.game_info = game_info
         self.ranked_players = ranked_players
@@ -27,7 +34,9 @@ class DraftState(GameState):
         :return DraftState: the advanced state
         """
         relevant_lineup = self.lineups[self.current_drafter]
-        slot = DraftState.slot_to_fill(self.open_slots(relevant_lineup), baseball_player)
+        slot = DraftState.slot_to_fill(
+            self.open_slots(relevant_lineup), baseball_player
+        )
         successor_lineups = copy(self.lineups)
         next_lineup = deepcopy(relevant_lineup)
         current_in_slot = next_lineup.player_dict.get(slot, [])
@@ -37,15 +46,23 @@ class DraftState(GameState):
         # add player to copy of drafted
         successor_drafted = copy(self.drafted)
         successor_drafted.add(baseball_player)
-        return DraftState(self.game_info, self.ranked_players, successor_drafted, successor_lineups,
-                                self._next_player(), self._next_direction())
+        return DraftState(
+            self.game_info,
+            self.ranked_players,
+            successor_drafted,
+            successor_lineups,
+            self._next_player(),
+            self._next_direction(),
+        )
 
-    def children(self) -> List['GameState']:
+    def children(self) -> List["GameState"]:
         # for player who's playing, get lineup, run over top x players at each position
         # add to drafted set
         relevant_lineup = self.lineups[self.current_drafter]
         new_states = []
-        for baseball_player, slot_to_fill in self._possible_additions(self.current_drafter):
+        for baseball_player, slot_to_fill in self._possible_additions(
+            self.current_drafter
+        ):
             new_states.append(self.advance_state(baseball_player))
         return new_states
 
@@ -53,8 +70,16 @@ class DraftState(GameState):
         if self.current_drafter == 0:
             return 1 if self.is_next_larger else 0
         if self.current_drafter == self.game_info.total_players - 1:
-            return self.current_drafter if self.is_next_larger else self.current_drafter - 1
-        return self.current_drafter + 1 if self.is_next_larger else self.current_drafter - 1
+            return (
+                self.current_drafter
+                if self.is_next_larger
+                else self.current_drafter - 1
+            )
+        return (
+            self.current_drafter + 1
+            if self.is_next_larger
+            else self.current_drafter - 1
+        )
 
     def _next_direction(self):
         if self.current_drafter not in {0, self.game_info.total_players - 1}:
@@ -87,23 +112,27 @@ class DraftState(GameState):
         return open_slots
 
     @staticmethod
-    def slot_to_fill(open_slots: List[BaseballSlot], player: Player) -> Optional[BaseballSlot]:
+    def slot_to_fill(
+        open_slots: List[BaseballSlot], player: Player
+    ) -> Optional[BaseballSlot]:
         fillable_slots = filter(lambda slot: player.can_play(slot), open_slots)
         sorted_bench_last = sorted(fillable_slots, key=slot_value, reverse=True)
         return next(iter(sorted_bench_last), None)
 
     def is_terminal(self) -> bool:
-        draftable_slots = filter(lambda tup: tup[0] != BaseballSlot.INJURED,
-                                 self.game_info.lineup_settings.slot_counts.items())
-        total_slots = sum(map(lambda tup: tup[1], draftable_slots)) * self.game_info.total_players
+        draftable_slots = filter(
+            lambda tup: tup[0] != BaseballSlot.INJURED,
+            self.game_info.lineup_settings.slot_counts.items(),
+        )
+        total_slots = (
+            sum(map(lambda tup: tup[1], draftable_slots)) * self.game_info.total_players
+        )
         return len(self.drafted) == total_slots
 
 
 def first_n_not_drafted(players, drafted, n):
     return islice(filter(lambda p: p not in drafted, players), n)
 
+
 def slot_value(slot):
-    return {
-        BaseballSlot.BENCH: 0,
-        BaseballSlot.UTIL: 1,
-    }.get(slot, 2)
+    return {BaseballSlot.BENCH: 0, BaseballSlot.UTIL: 1,}.get(slot, 2)

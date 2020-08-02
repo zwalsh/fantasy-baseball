@@ -9,66 +9,76 @@ from test.test_player import PlayerTest
 
 
 class TestDraftState(TestCase):
-    ls = LineupSettings({
-        BaseballSlot.OUTFIELD: 2,
-        BaseballSlot.SHORT: 1,
-        BaseballSlot.PITCHER: 1,
-        BaseballSlot.UTIL: 1,
-        BaseballSlot.BENCH: 1
-    })
+    ls = LineupSettings(
+        {
+            BaseballSlot.OUTFIELD: 2,
+            BaseballSlot.SHORT: 1,
+            BaseballSlot.PITCHER: 1,
+            BaseballSlot.UTIL: 1,
+            BaseballSlot.BENCH: 1,
+        }
+    )
     l1 = Lineup(
         {
             BaseballSlot.OUTFIELD: [PlayerTest.yelich, PlayerTest.braun],
-            BaseballSlot.UTIL: [PlayerTest.santana]
+            BaseballSlot.UTIL: [PlayerTest.santana],
         },
-        BaseballSlot)
+        BaseballSlot,
+    )
     l2 = Lineup(
         {
             BaseballSlot.PITCHER: [PlayerTest.degrom],
-            BaseballSlot.SHORT: [PlayerTest.segura]
+            BaseballSlot.SHORT: [PlayerTest.segura],
         },
-        BaseballSlot
+        BaseballSlot,
     )
     l3 = Lineup(
-        {
-            BaseballSlot.OUTFIELD: [PlayerTest.springer, PlayerTest.rosario]
-        },
-        BaseballSlot
+        {BaseballSlot.OUTFIELD: [PlayerTest.springer, PlayerTest.rosario]}, BaseballSlot
     )
     info = DraftGameInfo(3, 100, ls)
-    state = DraftState(info, {
-        PlayerTest.springer,
-        PlayerTest.rosario,
-        PlayerTest.degrom,
-        PlayerTest.segura,
-        PlayerTest.rizzo,
-        PlayerTest.peraza,
-        PlayerTest.choo,
-        PlayerTest.morton,
-        PlayerTest.yelich,
-        PlayerTest.braun,
-        PlayerTest.santana,
-    }, {
-                           PlayerTest.springer,
-                           PlayerTest.rosario,
-                           PlayerTest.degrom,
-                           PlayerTest.segura,
-                           PlayerTest.yelich,
-                           PlayerTest.braun,
-                           PlayerTest.santana
-                       }, [l1, l2, l3], 0, True)
+    state = DraftState(
+        info,
+        {
+            PlayerTest.springer,
+            PlayerTest.rosario,
+            PlayerTest.degrom,
+            PlayerTest.segura,
+            PlayerTest.rizzo,
+            PlayerTest.peraza,
+            PlayerTest.choo,
+            PlayerTest.morton,
+            PlayerTest.yelich,
+            PlayerTest.braun,
+            PlayerTest.santana,
+        },
+        {
+            PlayerTest.springer,
+            PlayerTest.rosario,
+            PlayerTest.degrom,
+            PlayerTest.segura,
+            PlayerTest.yelich,
+            PlayerTest.braun,
+            PlayerTest.santana,
+        },
+        [l1, l2, l3],
+        0,
+        True,
+    )
 
-    small_lineup_settings = LineupSettings({BaseballSlot.OUTFIELD: 1, BaseballSlot.INJURED: 1})
+    small_lineup_settings = LineupSettings(
+        {BaseballSlot.OUTFIELD: 1, BaseballSlot.INJURED: 1}
+    )
     sl0 = Lineup({BaseballSlot.OUTFIELD: [PlayerTest.springer]}, BaseballSlot)
     sl1 = Lineup({BaseballSlot.OUTFIELD: [PlayerTest.rosario]}, BaseballSlot)
     sl2 = Lineup({BaseballSlot.OUTFIELD: [PlayerTest.yelich]}, BaseballSlot)
-    terminal_state = DraftState(DraftGameInfo(3, 1000, small_lineup_settings), {
-        PlayerTest.springer,
-        PlayerTest.rosario,
-        PlayerTest.yelich
-    }, {
-                                    PlayerTest.springer, PlayerTest.rosario, PlayerTest.yelich
-                                }, [sl0, sl1, sl2], 0, True)
+    terminal_state = DraftState(
+        DraftGameInfo(3, 1000, small_lineup_settings),
+        {PlayerTest.springer, PlayerTest.rosario, PlayerTest.yelich},
+        {PlayerTest.springer, PlayerTest.rosario, PlayerTest.yelich},
+        [sl0, sl1, sl2],
+        0,
+        True,
+    )
 
     def test__possible_additions(self):
         poss_p0 = self.state._possible_additions(0)

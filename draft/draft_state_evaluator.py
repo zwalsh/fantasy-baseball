@@ -17,13 +17,18 @@ from scoring_setting import ScoringSetting
 from stats import Stats
 from timing.timed import timed
 
-LOGGER = logging.getLogger('draft.draft_state_evaluator')
+LOGGER = logging.getLogger("draft.draft_state_evaluator")
 
 total_heuristics = 0
 
-class DraftStateEvaluator(StateEvaluator):
 
-    def __init__(self, player_projections: dict, scoring_settings: List[ScoringSetting], players_ranked: List[Player]):
+class DraftStateEvaluator(StateEvaluator):
+    def __init__(
+        self,
+        player_projections: dict,
+        scoring_settings: List[ScoringSetting],
+        players_ranked: List[Player],
+    ):
         """
         Evaluates different draft states for the value they represent to all players of a draft.
         Bases values on given player projections.
@@ -36,13 +41,11 @@ class DraftStateEvaluator(StateEvaluator):
         self.averages_cache = dict()
 
     def _get_projection(self, name: str) -> Optional[Stats]:
-        replaced_name = {
-            'Nicholas Castellanos': 'Nick Castellanos'
-        }.get(name, name)
+        replaced_name = {"Nicholas Castellanos": "Nick Castellanos"}.get(name, name)
 
         proj = self.player_projections.get(replaced_name)
         if proj is None:
-            LOGGER.warning(f'NO PROJECTIONS FOR {name}')
+            LOGGER.warning(f"NO PROJECTIONS FOR {name}")
         return proj
 
     # @timed(LOGGER)
@@ -50,15 +53,19 @@ class DraftStateEvaluator(StateEvaluator):
         global total_heuristics
         total_heuristics += 1
         if total_heuristics % 1000 == 0:
-            LOGGER.info(f'Calculated {total_heuristics} heuristics')
+            LOGGER.info(f"Calculated {total_heuristics} heuristics")
         empty_slots = slots_to_fill(game_state.lineups, game_info.lineup_settings)
-        available_players = list(filter(lambda p: p not in game_state.drafted, self.players_ranked))
+        available_players = list(
+            filter(lambda p: p not in game_state.drafted, self.players_ranked)
+        )
 
         best_available = dict()
         players_taken = set()
         # fill slots
         slot_counts = game_info.lineup_settings.slot_counts
-        draftable_slots = filter(lambda s: s != BaseballSlot.INJURED, slot_counts.keys())
+        draftable_slots = filter(
+            lambda s: s != BaseballSlot.INJURED, slot_counts.keys()
+        )
         for slot in sorted(draftable_slots, key=slot_value, reverse=True):
             if (slot, empty_slots[slot]) in self.averages_cache.keys():
                 best_available[slot] = []
@@ -81,7 +88,9 @@ class DraftStateEvaluator(StateEvaluator):
                 averages[slot] = cached
                 continue
             # self.averages_cache[(slot, len(players))] = self.averages_cache.get((slot, len(players)), 0) + 1
-            projections = list(map(self._get_projection, map(lambda p: p.name, players)))
+            projections = list(
+                map(self._get_projection, map(lambda p: p.name, players))
+            )
             total = reduce(Stats.__add__, projections)
             average = total / len(players)
             averages[slot] = average
@@ -92,7 +101,9 @@ class DraftStateEvaluator(StateEvaluator):
             so_far = self._cumulative_stats(lineup)
             for slot, count in slot_counts.items():
                 count_to_fill = count - len(lineup.player_dict.get(slot, []))
-                amount_to_add = averages.get(slot, Stats({}, BaseballStat)) * count_to_fill
+                amount_to_add = (
+                    averages.get(slot, Stats({}, BaseballStat)) * count_to_fill
+                )
                 so_far += amount_to_add
             totals += [so_far]
         return self.values_from_totals(game_info, totals)
@@ -123,14 +134,19 @@ class DraftStateEvaluator(StateEvaluator):
         }
         for ss in self.scoring_settings:
             values_for_stat = self._accrued_value_in_league(
-                list(map(lambda stats: stats.unrounded_value_for_stat(ss.stat), totals)),
+                list(
+                    map(lambda stats: stats.unrounded_value_for_stat(ss.stat), totals)
+                ),
                 ss.is_reverse,
-                stat_std_devs[ss.stat])
+                stat_std_devs[ss.stat],
+            )
             for i, val in enumerate(values_for_stat):
                 values[i] += val
         return values
 
-    def _accrued_value_in_league(self, stat_values: List[float], is_reverse: bool, std_dev) -> List[float]:
+    def _accrued_value_in_league(
+        self, stat_values: List[float], is_reverse: bool, std_dev
+    ) -> List[float]:
         """
         Given a list of accrued stat values, calculates the worth of each of those values.
 
@@ -150,11 +166,11 @@ class DraftStateEvaluator(StateEvaluator):
                 first_minus_second = NormalDist(mean_1 - mean_2, sqrt(variance))
                 p_second_greater = first_minus_second.cdf(0)
                 if is_reverse:
-                    result[second] += (1 - p_second_greater)
+                    result[second] += 1 - p_second_greater
                     result[first] += p_second_greater
                 else:
                     result[second] += p_second_greater
-                    result[first] += (1 - p_second_greater)
+                    result[first] += 1 - p_second_greater
         return result
 
     def _cumulative_stats(self, lineup: Lineup):
@@ -168,7 +184,9 @@ class DraftStateEvaluator(StateEvaluator):
         for p in lineup.starters():
             total_stats += self._get_projection(p.name) or Stats({}, BaseballStat)
         for p in lineup.benched():
-            total_stats += self._get_projection(p.name) or Stats({}, BaseballStat) * self.likelihood(p, lineup)
+            total_stats += self._get_projection(p.name) or Stats(
+                {}, BaseballStat
+            ) * self.likelihood(p, lineup)
 
         return total_stats
 
@@ -197,12 +215,18 @@ def rank_values(values: List[float], is_reverse: bool) -> List[float]:
     points_by_pos = range(1, len(values) + 1)
     points = [0.0] * len(values)
     positions_ranked = list(
-        map(lambda tup: tup[0], sorted(enumerate(values), reverse=is_reverse, key=lambda tup: tup[1])))
+        map(
+            lambda tup: tup[0],
+            sorted(enumerate(values), reverse=is_reverse, key=lambda tup: tup[1]),
+        )
+    )
     i = 0
     while i < len(positions_ranked):
         j = i + 1
         cur_value = values[positions_ranked[i]]
-        while j < len(positions_ranked) and isclose(cur_value, values[positions_ranked[j]], rel_tol=1e-09, abs_tol=0.0):
+        while j < len(positions_ranked) and isclose(
+            cur_value, values[positions_ranked[j]], rel_tol=1e-09, abs_tol=0.0
+        ):
             j += 1
         points_to_split = sum(points_by_pos[i:j])
         for points_index in range(i, j):
@@ -218,5 +242,9 @@ def slots_to_fill(lineups: List[Lineup], settings: LineupSettings) -> dict:
     empty_counts = dict()
     for lineup in lineups:
         for slot, count in settings.slot_counts.items():
-            empty_counts[slot] = empty_counts.get(slot, 0) + count - len(lineup.player_dict.get(slot, []))
+            empty_counts[slot] = (
+                empty_counts.get(slot, 0)
+                + count
+                - len(lineup.player_dict.get(slot, []))
+            )
     return empty_counts
