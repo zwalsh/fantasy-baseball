@@ -9,7 +9,6 @@ LOGGER = logging.getLogger("numberfire.api")
 
 
 class NumberFireApi:
-
     def page(self):
         """
         Gets the daily fantasy projections page from NumberFire
@@ -17,40 +16,53 @@ class NumberFireApi:
         """
         start_time = time.time()
         LOGGER.info("Fetching daily projections page from Numberfire")
-        r = requests.get('http://www.numberfire.com/nba/fantasy/full-fantasy-basketball-projections')
+        r = requests.get(
+            "http://www.numberfire.com/nba/fantasy/full-fantasy-basketball-projections"
+        )
         LOGGER.info(f"Finished after {time.time() - start_time:.3f} seconds")
         return BeautifulSoup(r.content, "html5lib")
 
     def projections_table(self):
-        table_bodies = self.page().find_all('tbody')
-        return next(filter(lambda tbody: tbody.has_attr('class') and 'stat-table__body' in tbody['class'],
-                           table_bodies))
+        table_bodies = self.page().find_all("tbody")
+        return next(
+            filter(
+                lambda tbody: tbody.has_attr("class")
+                and "stat-table__body" in tbody["class"],
+                table_bodies,
+            )
+        )
 
     @staticmethod
     def row_to_projection(row):
-        links = row.find_all('a')
-        tds = row.find_all('td')
-        name = NumberFireApi.find_with_class(links, 'full')
-        fp = NumberFireApi.find_with_class(tds, 'fp')
-        mins = NumberFireApi.find_with_class(tds, 'min')
-        pts = NumberFireApi.find_with_class(tds, 'pts')
-        reb = NumberFireApi.find_with_class(tds, 'reb')
-        ast = NumberFireApi.find_with_class(tds, 'ast')
-        stl = NumberFireApi.find_with_class(tds, 'stl')
-        blk = NumberFireApi.find_with_class(tds, 'blk')
-        to = NumberFireApi.find_with_class(tds, 'to')
+        links = row.find_all("a")
+        tds = row.find_all("td")
+        name = NumberFireApi.find_with_class(links, "full")
+        fp = NumberFireApi.find_with_class(tds, "fp")
+        mins = NumberFireApi.find_with_class(tds, "min")
+        pts = NumberFireApi.find_with_class(tds, "pts")
+        reb = NumberFireApi.find_with_class(tds, "reb")
+        ast = NumberFireApi.find_with_class(tds, "ast")
+        stl = NumberFireApi.find_with_class(tds, "stl")
+        blk = NumberFireApi.find_with_class(tds, "blk")
+        to = NumberFireApi.find_with_class(tds, "to")
         return PlayerProjection(name, fp, mins, pts, reb, ast, stl, blk, to)
 
     @staticmethod
     def find_with_class(elt, target_class):
-        return next(filter(lambda a: a.has_attr('class') and target_class in a['class'], elt)).text.strip()
+        return next(
+            filter(lambda a: a.has_attr("class") and target_class in a["class"], elt)
+        ).text.strip()
 
     def projections(self):
         """
         Returns a list of PlayerProjections for today's slate of games
         :return list: projections for each player with a game today
         """
-        return list(map(NumberFireApi.row_to_projection, self.projections_table().find_all('tr')))
+        return list(
+            map(
+                NumberFireApi.row_to_projection, self.projections_table().find_all("tr")
+            )
+        )
 
 
 class PlayerProjection:

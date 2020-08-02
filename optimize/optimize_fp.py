@@ -23,7 +23,9 @@ def optimize_fp(espn, fantasysp, notifier):
     projections = fantasysp.players()
     LOGGER.info(f"num projections: {len(projections)}")
 
-    poss_lineups = cur_lineup.possible_lineups(espn.lineup_settings(), BasketballSlot.starting_slots())
+    poss_lineups = cur_lineup.possible_lineups(
+        espn.lineup_settings(), BasketballSlot.starting_slots()
+    )
 
     player_to_proj = dict()
     for player in cur_lineup.players():
@@ -31,8 +33,12 @@ def optimize_fp(espn, fantasysp, notifier):
         if projection is None:
             LOGGER.warning(f"No projection for {player.name}")
         else:
-            LOGGER.info(f"Projection for {player.name:<30}{stats_to_fp(projection.stats)}")
-        player_to_proj[player.name] = projection.stats if projection is not None else None
+            LOGGER.info(
+                f"Projection for {player.name:<30}{stats_to_fp(projection.stats)}"
+            )
+        player_to_proj[player.name] = (
+            projection.stats if projection is not None else None
+        )
 
     # min/max least transitions, most points
     cur_max_points = 0.0
@@ -56,7 +62,9 @@ def optimize_fp(espn, fantasysp, notifier):
 
     transitions = cur_lineup.transitions(cur_best_lineup)
     player_to_fp = {name: stats_to_fp(stats) for name, stats in player_to_proj.items()}
-    notifier.notify_set_fba_lineup(espn.team_name(), transitions, total_points, player_to_fp)
+    notifier.notify_set_fba_lineup(
+        espn.team_name(), transitions, total_points, player_to_fp
+    )
     try:
         if len(transitions) > 0:
             espn.set_lineup(cur_best_lineup)
@@ -73,7 +81,11 @@ def total_fp_given_starters(projections, starters):
     :param set starters: set of starters
     :return float: number of fantasy points
     """
-    return reduce(lambda so_far, starter: so_far + stats_to_fp(projections.get(starter.name)), starters, 0.0)
+    return reduce(
+        lambda so_far, starter: so_far + stats_to_fp(projections.get(starter.name)),
+        starters,
+        0.0,
+    )
 
 
 def stats_to_fp(stats):
@@ -85,16 +97,18 @@ def stats_to_fp(stats):
     if stats is None:
         return 0.0
     else:
-        return (stats.unrounded_value_for_stat(BasketballStat.FGM) or 0.0) * 1 + \
-               (stats.unrounded_value_for_stat(BasketballStat.FGA) or 0.0) * -1 + \
-               (stats.unrounded_value_for_stat(BasketballStat.FTM) or 0.0) * 1 + \
-               (stats.unrounded_value_for_stat(BasketballStat.FTA) or 0.0) * -1 + \
-               (stats.unrounded_value_for_stat(BasketballStat.REBOUNDS) or 0.0) * 1 + \
-               (stats.unrounded_value_for_stat(BasketballStat.ASSISTS) or 0.0) * 1 + \
-               (stats.unrounded_value_for_stat(BasketballStat.STEALS) or 0.0) * 1 + \
-               (stats.unrounded_value_for_stat(BasketballStat.BLOCKS) or 0.0) * 1 + \
-               (stats.unrounded_value_for_stat(BasketballStat.TURNOVERS) or 0.0) * -1 + \
-               (stats.unrounded_value_for_stat(BasketballStat.POINTS) or 0.0) * 1
+        return (
+            (stats.unrounded_value_for_stat(BasketballStat.FGM) or 0.0) * 1
+            + (stats.unrounded_value_for_stat(BasketballStat.FGA) or 0.0) * -1
+            + (stats.unrounded_value_for_stat(BasketballStat.FTM) or 0.0) * 1
+            + (stats.unrounded_value_for_stat(BasketballStat.FTA) or 0.0) * -1
+            + (stats.unrounded_value_for_stat(BasketballStat.REBOUNDS) or 0.0) * 1
+            + (stats.unrounded_value_for_stat(BasketballStat.ASSISTS) or 0.0) * 1
+            + (stats.unrounded_value_for_stat(BasketballStat.STEALS) or 0.0) * 1
+            + (stats.unrounded_value_for_stat(BasketballStat.BLOCKS) or 0.0) * 1
+            + (stats.unrounded_value_for_stat(BasketballStat.TURNOVERS) or 0.0) * -1
+            + (stats.unrounded_value_for_stat(BasketballStat.POINTS) or 0.0) * 1
+        )
 
 
 def find_projection(projections, name):

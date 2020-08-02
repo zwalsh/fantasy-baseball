@@ -48,7 +48,9 @@ class BaseballApi(EspnApi):
         name = player_resp["fullName"]
         LOGGER.debug(f"checking start status for {name}")
         stats = player_resp["stats"]
-        starter_split = next(filter(lambda s: s["statSplitTypeId"] == 5, stats), {}).get("stats", {})
+        starter_split = next(
+            filter(lambda s: s["statSplitTypeId"] == 5, stats), {}
+        ).get("stats", {})
         is_starter = starter_split.get("99", None) == 1.0
         LOGGER.debug(f"starting? {is_starter}")
         return is_starter
@@ -123,5 +125,8 @@ class BaseballApi(EspnApi):
             return self
 
         def build(self):
-            return BaseballApi(EspnSessionProvider(self.__username, self.__password), self.__league_id,
-                               self.__team_id)
+            return BaseballApi(
+                EspnSessionProvider(self.__username, self.__password),
+                self.__league_id,
+                self.__team_id,
+            )

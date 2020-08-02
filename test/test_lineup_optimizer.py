@@ -7,7 +7,6 @@ from test.test_player import PlayerTest
 
 
 class MockEspn:
-
     def __init__(self, prob_pitcher_ids):
         self.prob_pitcher_ids = prob_pitcher_ids
 
@@ -16,7 +15,6 @@ class MockEspn:
 
 
 class TestLineupOptimizer(unittest.TestCase):
-
     def test_must_start_pitchers(self):
         l = LineupTest.simple_lineup
         paddack = PlayerTest.paddack
@@ -26,7 +24,9 @@ class TestLineupOptimizer(unittest.TestCase):
         # includes all probable starters
         self.assertTrue(paddack in must_starts)
 
-        relievers = [p for p in l.players() if p.default_position is BaseballPosition.RELIEVER]
+        relievers = [
+            p for p in l.players() if p.default_position is BaseballPosition.RELIEVER
+        ]
 
         # includes all relievers
         self.assertTrue(all(map(lambda r: r in must_starts, relievers)))
@@ -41,9 +41,14 @@ class TestLineupOptimizer(unittest.TestCase):
         benchables = lineup_optimizer.benchable_pitchers(l, must_start)
 
         self.assertNotIn(PlayerTest.paddack, benchables)
-        self.assertEqual(benchables, {PlayerTest.degrom,
-                                      PlayerTest.morton,
-                                      PlayerTest.hill,
-                                      PlayerTest.arrieta,
-                                      PlayerTest.glasnow,
-                                      PlayerTest.smith})
+        self.assertEqual(
+            benchables,
+            {
+                PlayerTest.degrom,
+                PlayerTest.morton,
+                PlayerTest.hill,
+                PlayerTest.arrieta,
+                PlayerTest.glasnow,
+                PlayerTest.smith,
+            },
+        )

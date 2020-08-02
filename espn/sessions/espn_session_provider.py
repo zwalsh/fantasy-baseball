@@ -11,7 +11,9 @@ class LoginException(Exception):
     """
     Exception to throw when Login to ESPN was unsuccessful
     """
+
     pass
+
 
 LOGGER = logging.getLogger("espn.api.espn_session_provider")
 
@@ -34,24 +36,28 @@ class EspnSessionProvider:
         return f"espn_s2_{self.username}.txt"
 
     def __login(self):
-        login_payload = {
-            "loginValue": self.username,
-            "password": self.password
-        }
+        login_payload = {"loginValue": self.username, "password": self.password}
         login_headers = {
             "authorization": EspnSessionProvider.api_key(),
             "content-type": "application/json",
         }
         LOGGER.info("logging into ESPN for %(user)s...", {"user": self.username})
         start = time.time()
-        resp = requests.post(EspnSessionProvider.LOGIN_URL, data=json.dumps(login_payload), headers=login_headers)
+        resp = requests.post(
+            EspnSessionProvider.LOGIN_URL,
+            data=json.dumps(login_payload),
+            headers=login_headers,
+        )
         end = time.time()
         if resp.status_code != 200:
             LOGGER.error("could not log into ESPN: %(msg)s", {"msg": resp.reason})
             LOGGER.error(resp.text)
             raise LoginException
-        key = resp.json().get('data').get('s2')
-        LOGGER.info("logged in for %(user)s after %(time).3fs", {"user": self.username, "time": end - start})
+        key = resp.json().get("data").get("s2")
+        LOGGER.info(
+            "logged in for %(user)s after %(time).3fs",
+            {"user": self.username, "time": end - start},
+        )
         return key
 
     def get_session(self):

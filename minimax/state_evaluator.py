@@ -3,7 +3,6 @@ from minimax.game_state import GameState
 
 
 class StateEvaluator:
-
     def heuristic(self, game_state: GameState, game_info: GameInfo):
         pass
 

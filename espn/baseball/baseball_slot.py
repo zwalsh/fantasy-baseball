@@ -30,7 +30,7 @@ class BaseballSlot(Enum):
             12: BaseballSlot.UTIL,
             13: BaseballSlot.PITCHER,
             16: BaseballSlot.BENCH,
-            17: BaseballSlot.INJURED
+            17: BaseballSlot.INJURED,
         }
 
     @staticmethod
@@ -49,15 +49,17 @@ class BaseballSlot(Enum):
 
     @staticmethod
     def hitting_slots():
-        return {BaseballSlot.CATCHER,
-                BaseballSlot.FIRST,
-                BaseballSlot.SECOND,
-                BaseballSlot.THIRD,
-                BaseballSlot.SHORT,
-                BaseballSlot.MIDDLE_INFIELD,
-                BaseballSlot.CORNER_INFIELD,
-                BaseballSlot.OUTFIELD,
-                BaseballSlot.UTIL}
+        return {
+            BaseballSlot.CATCHER,
+            BaseballSlot.FIRST,
+            BaseballSlot.SECOND,
+            BaseballSlot.THIRD,
+            BaseballSlot.SHORT,
+            BaseballSlot.MIDDLE_INFIELD,
+            BaseballSlot.CORNER_INFIELD,
+            BaseballSlot.OUTFIELD,
+            BaseballSlot.UTIL,
+        }
 
     @staticmethod
     def catcher():
@@ -65,19 +67,39 @@ class BaseballSlot(Enum):
 
     @staticmethod
     def first():
-        return {BaseballSlot.FIRST, BaseballSlot.CORNER_INFIELD, BaseballSlot.BENCH, BaseballSlot.UTIL}
+        return {
+            BaseballSlot.FIRST,
+            BaseballSlot.CORNER_INFIELD,
+            BaseballSlot.BENCH,
+            BaseballSlot.UTIL,
+        }
 
     @staticmethod
     def second():
-        return {BaseballSlot.SECOND, BaseballSlot.MIDDLE_INFIELD, BaseballSlot.BENCH, BaseballSlot.UTIL}
+        return {
+            BaseballSlot.SECOND,
+            BaseballSlot.MIDDLE_INFIELD,
+            BaseballSlot.BENCH,
+            BaseballSlot.UTIL,
+        }
 
     @staticmethod
     def third():
-        return {BaseballSlot.THIRD, BaseballSlot.CORNER_INFIELD, BaseballSlot.BENCH, BaseballSlot.UTIL}
+        return {
+            BaseballSlot.THIRD,
+            BaseballSlot.CORNER_INFIELD,
+            BaseballSlot.BENCH,
+            BaseballSlot.UTIL,
+        }
 
     @staticmethod
     def short():
-        return {BaseballSlot.SHORT, BaseballSlot.MIDDLE_INFIELD, BaseballSlot.BENCH, BaseballSlot.UTIL}
+        return {
+            BaseballSlot.SHORT,
+            BaseballSlot.MIDDLE_INFIELD,
+            BaseballSlot.BENCH,
+            BaseballSlot.UTIL,
+        }
 
     @staticmethod
     def outfield():

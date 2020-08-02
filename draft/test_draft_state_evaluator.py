@@ -21,7 +21,9 @@ class TestDraftStateEvaluator(TestCase):
 
     def test_rank_values_ties(self):
         self.assertEqual(rank_values([1.0, 1.0], False), [1.5, 1.5])
-        self.assertEqual(rank_values([1.0, 1.0, 1.0, 1.0, 2.0], False), [2.5, 2.5, 2.5, 2.5, 5.0])
+        self.assertEqual(
+            rank_values([1.0, 1.0, 1.0, 1.0, 2.0], False), [2.5, 2.5, 2.5, 2.5, 5.0]
+        )
 
     def test__slots_to_fill(self):
         lineups = [TestDraftState.l1, TestDraftState.l2, TestDraftState.l3]
@@ -30,6 +32,6 @@ class TestDraftStateEvaluator(TestCase):
             BaseballSlot.SHORT: 2,
             BaseballSlot.PITCHER: 2,
             BaseballSlot.UTIL: 2,
-            BaseballSlot.BENCH: 3
+            BaseballSlot.BENCH: 3,
         }
         self.assertEqual(d, slots_to_fill(lineups, TestDraftState.ls))

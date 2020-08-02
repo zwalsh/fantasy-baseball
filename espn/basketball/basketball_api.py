@@ -7,7 +7,6 @@ from espn.sessions.espn_session_provider import EspnSessionProvider
 
 
 class BasketballApi(EspnApi):
-
     def slot_enum(self):
         return BasketballSlot
 
@@ -52,5 +51,9 @@ class BasketballApi(EspnApi):
             return self
 
         def build(self):
-            return BasketballApi(EspnSessionProvider(self.__username, self.__password), self.__league_id,
-                                 self.__team_id, self.__year)
+            return BasketballApi(
+                EspnSessionProvider(self.__username, self.__password),
+                self.__league_id,
+                self.__team_id,
+                self.__year,
+            )

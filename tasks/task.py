@@ -4,7 +4,6 @@ from config import logging_config, notifier_config
 
 
 class Task:
-
     @staticmethod
     def create(username):
         """
@@ -21,7 +20,9 @@ class Task:
 
         Should be overridden in every Task implementation.
         """
-        raise NotImplementedError("Parent Task class does not implement any specific behavior")
+        raise NotImplementedError(
+            "Parent Task class does not implement any specific behavior"
+        )
 
     def execute(self):
         """
@@ -31,7 +32,10 @@ class Task:
         logging.config.dictConfig(logging_config.config_dict())
 
         logger = logging.getLogger()
-        logger.info("starting up %(task)s with user %(user)s", {"user": self.username, "task": type(self).__name__})
+        logger.info(
+            "starting up %(task)s with user %(user)s",
+            {"user": self.username, "task": type(self).__name__},
+        )
         notifier = notifier_config.current_notifier(self.username)
 
         try:

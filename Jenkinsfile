@@ -11,12 +11,13 @@ pipeline {
         }
         stage('test') {
             steps {
-                sh 'python3.8 -m unittest'
+                sh 'python3.8 -m xmlrunner -o test-reports'
             }
         }
         stage('lint') {
             steps {
-                sh 'find . -type f -name "*.py" | xargs pylint'
+                sh 'find . -type f -name "*.py" | xargs python3.8 -m pylint --rcfile=pylintrc --output-format=junit | tee pylint.out'
+                sh 'exit ${PIPESTATUS[0]}'
             }
         }
     }
@@ -32,6 +33,10 @@ pipeline {
         failure {
             echo 'I failed :('
             setBuildStatus('failure')
+        }
+        always {
+            junit 'test-reports/*.xml'
+            junit 'pylint.out'
         }
     }
 }

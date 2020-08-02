@@ -20,10 +20,18 @@ class SetLineup(Task):
 
     def run(self):
         for team_config in self.configs:
-            LOGGER.info(f"setting lineup for team {team_config.team_id} in league {team_config.league_id}")
+            LOGGER.info(
+                f"setting lineup for team {team_config.team_id} in league {team_config.league_id}"
+            )
 
-            espn = BaseballApi.Builder().username(self.username).password(self.password).league_id(
-                team_config.league_id).team_id(team_config.team_id).build()
+            espn = (
+                BaseballApi.Builder()
+                .username(self.username)
+                .password(self.password)
+                .league_id(team_config.league_id)
+                .team_id(team_config.team_id)
+                .build()
+            )
             optimize_lineup(espn, self.fangraphs, self.notifier)
 
     @staticmethod
