@@ -16,9 +16,11 @@ pipeline {
         }
         stage('lint') {
             steps {
-                sh 'find . -type f -name "*.py"
+                sh '''
+                find . -type f -name "*.py"
                 | xargs python3.8 -m pylint --rcfile=pylintrc --output-format=junit
-                | tee pylint.out'
+                | tee pylint.out
+                '''
             }
         }
     }
