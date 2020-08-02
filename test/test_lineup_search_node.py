@@ -8,13 +8,17 @@ from player import Player
 
 class Test(unittest.TestCase):
     rizzo = Player("Anthony Rizzo", None, None, 123, {BaseballSlot.FIRST}, None)
-    goldschmidt = Player("Paul Goldschmidt", None, None, 456, {BaseballSlot.FIRST}, None)
+    goldschmidt = Player(
+        "Paul Goldschmidt", None, None, 456, {BaseballSlot.FIRST}, None
+    )
 
     empty_lineup = Lineup(dict(), BaseballSlot)
     basic_node = LineupSearchNode(empty_lineup, [rizzo], {BaseballSlot.FIRST})
     simple_settings = LineupSettings({BaseballSlot.FIRST: 1})
 
-    two_firsts_left_node = LineupSearchNode(empty_lineup, [rizzo, goldschmidt], {BaseballSlot.FIRST})
+    two_firsts_left_node = LineupSearchNode(
+        empty_lineup, [rizzo, goldschmidt], {BaseballSlot.FIRST}
+    )
 
     def test_successors_one_player(self):
         result = self.basic_node.successors(self.simple_settings)
@@ -37,4 +41,3 @@ class Test(unittest.TestCase):
         self.assertNotEqual(s0rem, s0first)
         self.assertNotEqual(s1rem, s1first)
         self.assertEqual(s0rem, s1first)
-

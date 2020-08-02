@@ -10,7 +10,6 @@ from test.test_player import PlayerTest
 
 
 class MockClient:
-
     def __init__(self):
         """
         Fake client to be used by a Notifier in tests
@@ -22,8 +21,12 @@ class MockClient:
 
 
 class Test(unittest.TestCase):
-    t1 = LineupTransition(PlayerTest.muncy, BaseballSlot.CORNER_INFIELD, BaseballSlot.BENCH)
-    t2 = LineupTransition(PlayerTest.merrifield, BaseballSlot.OUTFIELD, BaseballSlot.SECOND)
+    t1 = LineupTransition(
+        PlayerTest.muncy, BaseballSlot.CORNER_INFIELD, BaseballSlot.BENCH
+    )
+    t2 = LineupTransition(
+        PlayerTest.merrifield, BaseballSlot.OUTFIELD, BaseballSlot.SECOND
+    )
 
     lt1 = LineupTotalTest.lt1
 
@@ -56,7 +59,9 @@ class Test(unittest.TestCase):
         team = "Name"
         ts = [self.t1, self.t2]
 
-        n.notify_set_lineup(team, self.lt1, ts, [ScoringSetting(BaseballStat.WHIP, True)])
+        n.notify_set_lineup(
+            team, self.lt1, ts, [ScoringSetting(BaseballStat.WHIP, True)]
+        )
 
         expected = team + ": 50.00PA\n"
         for t in ts:
