@@ -47,8 +47,10 @@ class FootballStat(Enum):
 
     @staticmethod
     def sum_stats():
+        # pylint: disable=unnecessary-comprehension
         return {s for s in FootballStat}
 
+    # pylint: disable=no-self-use
     def num_rounding_digits(self):
         return 0
 

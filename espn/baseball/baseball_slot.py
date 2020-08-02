@@ -41,11 +41,15 @@ class BaseballSlot(Enum):
         return {v: k for k, v in BaseballSlot.slot_id_to_slot().items()}[self]
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
     @staticmethod
     def starting_slots():
-        return {ls for ls in BaseballSlot} - {BaseballSlot.BENCH, BaseballSlot.INJURED}
+        return {
+            ls
+            for ls in BaseballSlot
+            if ls not in {BaseballSlot.BENCH, BaseballSlot.INJURED}
+        }
 
     @staticmethod
     def hitting_slots():

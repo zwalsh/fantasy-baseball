@@ -5,7 +5,6 @@ from abc import abstractmethod, ABCMeta
 
 import requests
 
-from espn.sessions.espn_session_provider import EspnSessionProvider
 from league import League
 from lineup import Lineup
 from lineup_settings import LineupSettings
@@ -22,16 +21,18 @@ class EspnApiException(Exception):
     Exception to throw when a request to the ESPN API failed
     """
 
+    # pylint: disable=unnecessary-pass
     pass
 
 
 class EspnApi(metaclass=ABCMeta):
     def __init__(self, session_provider, league_id, team_id, year=2020):
         """
-        Programmatic access to ESPN's (undocumented) API, caching requests that do not need refreshing,
-        and automatically fetching a token for the user/password combination.
+        Programmatic access to ESPN's (undocumented) API, caching requests that do not need
+        refreshing, and automatically fetching a token for the user/password combination.
 
-        :param EspnSessionProvider session_provider: using a username and password, provides and stores session tokens
+        :param EspnSessionProvider session_provider: using a username and password, provides
+        and stores session tokens
         """
         self.session_provider = session_provider
         self.league_id = league_id
@@ -48,11 +49,17 @@ class EspnApi(metaclass=ABCMeta):
         start_time = time.time()
         k = self.session_provider.get_session()
         cookies = {"espn_s2": k}
+        response = None
         if method == "GET":
-            r = requests.get(url, headers=headers or {}, cookies=cookies)
+            response = requests.get(url, headers=headers or {}, cookies=cookies)
         if method == "POST":
-            r = requests.post(url, headers=headers or {}, cookies=cookies, json=payload)
-        if r.status_code == 401:
+            response = requests.post(
+                url, headers=headers or {}, cookies=cookies, json=payload
+            )
+        if response is None:
+            LOGGER.error("Got no response")
+            raise EspnApiException(url)
+        if response.status_code == 401:
             LOGGER.warning("request denied, logging in again.")
             self.session_provider.refresh_session()
             return self.espn_request(
@@ -62,12 +69,14 @@ class EspnApi(metaclass=ABCMeta):
                 headers=headers,
                 check_cache=check_cache,
             )
-        if not r.ok:
+        if not response.ok:
+            elapsed_time = start_time - time.time()
             LOGGER.error(
-                f"received {r.status_code} {r.reason}: {r.text} in {start_time - time.time():.3f} seconds"
+                f"received {response.status_code} {response.reason}: {response.text} in "
+                f"{elapsed_time :.3f} seconds"
             )
             if retries > 0:
-                LOGGER.info(f"retrying request")
+                LOGGER.info("retrying request")
                 return self.espn_request(
                     method=method,
                     url=url,
@@ -76,9 +85,8 @@ class EspnApi(metaclass=ABCMeta):
                     check_cache=check_cache,
                     retries=retries - 1,
                 )
-            else:
-                raise EspnApiException(url)
-        if r.text is None or r.text == "":
+            raise EspnApiException(url)
+        if response.text is None or response.text == "":
             LOGGER.error(
                 f"the response was blank after {start_time - time.time():.3f} seconds"
             )
@@ -91,13 +99,12 @@ class EspnApi(metaclass=ABCMeta):
                     check_cache=check_cache,
                     retries=retries - 1,
                 )
-            else:
-                raise EspnApiException(url)
+            raise EspnApiException(url)
         else:
             end_time = time.time()
             LOGGER.info("finished after %(time).3fs", {"time": end_time - start_time})
-        self.cache[url] = r
-        return r
+        self.cache[url] = response
+        return response
 
     def espn_get(self, url, headers=None, check_cache=True):
         return self.espn_request(
@@ -115,6 +122,7 @@ class EspnApi(metaclass=ABCMeta):
         Returns the URL segment for this api, e.g. flb, ffb, etc.
         :return:
         """
+        # pylint: disable=unnecessary-pass
         pass
 
     @abstractmethod
@@ -123,7 +131,8 @@ class EspnApi(metaclass=ABCMeta):
 
     def base_url(self):
         return (
-            f"http://fantasy.espn.com/apis/v3/games/{self.api_url_segment()}/seasons/{self.year}/segments/0/leagues/"
+            f"http://fantasy.espn.com/apis/v3/games/{self.api_url_segment()}"
+            f"/seasons/{self.year}/segments/0/leagues/"
             f"{self.league_id}"
         )
 
@@ -278,7 +287,8 @@ class EspnApi(metaclass=ABCMeta):
 
     def cumulative_stats_from_roster_entries(self, entries, scoring_period_id):
         """
-        Takes a list of roster entries and reconstitutes the cumulative stats produced by that roster.
+        Takes a list of roster entries and reconstitutes the cumulative stats produced by that
+        roster.
         :param list entries: the entries produced
         :param int scoring_period_id: the scoring period for which stats are being accumulated
         :return Stats: the sum total of stats produced by starters on that roster
@@ -298,7 +308,8 @@ class EspnApi(metaclass=ABCMeta):
             if stats_dict is None:
                 name = e["playerPoolEntry"]["player"]["fullName"]
                 LOGGER.warning(
-                    f"{name} has no stats matching scoring period {scoring_period_id} found in entry {e}"
+                    f"{name} has no stats matching scoring period {scoring_period_id} "
+                    f"found in entry {e}"
                 )
                 continue
             stats = self.create_stats(stats_dict["stats"])
@@ -332,7 +343,8 @@ class EspnApi(metaclass=ABCMeta):
 
     def player_request(self, player_id):
         """
-        Makes the request to ESPN for the player with the player id and returns the raw response (parsed from JSON)
+        Makes the request to ESPN for the player with the player id and returns the raw response
+        (parsed from JSON).
         :param int player_id: the id of the player to make the request about
         :return dict: the parsed response from ESPN
         """
@@ -346,8 +358,8 @@ class EspnApi(metaclass=ABCMeta):
 
     def player(self, player_id):
         """
-        Given the ESPN id of a Player, this will return the Player object associated with that Player,
-        or None if no such player exists.
+        Given the ESPN id of a Player, this will return the Player object associated with that
+        Player, or None if no such player exists.
         :param int player_id: the id in the ESPN system of the player to be requested
         :return Player: the associated Player object (or None)
         """

@@ -6,19 +6,20 @@ from espn.baseball.baseball_stat import BaseballStat
 from espn.espn_api import EspnApi
 from espn.sessions.espn_session_provider import EspnSessionProvider
 
-"""
-http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/<LEAGUE_ID>
-- members[i].displayName == "zcwalsh" 
-    -> id == ownerId
-- scoringPeriodId
+
+# http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/<LEAGUE_ID>
+# - members[i].displayName == "zcwalsh"
+#     -> id == ownerId
+# - scoringPeriodId
+#
+#
+#
+# url that is hit on page load:
+# "http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/<LEAGUE_ID>
+# ?view=mMatchupScore" \
+#               "&view=mLiveScoring"
 
 
-
-url that is hit on page load:
-"http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/<LEAGUE_ID>?view=mMatchupScore" \
-              "&view=mLiveScoring"
-
-"""
 LOGGER = logging.getLogger("espn.baseball.api")
 
 
@@ -54,40 +55,6 @@ class BaseballApi(EspnApi):
         is_starter = starter_split.get("99", None) == 1.0
         LOGGER.debug(f"starting? {is_starter}")
         return is_starter
-
-    """
-    {"bidAmount":0,
-    "executionType":"EXECUTE",
-    "id":"e2d156d6-94c3-4fa0-9cac-4aaacbce1444",
-    "isActingAsTeamOwner":false,
-    "isLeagueManager":false,
-    "isPending":false,
-    "items":[{"fromLineupSlotId":-1,
-                "fromTeamId":0,
-                "isKeeper":false,
-                "overallPickNumber":0,
-                "playerId":35983,
-                "toLineupSlotId":-1,
-                "toTeamId":7,
-                "type":"ADD"},
-                {"fromLineupSlotId":-1,
-                "fromTeamId":7,
-                "isKeeper":false,
-                "overallPickNumber":0,
-                "playerId":32620,
-                "toLineupSlotId":-1,
-                "toTeamId":0,
-                "type":"DROP"}],
-    "memberId":"{84C1CD19-5E2C-4D5D-81CD-195E2C4D5D75}",
-    "proposedDate":1553703820851,
-    "rating":0,
-    "scoringPeriodId":8,
-    "skipTransactionCounters":false,
-    "status":"EXECUTED",
-    "subOrder":0,
-    "teamId":7,
-    "type":"FREEAGENT"}
-    """
 
     def slot_enum(self):
         return BaseballSlot

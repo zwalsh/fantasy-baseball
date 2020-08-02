@@ -44,10 +44,7 @@ class BaseballStat(Enum):
         }
 
     def num_rounding_digits(self):
-        if self in {BaseballStat.AVG, BaseballStat.OBP}:
-            return 3
-        else:
-            return 2
+        return 3 if self in {BaseballStat.AVG, BaseballStat.OBP} else 2
 
     @staticmethod
     def sum_stats():

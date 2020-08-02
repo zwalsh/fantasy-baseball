@@ -12,7 +12,7 @@ class FootballSlot(Enum):
     INJURED = "IR"
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
     @staticmethod
     def slot_id_to_slot_map():
@@ -29,7 +29,11 @@ class FootballSlot(Enum):
 
     @staticmethod
     def starting_slots():
-        return {ls for ls in FootballSlot} - {FootballSlot.BENCH, FootballSlot.INJURED}
+        return {
+            ls
+            for ls in FootballSlot
+            if ls not in {FootballSlot.BENCH, FootballSlot.INJURED}
+        }
 
     @staticmethod
     def espn_slot_to_slot(slot_id):

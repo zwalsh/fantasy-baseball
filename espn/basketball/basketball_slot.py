@@ -14,7 +14,7 @@ class BasketballSlot(Enum):
     INJURED = "INJ"
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
     @staticmethod
     def slot_id_to_slot_map():
@@ -32,9 +32,10 @@ class BasketballSlot(Enum):
 
     @staticmethod
     def starting_slots():
-        return {ls for ls in BasketballSlot} - {
-            BasketballSlot.BENCH,
-            BasketballSlot.INJURED,
+        return {
+            ls
+            for ls in BasketballSlot
+            if ls not in {BasketballSlot.BENCH, BasketballSlot.INJURED,}
         }
 
     @staticmethod
