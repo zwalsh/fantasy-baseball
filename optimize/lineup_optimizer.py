@@ -11,7 +11,7 @@ from espn.baseball.baseball_stat import BaseballStat
 # first - log/notify number of lineups to choose from within 95% of max PA
 # then - choose best: first one to appear within some % of max of all categories
 
-LOGGER = logging.getLogger('optimize.optimizer')
+LOGGER = logging.getLogger("optimize.optimizer")
 
 
 def optimize_lineup(espn, fangraphs, notifier):
@@ -24,26 +24,47 @@ def optimize_lineup(espn, fangraphs, notifier):
     :param Notifier notifier: wrapper around a Notifier client
     """
     lineup = espn.lineup()
-    LOGGER.info(f'Current lineup: {lineup}')
+    LOGGER.info(f"Current lineup: {lineup}")
     l_settings = espn.lineup_settings()
     s_settings = espn.scoring_settings()
-    hitting_settings = filter(lambda s: s.stat not in {BaseballStat.K, BaseballStat.W, BaseballStat.ERA, BaseballStat.WHIP, BaseballStat.SV}, s_settings)
+    hitting_settings = filter(
+        lambda s: s.stat
+        not in {
+            BaseballStat.K,
+            BaseballStat.W,
+            BaseballStat.ERA,
+            BaseballStat.WHIP,
+            BaseballStat.SV,
+        },
+        s_settings,
+    )
 
     hitter_projections = fangraphs.hitter_projections()
     possibles = possible_lineup_totals(lineup, l_settings, hitter_projections)
     best_pa = best_for_stat(lineup, possibles, ScoringSetting(BaseballStat.PA, False))
     threshold = best_pa.stats.value_for_stat(BaseballStat.PA) * 0.95
-    candidates = above_threshold_for_stat(possibles, ScoringSetting(BaseballStat.PA, False), threshold)
+    candidates = above_threshold_for_stat(
+        possibles, ScoringSetting(BaseballStat.PA, False), threshold
+    )
 
     num_candidates = len(candidates)
-    LOGGER.info(f"found {num_candidates} candidates within 95% of max PA's (above threshold {threshold})")
+    LOGGER.info(
+        f"found {num_candidates} candidates within 95% of max PA's (above threshold {threshold})"
+    )
     best_list = best_lineups(lineup, candidates, hitting_settings)
-    most_pas_from_best = best_for_stat(lineup, best_list, ScoringSetting(BaseballStat.PA, False))
-    LOGGER.info(f'Using lineup {most_pas_from_best.lineup}')
+    most_pas_from_best = best_for_stat(
+        lineup, best_list, ScoringSetting(BaseballStat.PA, False)
+    )
+    LOGGER.info(f"Using lineup {most_pas_from_best.lineup}")
 
     hitting_transitions = lineup.transitions(most_pas_from_best.lineup)
     pitching_transitions = optimal_pitching_transitions(lineup, espn)
-    notifier.notify_set_lineup(espn.team_name(), most_pas_from_best, hitting_transitions + pitching_transitions, s_settings)
+    notifier.notify_set_lineup(
+        espn.team_name(),
+        most_pas_from_best,
+        hitting_transitions + pitching_transitions,
+        s_settings,
+    )
     if len(hitting_transitions + pitching_transitions) == 0:
         LOGGER.info(f"no transitions to execute")
     else:
@@ -70,20 +91,26 @@ def best_lineups(current, candidates, scoring_settings):
     passing = list()
     # while list of passing candidates is empty, decr. threshold by .01 and try again
     while len(passing) == 0:
-        threshold -= .01
+        threshold -= 0.01
         LOGGER.debug(f"filtering candidates at threshold value {threshold}")
         passing = candidates_above_threshold(candidates, max_values, threshold)
     num_to_choose = len(passing)
-    LOGGER.info(f"{num_to_choose} candidates pass for each stat at {round(threshold, 2)}")
+    LOGGER.info(
+        f"{num_to_choose} candidates pass for each stat at {round(threshold, 2)}"
+    )
     return passing
 
 
 def candidates_above_threshold(candidates, maxes, threshold_percentage):
     passing = candidates.copy()
     for (setting, value) in maxes:
-        passing = above_threshold_for_stat(passing, setting, value * threshold_percentage)
+        passing = above_threshold_for_stat(
+            passing, setting, value * threshold_percentage
+        )
         if len(passing) == 0:
-            LOGGER.debug(f"none pass for {setting.stat} at value {value * threshold_percentage}")
+            LOGGER.debug(
+                f"none pass for {setting.stat} at value {value * threshold_percentage}"
+            )
             return list()
 
     return list(passing)
@@ -99,7 +126,12 @@ def above_threshold_for_stat(totals, scoring_setting, threshold):
     :return list: all LineupTotals that pass the test
     """
     comp = operator.lt if scoring_setting.is_reverse else operator.gt
-    return list(filter(lambda lt: lt.passes_threshold(scoring_setting.stat, threshold, comp), totals))
+    return list(
+        filter(
+            lambda lt: lt.passes_threshold(scoring_setting.stat, threshold, comp),
+            totals,
+        )
+    )
 
 
 def best_for_stat(current, totals, scoring_setting):
@@ -139,7 +171,9 @@ def possible_lineup_totals(lineup, lineup_settings, projections):
     :return: list
     """
     possibles = lineup.possible_lineups(lineup_settings, BaseballSlot.hitting_slots())
-    return list(map(lambda l: LineupTotal.total_from_projections(l, projections), possibles))
+    return list(
+        map(lambda l: LineupTotal.total_from_projections(l, projections), possibles)
+    )
 
 
 def optimal_pitching_transitions(lineup, espn):
@@ -169,8 +203,12 @@ def optimal_pitching_transitions(lineup, espn):
     for ns in not_started:
         player_to_bench = next(benchables)
         LOGGER.info(f"starting {ns}, benching {player_to_bench}")
-        transitions.append(LineupTransition(ns, BaseballSlot.BENCH, BaseballSlot.PITCHER))
-        transitions.append(LineupTransition(player_to_bench, BaseballSlot.PITCHER, BaseballSlot.BENCH))
+        transitions.append(
+            LineupTransition(ns, BaseballSlot.BENCH, BaseballSlot.PITCHER)
+        )
+        transitions.append(
+            LineupTransition(player_to_bench, BaseballSlot.PITCHER, BaseballSlot.BENCH)
+        )
 
     return transitions
 
@@ -186,7 +224,9 @@ def must_start_pitchers(lineup, espn):
     :return set: the set of Players that are must-start pitchers today
     """
     players = lineup.players()
-    pitchers = list(filter(lambda player: player.can_play(BaseballSlot.PITCHER), players))
+    pitchers = list(
+        filter(lambda player: player.can_play(BaseballSlot.PITCHER), players)
+    )
     probable_pitchers = {p for p in pitchers if espn.is_probable_pitcher(p.espn_id)}
     relievers = {p for p in pitchers if p.default_position == BaseballPosition.RELIEVER}
     return probable_pitchers.union(relievers).difference(lineup.injured())
@@ -200,5 +240,9 @@ def benchable_pitchers(lineup, must_start):
     :param set must_start: set of pitchers that must be started
     :return set: the group of pitchers that can be safely moved to the bench
     """
-    started_pitchers = {player for player in lineup.starters() if player.default_position == BaseballPosition.STARTER}
+    started_pitchers = {
+        player
+        for player in lineup.starters()
+        if player.default_position == BaseballPosition.STARTER
+    }
     return started_pitchers - set(must_start)
