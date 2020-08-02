@@ -34,11 +34,19 @@ class FantasySPApi:
     def table(self):
         page = self.page()
 
-        return next(filter(lambda elt: "sortable" in elt.attrs.get("class", list()), page.find("table")))
+        return next(
+            filter(
+                lambda elt: "sortable" in elt.attrs.get("class", list()),
+                page.find("table"),
+            )
+        )
 
     def rows(self):
         table = self.table()
-        return filter(lambda elt: "projection-player" in elt.attrs.get("class", list()), table.find("tr"))
+        return filter(
+            lambda elt: "projection-player" in elt.attrs.get("class", list()),
+            table.find("tr"),
+        )
 
     def players(self):
         return list(map(FantasySPApi.row_to_player, self.rows()))
