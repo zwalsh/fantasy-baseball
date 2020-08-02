@@ -6,7 +6,6 @@ LOGGER = logging.getLogger("fangraphs.metrics")
 
 
 class FangraphsMetrics:
-
     @staticmethod
     def last_update_file():
         """
