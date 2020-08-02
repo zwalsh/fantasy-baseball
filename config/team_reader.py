@@ -5,7 +5,7 @@ import json
 
 from config.team_config import EspnTeamConfig
 
-LOGGER = logging.getLogger('config.team_reader')
+LOGGER = logging.getLogger("config.team_reader")
 
 
 def all_teams(directory):
@@ -25,23 +25,26 @@ def all_teams(directory):
             config = read_json(file.read_text())
             configs.append(config)
         except JSONDecodeError:
-            LOGGER.error("could not deserialize config file %(filename)s", {"filename": file.name})
+            LOGGER.error(
+                "could not deserialize config file %(filename)s",
+                {"filename": file.name},
+            )
             continue
         except KeyError as e:
-            error_info = {
-                "filename": file.name,
-                "msg": str(e)
-            }
-            LOGGER.error("could not convert the JSON in config file %(filename)s to an EspnTeamConfig: "
-                         "missing key %(msg)s", error_info)
+            error_info = {"filename": file.name, "msg": str(e)}
+            LOGGER.error(
+                "could not convert the JSON in config file %(filename)s to an EspnTeamConfig: "
+                "missing key %(msg)s",
+                error_info,
+            )
             continue
         except ValueError as e:
-            error_info = {
-                "filename": file.name,
-                "msg": str(e)
-            }
-            LOGGER.error("could not convert the JSON in config file %(filename)s to an EspnTeamConfig: "
-                         "%(msg)s", error_info)
+            error_info = {"filename": file.name, "msg": str(e)}
+            LOGGER.error(
+                "could not convert the JSON in config file %(filename)s to an EspnTeamConfig: "
+                "%(msg)s",
+                error_info,
+            )
             continue
 
     return configs
