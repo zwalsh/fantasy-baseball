@@ -4,3 +4,4 @@ numpy==1.19.0
 plotly==4.9.0
 pushed==0.1.4
 requests==2.22.0
+unittest-xml-reporting==3.0.2

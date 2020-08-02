@@ -11,7 +11,7 @@ pipeline {
         }
         stage('test') {
             steps {
-                sh 'python3.8 -m unittest'
+                sh 'python3.8 -m xmlrunner -o test-reports'
             }
         }
         stage('lint') {
@@ -32,6 +32,9 @@ pipeline {
         failure {
             echo 'I failed :('
             setBuildStatus('failure')
+        }
+        always {
+            junit 'test-reports/*.xml'
         }
     }
 }
