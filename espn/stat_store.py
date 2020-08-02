@@ -8,7 +8,6 @@ LOGGER = logging.getLogger("espn.stat_store")
 
 
 class StatStore:
-
     def __init__(self, league_id, year):
         """
         Interface to a store of stats on disk for an ESPN league in a given year.

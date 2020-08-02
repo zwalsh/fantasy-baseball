@@ -7,7 +7,6 @@ LOGGER = logging.getLogger("espn.trade_store")
 
 
 class TradeStore:
-
     def __init__(self, league_id):
         """
         Interface to an underlying store of current Trades in an ESPN league.

@@ -21,6 +21,7 @@ class EspnApiException(Exception):
     """
     Exception to throw when a request to the ESPN API failed
     """
+
     pass
 
 
@@ -38,34 +39,58 @@ class EspnApi(metaclass=ABCMeta):
         self.year = year
         self.cache = dict()
 
-    def espn_request(self, method, url, payload, headers=None, check_cache=True, retries=1):
+    def espn_request(
+        self, method, url, payload, headers=None, check_cache=True, retries=1
+    ):
         if check_cache and url in self.cache.keys():
             return self.cache.get(url)
         LOGGER.info(f"making {method} request to {url} in with headers {headers}")
         start_time = time.time()
         k = self.session_provider.get_session()
         cookies = {"espn_s2": k}
-        if method == 'GET':
+        if method == "GET":
             r = requests.get(url, headers=headers or {}, cookies=cookies)
-        if method == 'POST':
+        if method == "POST":
             r = requests.post(url, headers=headers or {}, cookies=cookies, json=payload)
         if r.status_code == 401:
             LOGGER.warning("request denied, logging in again.")
             self.session_provider.refresh_session()
-            return self.espn_request(method=method, url=url, payload=payload, headers=headers, check_cache=check_cache)
+            return self.espn_request(
+                method=method,
+                url=url,
+                payload=payload,
+                headers=headers,
+                check_cache=check_cache,
+            )
         if not r.ok:
-            LOGGER.error(f"received {r.status_code} {r.reason}: {r.text} in {start_time - time.time():.3f} seconds")
+            LOGGER.error(
+                f"received {r.status_code} {r.reason}: {r.text} in {start_time - time.time():.3f} seconds"
+            )
             if retries > 0:
                 LOGGER.info(f"retrying request")
-                return self.espn_request(method=method, url=url, payload=payload, headers=headers,
-                                         check_cache=check_cache, retries=retries - 1)
+                return self.espn_request(
+                    method=method,
+                    url=url,
+                    payload=payload,
+                    headers=headers,
+                    check_cache=check_cache,
+                    retries=retries - 1,
+                )
             else:
                 raise EspnApiException(url)
         if r.text is None or r.text == "":
-            LOGGER.error(f"the response was blank after {start_time - time.time():.3f} seconds")
+            LOGGER.error(
+                f"the response was blank after {start_time - time.time():.3f} seconds"
+            )
             if retries > 0:
-                return self.espn_request(method=method, url=url, payload=payload, headers=headers,
-                                         check_cache=check_cache, retries=retries - 1)
+                return self.espn_request(
+                    method=method,
+                    url=url,
+                    payload=payload,
+                    headers=headers,
+                    check_cache=check_cache,
+                    retries=retries - 1,
+                )
             else:
                 raise EspnApiException(url)
         else:
@@ -75,10 +100,14 @@ class EspnApi(metaclass=ABCMeta):
         return r
 
     def espn_get(self, url, headers=None, check_cache=True):
-        return self.espn_request(method='GET', url=url, payload={}, headers=headers, check_cache=check_cache)
+        return self.espn_request(
+            method="GET", url=url, payload={}, headers=headers, check_cache=check_cache
+        )
 
     def espn_post(self, url, payload, headers=None):
-        return self.espn_request(method='POST', url=url, payload=payload, headers=headers)
+        return self.espn_request(
+            method="POST", url=url, payload=payload, headers=headers
+        )
 
     @abstractmethod
     def api_url_segment(self):
@@ -93,26 +122,31 @@ class EspnApi(metaclass=ABCMeta):
         pass
 
     def base_url(self):
-        return f"http://fantasy.espn.com/apis/v3/games/{self.api_url_segment()}/seasons/{self.year}/segments/0/leagues/" \
-               f"{self.league_id}"
+        return (
+            f"http://fantasy.espn.com/apis/v3/games/{self.api_url_segment()}/seasons/{self.year}/segments/0/leagues/"
+            f"{self.league_id}"
+        )
 
     def scoring_period_info_url(self, scoring_period):
-        return f"{self.base_url()}" \
-               f"?scoringPeriodId={scoring_period}&view=mRoster"
+        return f"{self.base_url()}" f"?scoringPeriodId={scoring_period}&view=mRoster"
 
     def lineup_url(self):
-        return f"{self.base_url()}" \
-               f"?forTeamId={self.team_id}" \
-               f"&scoringPeriodId={self.scoring_period()}" \
-               "&view=mRoster"
+        return (
+            f"{self.base_url()}"
+            f"?forTeamId={self.team_id}"
+            f"&scoringPeriodId={self.scoring_period()}"
+            "&view=mRoster"
+        )
 
     def all_lineups_url(self):
         return self.scoring_period_info_url(self.scoring_period())
 
     def all_info_url(self):
-        return f"{self.base_url()}" \
-               "?view=mLiveScoring&view=mMatchupScore&view=mPendingTransactions" \
-               "&view=mPositionalRatings&view=mSettings&view=mTeam"
+        return (
+            f"{self.base_url()}"
+            "?view=mLiveScoring&view=mMatchupScore&view=mPendingTransactions"
+            "&view=mPositionalRatings&view=mSettings&view=mTeam"
+        )
 
     def lineup_settings_url(self):
         return f"{self.base_url()}?view=mSettings"
@@ -121,7 +155,7 @@ class EspnApi(metaclass=ABCMeta):
         return f"{self.base_url()}/transactions/"
 
     def scoring_period(self):
-        return self.espn_get(self.base_url()).json()['scoringPeriodId']
+        return self.espn_get(self.base_url()).json()["scoringPeriodId"]
 
     def lineup(self, team_id=None):
         """
@@ -133,15 +167,21 @@ class EspnApi(metaclass=ABCMeta):
 
     def all_lineups(self):
         resp = self.espn_get(self.all_lineups_url()).json()
-        teams = resp['teams']
+        teams = resp["teams"]
         lineup_dict = dict()
         for team in teams:
-            roster = team['roster']['entries']
-            players = list(map(lambda e:
-                               (self.roster_entry_to_player(e["playerPoolEntry"]["player"]),
-                                self.slot_for_id(e['lineupSlotId'])), roster))
+            roster = team["roster"]["entries"]
+            players = list(
+                map(
+                    lambda e: (
+                        self.roster_entry_to_player(e["playerPoolEntry"]["player"]),
+                        self.slot_for_id(e["lineupSlotId"]),
+                    ),
+                    roster,
+                )
+            )
             lineup = self.player_list_to_lineup(players)
-            lineup_dict[team['id']] = lineup
+            lineup_dict[team["id"]] = lineup
         return lineup_dict
 
     def all_info(self):
@@ -159,8 +199,8 @@ class EspnApi(metaclass=ABCMeta):
         :return str: the name fetched from ESPN for the given team
         """
         team_id = team_id or self.team_id
-        teams = self.all_info().json()['teams']
-        team = next(filter(lambda t: t['id'] == team_id, teams))
+        teams = self.all_info().json()["teams"]
+        team = next(filter(lambda t: t["id"] == team_id, teams))
         return f"{team['location']} {team['nickname']}"
 
     # DATA PARSING
@@ -172,13 +212,13 @@ class EspnApi(metaclass=ABCMeta):
         :param player_map: ESPN api player object
         :return: Player object
         """
-        player_id = player_map['id']
-        name = player_map['fullName']
-        default_position_id = player_map['defaultPositionId']
-        eligible_slots = player_map['eligibleSlots']
+        player_id = player_map["id"]
+        name = player_map["fullName"]
+        default_position_id = player_map["defaultPositionId"]
+        eligible_slots = player_map["eligibleSlots"]
         position = self.position(default_position_id)
-        first = player_map['firstName']
-        last = player_map['lastName']
+        first = player_map["firstName"]
+        last = player_map["lastName"]
         possible_positions = set()
         for slot in eligible_slots:
             converted = self.slot_for_id(slot)
@@ -207,7 +247,9 @@ class EspnApi(metaclass=ABCMeta):
 
     def lineup_settings(self):
         url = self.lineup_settings_url()
-        settings = self.espn_get(url).json()['settings']['rosterSettings']['lineupSlotCounts']
+        settings = self.espn_get(url).json()["settings"]["rosterSettings"][
+            "lineupSlotCounts"
+        ]
         return self.lineup_slot_counts_to_lineup_settings(settings)
 
     def create_stats(self, espn_stats_dict):
@@ -227,11 +269,11 @@ class EspnApi(metaclass=ABCMeta):
         Maps team id to Stats object
         :return: mapping of team id to Stats for the year
         """
-        teams = self.all_info().json()['teams']
+        teams = self.all_info().json()["teams"]
         team_to_stats = dict()
         for t in teams:
-            stats = self.create_stats(t['valuesByStat'])
-            team_to_stats[t['id']] = stats
+            stats = self.create_stats(t["valuesByStat"])
+            team_to_stats[t["id"]] = stats
         return team_to_stats
 
     def cumulative_stats_from_roster_entries(self, entries, scoring_period_id):
@@ -244,14 +286,20 @@ class EspnApi(metaclass=ABCMeta):
         total_stats = Stats({}, self.stat_enum())
         for e in filter(self.is_starting, entries):
             entry_stats_list = e["playerPoolEntry"]["player"]["stats"]
-            stats_dict = next(filter(lambda d: d['scoringPeriodId'] == scoring_period_id
-                                               and d['statSourceId'] == 0
-                                               and d['statSplitTypeId'] == 5,
-                                     entry_stats_list),
-                              None)
+            stats_dict = next(
+                filter(
+                    lambda d: d["scoringPeriodId"] == scoring_period_id
+                    and d["statSourceId"] == 0
+                    and d["statSplitTypeId"] == 5,
+                    entry_stats_list,
+                ),
+                None,
+            )
             if stats_dict is None:
                 name = e["playerPoolEntry"]["player"]["fullName"]
-                LOGGER.warning(f"{name} has no stats matching scoring period {scoring_period_id} found in entry {e}")
+                LOGGER.warning(
+                    f"{name} has no stats matching scoring period {scoring_period_id} found in entry {e}"
+                )
                 continue
             stats = self.create_stats(stats_dict["stats"])
             total_stats += stats
@@ -261,18 +309,20 @@ class EspnApi(metaclass=ABCMeta):
         teams = self.scoring_period_info(scoring_period).json()["teams"]
         team_to_stats = dict()
         for t in teams:
-            stats = self.cumulative_stats_from_roster_entries(t["roster"]["entries"], scoring_period)
-            team_to_stats[t['id']] = stats
+            stats = self.cumulative_stats_from_roster_entries(
+                t["roster"]["entries"], scoring_period
+            )
+            team_to_stats[t["id"]] = stats
         return team_to_stats
 
     def scoring_settings(self):
         info = self.all_info().json()
-        scoring_items = info['settings']['scoringSettings']['scoringItems']
+        scoring_items = info["settings"]["scoringSettings"]["scoringItems"]
         return list(map(self.json_to_scoring_setting, scoring_items))
 
     def json_to_scoring_setting(self, item):
-        stat = self.stat_enum().espn_stat_to_stat(item['statId'])
-        return ScoringSetting(stat, item['isReverseItem'])
+        stat = self.stat_enum().espn_stat_to_stat(item["statId"])
+        return ScoringSetting(stat, item["isReverseItem"])
 
     def player_url(self):
         return f"{self.base_url()}?view=kona_playercard"
@@ -287,7 +337,11 @@ class EspnApi(metaclass=ABCMeta):
         :return dict: the parsed response from ESPN
         """
         filter_header = {"players": {"filterIds": {"value": [player_id]}}}
-        resp = self.espn_get(self.player_url(), {"X-Fantasy-Filter": json.dumps(filter_header)}, check_cache=False)
+        resp = self.espn_get(
+            self.player_url(),
+            {"X-Fantasy-Filter": json.dumps(filter_header)},
+            check_cache=False,
+        )
         return resp.json()["players"][0]["player"]
 
     def player(self, player_id):
@@ -302,11 +356,18 @@ class EspnApi(metaclass=ABCMeta):
     def all_players_sorted(self):
         resp = self.espn_get(self.all_players_url())
         players_json_array = resp.json()["players"]
-        players_list = list(map(lambda p: (p["player"], p.get("player", {})
-                                           .get("draftRanksByRankType", {})
-                                           .get('STANDARD', {})
-                                           .get('rank', 9999)),
-                                players_json_array))
+        players_list = list(
+            map(
+                lambda p: (
+                    p["player"],
+                    p.get("player", {})
+                    .get("draftRanksByRankType", {})
+                    .get("STANDARD", {})
+                    .get("rank", 9999),
+                ),
+                players_json_array,
+            )
+        )
         relevant_players = filter(lambda p: p[1] not in {0, 9999}, players_list)
         sorted_list = sorted(relevant_players, key=lambda tup: tup[1])
         return list(map(lambda tup: self.roster_entry_to_player(tup[0]), sorted_list))
@@ -355,7 +416,7 @@ class EspnApi(metaclass=ABCMeta):
             "memberId": self.member_id(),
             "scoringPeriodId": self.scoring_period(),
             "executionType": "EXECUTE",
-            "items": list(map(self.transition_to_item, transitions))
+            "items": list(map(self.transition_to_item, transitions)),
         }
         return payload
 
@@ -386,5 +447,5 @@ class EspnApi(metaclass=ABCMeta):
             "playerId": transition.player.espn_id,
             "type": "LINEUP",
             "fromLineupSlotId": self.slot_enum().slot_to_slot_id(transition.from_slot),
-            "toLineupSlotId": self.slot_enum().slot_to_slot_id(transition.to_slot)
+            "toLineupSlotId": self.slot_enum().slot_to_slot_id(transition.to_slot),
         }

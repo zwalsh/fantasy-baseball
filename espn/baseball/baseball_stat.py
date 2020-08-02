@@ -106,5 +106,5 @@ sum_stats_set = {
     BaseballStat.K,
     BaseballStat.W,
     BaseballStat.L,
-    BaseballStat.SV
+    BaseballStat.SV,
 }

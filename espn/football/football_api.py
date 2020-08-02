@@ -10,7 +10,6 @@ LOGGER = logging.getLogger("espn.football.api")
 
 
 class FootballApi(EspnApi):
-
     def slot_enum(self):
         return FootballSlot
 
@@ -50,5 +49,8 @@ class FootballApi(EspnApi):
             return self
 
         def build(self):
-            return FootballApi(EspnSessionProvider(self.__username, self.__password), self.__league_id,
-                               self.__team_id)
+            return FootballApi(
+                EspnSessionProvider(self.__username, self.__password),
+                self.__league_id,
+                self.__team_id,
+            )

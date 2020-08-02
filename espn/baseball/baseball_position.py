@@ -26,6 +26,6 @@ class BaseballPosition(Enum):
             BaseballPosition.CENTER: "CF",
             BaseballPosition.RIGHT: "RF",
             BaseballPosition.DH: "DH",
-            BaseballPosition.RELIEVER: "RP"
+            BaseballPosition.RELIEVER: "RP",
         }
         return names[self]

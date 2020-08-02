@@ -32,7 +32,10 @@ class BasketballSlot(Enum):
 
     @staticmethod
     def starting_slots():
-        return {ls for ls in BasketballSlot} - {BasketballSlot.BENCH, BasketballSlot.INJURED}
+        return {ls for ls in BasketballSlot} - {
+            BasketballSlot.BENCH,
+            BasketballSlot.INJURED,
+        }
 
     @staticmethod
     def espn_slot_to_slot(slot_id):
