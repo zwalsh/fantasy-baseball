@@ -16,7 +16,7 @@ pipeline {
         }
         stage('lint') {
             steps {
-                sh 'find . -type f -name "*.py" | xargs pylint'
+                sh 'find . -type f -name "*.py" | xargs pylint --rcfile=pylintrc'
             }
         }
     }
