@@ -40,7 +40,7 @@ class EspnApi(metaclass=ABCMeta):
         self.cache = dict()
 
     def espn_request(
-            self, method, url, payload, headers=None, check_cache=True, retries=1
+        self, method, url, payload, headers=None, check_cache=True, retries=1
     ):
         if check_cache and url in self.cache.keys():
             return self.cache.get(url)
@@ -297,8 +297,8 @@ class EspnApi(metaclass=ABCMeta):
             stats_dict = next(
                 filter(
                     lambda d: d["scoringPeriodId"] == scoring_period_id
-                              and d["statSourceId"] == 0
-                              and d["statSplitTypeId"] == 5,
+                    and d["statSourceId"] == 0
+                    and d["statSplitTypeId"] == 5,
                     entry_stats_list,
                 ),
                 None,
@@ -371,9 +371,9 @@ class EspnApi(metaclass=ABCMeta):
                 lambda p: (
                     p["player"],
                     p.get("player", {})
-                        .get("draftRanksByRankType", {})
-                        .get("STANDARD", {})
-                        .get("rank", 9999),
+                    .get("draftRanksByRankType", {})
+                    .get("STANDARD", {})
+                    .get("rank", 9999),
                 ),
                 players_json_array,
             )

@@ -21,10 +21,10 @@ LOGGER = logging.getLogger("draft.draft_state_evaluator")
 
 class DraftStateEvaluator(StateEvaluator):
     def __init__(
-            self,
-            player_projections: dict,
-            scoring_settings: List[ScoringSetting],
-            players_ranked: List[Player],
+        self,
+        player_projections: dict,
+        scoring_settings: List[ScoringSetting],
+        players_ranked: List[Player],
     ):
         """
         Evaluates different draft states for the value they represent to all players of a draft.
@@ -99,7 +99,7 @@ class DraftStateEvaluator(StateEvaluator):
             for slot, count in slot_counts.items():
                 count_to_fill = count - len(lineup.player_dict.get(slot, []))
                 amount_to_add = (
-                        averages.get(slot, Stats({}, BaseballStat)) * count_to_fill
+                    averages.get(slot, Stats({}, BaseballStat)) * count_to_fill
                 )
                 so_far += amount_to_add
             totals += [so_far]
@@ -140,7 +140,7 @@ class DraftStateEvaluator(StateEvaluator):
         return values
 
     def _accrued_value_in_league(
-            self, stat_values: List[float], is_reverse: bool, std_dev
+        self, stat_values: List[float], is_reverse: bool, std_dev
     ) -> List[float]:
         """
         Given a list of accrued stat values, calculates the worth of each of those values.
@@ -220,7 +220,7 @@ def rank_values(values: List[float], is_reverse: bool) -> List[float]:
         j = i + 1
         cur_value = values[positions_ranked[i]]
         while j < len(positions_ranked) and isclose(
-                cur_value, values[positions_ranked[j]], rel_tol=1e-09, abs_tol=0.0
+            cur_value, values[positions_ranked[j]], rel_tol=1e-09, abs_tol=0.0
         ):
             j += 1
         points_to_split = sum(points_by_pos[i:j])
@@ -238,8 +238,8 @@ def slots_to_fill(lineups: List[Lineup], settings: LineupSettings) -> dict:
     for lineup in lineups:
         for slot, count in settings.slot_counts.items():
             empty_counts[slot] = (
-                    empty_counts.get(slot, 0)
-                    + count
-                    - len(lineup.player_dict.get(slot, []))
+                empty_counts.get(slot, 0)
+                + count
+                - len(lineup.player_dict.get(slot, []))
             )
     return empty_counts

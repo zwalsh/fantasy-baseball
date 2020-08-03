@@ -30,7 +30,9 @@ class Lineup:
         :param set slots_to_fill: the slots to fill up with players
         :return set: set of lineups with all combinations of starters
         """
-        initial_node = LineupSearchNode(Lineup(dict(), self.slot_enum), self.players(), slots_to_fill)
+        initial_node = LineupSearchNode(
+            Lineup(dict(), self.slot_enum), self.players(), slots_to_fill
+        )
         # stack of nodes representing the frontier of the search graph
         frontier = [initial_node]
         max_starters = lineup_settings.total_for_slots(slots_to_fill)
@@ -63,10 +65,13 @@ class Lineup:
             "total": total_proc,
             "max_stack": max_stack,
             "avg_stack": total_stack / float(total_proc),
-            "elapsed": end_time - start_time
+            "elapsed": end_time - start_time,
         }
-        LOGGER.info("possible starting combos: %(starters)d / %(total)d lineups,"
-                    " max stack: %(max_stack)d, avg stack: %(avg_stack).3f, time: %(elapsed).3fs", info_dict)
+        LOGGER.info(
+            "possible starting combos: %(starters)d / %(total)d lineups,"
+            " max stack: %(max_stack)d, avg stack: %(avg_stack).3f, time: %(elapsed).3fs",
+            info_dict,
+        )
         return all_starters.values()
 
     def add_players_for_slot(self, slot, count, remaining_players):
@@ -142,8 +147,15 @@ class Lineup:
             for player in players:
                 if player not in to_lineup.player_dict.get(slot, []):
                     to_slots = to_lineup.player_dict.keys()
-                    to_slot = next(filter(lambda s: player in to_lineup.player_dict[s], to_slots), self.slot_enum.BENCH)
-                    if slot != to_slot and slot != BaseballSlot.PITCHER and slot != BaseballSlot.INJURED: # todo remove BaseballSlot references
+                    to_slot = next(
+                        filter(lambda s: player in to_lineup.player_dict[s], to_slots),
+                        self.slot_enum.BENCH,
+                    )
+                    if (
+                        slot != to_slot
+                        and slot != BaseballSlot.PITCHER
+                        and slot != BaseballSlot.INJURED
+                    ):  # todo remove BaseballSlot references
                         transitions.append(LineupTransition(player, slot, to_slot))
 
         return transitions
@@ -176,7 +188,6 @@ class Lineup:
 
 
 class LineupSearchNode:
-
     def __init__(self, lineup, players_left, slots_left):
         """
         Represents a node in a search of all possible lineups given a set of players.
@@ -201,7 +212,9 @@ class LineupSearchNode:
         """
         next_slot = self.slots_left.pop()
         slot_count = lineup_settings.slot_counts.get(next_slot)
-        new_lineups = self.lineup.add_players_for_slot(next_slot, slot_count, self.players_left)
+        new_lineups = self.lineup.add_players_for_slot(
+            next_slot, slot_count, self.players_left
+        )
         successors = []
         for (new_lin, rem_players) in new_lineups:
             rem_slots = self.slots_left.copy()

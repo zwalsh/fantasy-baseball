@@ -1,6 +1,4 @@
-
 class LineupSettings:
-
     def __init__(self, slot_counts):
         """
         Maps LineupSlots to the number of players that may fill

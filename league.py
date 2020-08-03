@@ -1,6 +1,4 @@
-
 class League:
-
     def __init__(self, teams):
         self.teams = teams
 
@@ -26,7 +24,9 @@ class League:
 
             team_stat_values = list(map(lambda p: p[1], team_stats))
             for (team_id, val_for_stat) in team_stats:
-                team_points = League.points_available_for_value(val_for_stat, team_stat_values)
+                team_points = League.points_available_for_value(
+                    val_for_stat, team_stat_values
+                )
                 point_values[team_id] += team_points
 
         return point_values

@@ -59,9 +59,7 @@ class DraftState(GameState):
         # for player who's playing, get lineup, run over top x players at each position
         # add to drafted set
         new_states = []
-        for baseball_player, _ in self._possible_additions(
-            self.current_drafter
-        ):
+        for baseball_player, _ in self._possible_additions(self.current_drafter):
             new_states.append(self.advance_state(baseball_player))
         return new_states
 
