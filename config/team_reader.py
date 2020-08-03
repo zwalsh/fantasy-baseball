@@ -1,6 +1,5 @@
 import logging
 from json import JSONDecodeError
-from pathlib import Path
 import json
 
 from config.team_config import EspnTeamConfig

@@ -2,7 +2,6 @@ import logging
 
 import time
 
-import pickle
 from requests_html import HTMLSession
 
 from espn.basketball.basketball_stat import BasketballStat

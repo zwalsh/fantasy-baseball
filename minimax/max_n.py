@@ -47,6 +47,7 @@ def max_n(
     :param answer_now: whether to use the heuristic to rapidly determine an approximate answer
     :return: a tuple with a value for every player in the game, given the state and whose turn it is
     """
+    # pylint: disable=global-statement
     global max_n_total_nodes
     max_n_total_nodes += 1
     if max_n_total_nodes % 1000 == 0:

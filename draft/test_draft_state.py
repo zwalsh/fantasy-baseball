@@ -7,7 +7,7 @@ from lineup import Lineup
 from lineup_settings import LineupSettings
 from test.test_player import PlayerTest
 
-
+# pylint: disable=protected-access
 class TestDraftState(TestCase):
     ls = LineupSettings(
         {

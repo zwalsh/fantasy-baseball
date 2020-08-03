@@ -4,6 +4,9 @@ from config import logging_config, notifier_config
 
 
 class Task:
+    def __init__(self, username):
+        self.username = username
+
     @staticmethod
     def create(username):
         """

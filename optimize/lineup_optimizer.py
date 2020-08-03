@@ -66,7 +66,7 @@ def optimize_lineup(espn, fangraphs, notifier):
         s_settings,
     )
     if len(hitting_transitions + pitching_transitions) == 0:
-        LOGGER.info(f"no transitions to execute")
+        LOGGER.info("no transitions to execute")
     else:
         espn.execute_transitions(hitting_transitions + pitching_transitions)
 

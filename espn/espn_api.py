@@ -416,7 +416,7 @@ class EspnApi(metaclass=ABCMeta):
         return slot in self.slot_enum().starting_slots()
 
     def member_id(self):
-        return "{84C1CD19-5E2C-4D5D-81CD-195E2C4D5D75}"  # todo fetch when logging in, persist?
+        return "{84C1CD19-5E2C-4D5D-81CD-195E2C4D5D75}"
 
     def set_lineup_payload(self, transitions):
         payload = {

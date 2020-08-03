@@ -12,7 +12,7 @@ LOGGER = logging.getLogger("tasks.set_fba_lineup")
 
 class SetFbaLineup(Task):
     def __init__(self, username, password, configs, notifier, fantasysp):
-        self.username = username
+        super().__init__(username)
         self.password = password
         self.configs = configs
         self.notifier = notifier

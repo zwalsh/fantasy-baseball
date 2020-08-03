@@ -15,19 +15,16 @@ from minimax.state_evaluator import StateEvaluator
 from player import Player
 from scoring_setting import ScoringSetting
 from stats import Stats
-from timing.timed import timed
 
 LOGGER = logging.getLogger("draft.draft_state_evaluator")
-
-total_heuristics = 0
 
 
 class DraftStateEvaluator(StateEvaluator):
     def __init__(
-        self,
-        player_projections: dict,
-        scoring_settings: List[ScoringSetting],
-        players_ranked: List[Player],
+            self,
+            player_projections: dict,
+            scoring_settings: List[ScoringSetting],
+            players_ranked: List[Player],
     ):
         """
         Evaluates different draft states for the value they represent to all players of a draft.
@@ -39,6 +36,7 @@ class DraftStateEvaluator(StateEvaluator):
         self.scoring_settings = scoring_settings
         self.players_ranked = players_ranked
         self.averages_cache = dict()
+        self.total_heuristics = 0
 
     def _get_projection(self, name: str) -> Optional[Stats]:
         replaced_name = {"Nicholas Castellanos": "Nick Castellanos"}.get(name, name)
@@ -50,10 +48,9 @@ class DraftStateEvaluator(StateEvaluator):
 
     # @timed(LOGGER)
     def heuristic(self, game_state: DraftState, game_info: DraftGameInfo):
-        global total_heuristics
-        total_heuristics += 1
-        if total_heuristics % 1000 == 0:
-            LOGGER.info(f"Calculated {total_heuristics} heuristics")
+        self.total_heuristics += 1
+        if self.total_heuristics % 1000 == 0:
+            LOGGER.info(f"Calculated {self.total_heuristics} heuristics")
         empty_slots = slots_to_fill(game_state.lineups, game_info.lineup_settings)
         available_players = list(
             filter(lambda p: p not in game_state.drafted, self.players_ranked)
@@ -102,7 +99,7 @@ class DraftStateEvaluator(StateEvaluator):
             for slot, count in slot_counts.items():
                 count_to_fill = count - len(lineup.player_dict.get(slot, []))
                 amount_to_add = (
-                    averages.get(slot, Stats({}, BaseballStat)) * count_to_fill
+                        averages.get(slot, Stats({}, BaseballStat)) * count_to_fill
                 )
                 so_far += amount_to_add
             totals += [so_far]
@@ -134,9 +131,7 @@ class DraftStateEvaluator(StateEvaluator):
         }
         for ss in self.scoring_settings:
             values_for_stat = self._accrued_value_in_league(
-                list(
-                    map(lambda stats: stats.unrounded_value_for_stat(ss.stat), totals)
-                ),
+                [stats.unrounded_value_for_stat(ss.stat) for stats in totals],
                 ss.is_reverse,
                 stat_std_devs[ss.stat],
             )
@@ -145,7 +140,7 @@ class DraftStateEvaluator(StateEvaluator):
         return values
 
     def _accrued_value_in_league(
-        self, stat_values: List[float], is_reverse: bool, std_dev
+            self, stat_values: List[float], is_reverse: bool, std_dev
     ) -> List[float]:
         """
         Given a list of accrued stat values, calculates the worth of each of those values.
@@ -225,7 +220,7 @@ def rank_values(values: List[float], is_reverse: bool) -> List[float]:
         j = i + 1
         cur_value = values[positions_ranked[i]]
         while j < len(positions_ranked) and isclose(
-            cur_value, values[positions_ranked[j]], rel_tol=1e-09, abs_tol=0.0
+                cur_value, values[positions_ranked[j]], rel_tol=1e-09, abs_tol=0.0
         ):
             j += 1
         points_to_split = sum(points_by_pos[i:j])
@@ -243,8 +238,8 @@ def slots_to_fill(lineups: List[Lineup], settings: LineupSettings) -> dict:
     for lineup in lineups:
         for slot, count in settings.slot_counts.items():
             empty_counts[slot] = (
-                empty_counts.get(slot, 0)
-                + count
-                - len(lineup.player_dict.get(slot, []))
+                    empty_counts.get(slot, 0)
+                    + count
+                    - len(lineup.player_dict.get(slot, []))
             )
     return empty_counts

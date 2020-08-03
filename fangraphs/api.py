@@ -108,17 +108,14 @@ class FangraphsApi:
     def row_to_pitcher_projections(row):
         wins = float(row[3].text)
         ip = float(row[4].text)
-        total_batters = float(row[5].text)
         hits = float(row[6].text)
         hr = float(row[10].text)
         walks = float(row[11].text)
         strikeouts = float(row[12].text)
-        return FangraphsApi.pitcher_stats(
-            wins, ip, total_batters, hits, hr, walks, strikeouts
-        )
+        return FangraphsApi.pitcher_stats(wins, ip, hits, hr, walks, strikeouts)
 
     @staticmethod
-    def pitcher_stats(wins, innings, batters, hits, homers, walks, strikeouts):
+    def pitcher_stats(wins, innings, hits, homers, walks, strikeouts):
         # component era calculation from Bill James https://en.wikipedia.org/wiki/Component_ERA
         # pitcher_total_bases = 0.89 * (1.255 * (hits - homers) + 4 * homers) + 0.475 * walks
         # unadjusted_comp_era = 9 * ((hits + walks) * pitcher_total_bases) / (batters * innings)

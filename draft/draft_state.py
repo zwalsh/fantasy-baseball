@@ -58,9 +58,8 @@ class DraftState(GameState):
     def children(self) -> List["GameState"]:
         # for player who's playing, get lineup, run over top x players at each position
         # add to drafted set
-        relevant_lineup = self.lineups[self.current_drafter]
         new_states = []
-        for baseball_player, slot_to_fill in self._possible_additions(
+        for baseball_player, _ in self._possible_additions(
             self.current_drafter
         ):
             new_states.append(self.advance_state(baseball_player))
@@ -115,7 +114,7 @@ class DraftState(GameState):
     def slot_to_fill(
         open_slots: List[BaseballSlot], player: Player
     ) -> Optional[BaseballSlot]:
-        fillable_slots = filter(lambda slot: player.can_play(slot), open_slots)
+        fillable_slots = filter(player.can_play, open_slots)
         sorted_bench_last = sorted(fillable_slots, key=slot_value, reverse=True)
         return next(iter(sorted_bench_last), None)
 
