@@ -9,7 +9,7 @@ LOGGER = logging.getLogger("tasks.check_fangraphs")
 
 class CheckFangraphs(Task):
     def __init__(self, username, fg_api, fg_metrics):
-        self.username = username
+        super().__init__(username)
         self.api = fg_api
         self.metrics = fg_metrics
 

@@ -1,12 +1,9 @@
 import logging
 
-import pickle
-
 from functools import reduce
 
 from espn.basketball.basketball_slot import BasketballSlot
 from espn.basketball.basketball_stat import BasketballStat
-from notifications.notifier import Notifier
 
 LOGGER = logging.getLogger("optimize.optimize_fp")
 
@@ -96,19 +93,19 @@ def stats_to_fp(stats):
     """
     if stats is None:
         return 0.0
-    else:
-        return (
-            (stats.unrounded_value_for_stat(BasketballStat.FGM) or 0.0) * 1
-            + (stats.unrounded_value_for_stat(BasketballStat.FGA) or 0.0) * -1
-            + (stats.unrounded_value_for_stat(BasketballStat.FTM) or 0.0) * 1
-            + (stats.unrounded_value_for_stat(BasketballStat.FTA) or 0.0) * -1
-            + (stats.unrounded_value_for_stat(BasketballStat.REBOUNDS) or 0.0) * 1
-            + (stats.unrounded_value_for_stat(BasketballStat.ASSISTS) or 0.0) * 1
-            + (stats.unrounded_value_for_stat(BasketballStat.STEALS) or 0.0) * 1
-            + (stats.unrounded_value_for_stat(BasketballStat.BLOCKS) or 0.0) * 1
-            + (stats.unrounded_value_for_stat(BasketballStat.TURNOVERS) or 0.0) * -1
-            + (stats.unrounded_value_for_stat(BasketballStat.POINTS) or 0.0) * 1
-        )
+
+    return (
+        (stats.unrounded_value_for_stat(BasketballStat.FGM) or 0.0) * 1
+        + (stats.unrounded_value_for_stat(BasketballStat.FGA) or 0.0) * -1
+        + (stats.unrounded_value_for_stat(BasketballStat.FTM) or 0.0) * 1
+        + (stats.unrounded_value_for_stat(BasketballStat.FTA) or 0.0) * -1
+        + (stats.unrounded_value_for_stat(BasketballStat.REBOUNDS) or 0.0) * 1
+        + (stats.unrounded_value_for_stat(BasketballStat.ASSISTS) or 0.0) * 1
+        + (stats.unrounded_value_for_stat(BasketballStat.STEALS) or 0.0) * 1
+        + (stats.unrounded_value_for_stat(BasketballStat.BLOCKS) or 0.0) * 1
+        + (stats.unrounded_value_for_stat(BasketballStat.TURNOVERS) or 0.0) * -1
+        + (stats.unrounded_value_for_stat(BasketballStat.POINTS) or 0.0) * 1
+    )
 
 
 def find_projection(projections, name):

@@ -8,10 +8,7 @@ from notifications.notifier import Notifier
 
 def current_notifier(user):
     env = os.getenv("ENV", "DEV")
-    if env == "PROD":
-        return prod_notifier(user)
-    else:
-        return Notifier(DevClient())
+    return prod_notifier(user) if env == "PROD" else Notifier(DevClient())
 
 
 def prod_notifier(user):

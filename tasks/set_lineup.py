@@ -12,7 +12,7 @@ LOGGER = logging.getLogger("tasks.set_lineup")
 
 class SetLineup(Task):
     def __init__(self, username, password, configs, notifier, fangraphs):
-        self.username = username
+        super().__init__(username)
         self.password = password
         self.configs = configs
         self.notifier = notifier

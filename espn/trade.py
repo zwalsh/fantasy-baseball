@@ -4,8 +4,8 @@ from functools import reduce
 class Trade:
     def __init__(self, from_team, to_team, send_players, receive_players):
         """
-        Represents a trade between two teams. In the trade, the send_players would move from the from_team
-        to the to_team, and vice verse for the receive_players.
+        Represents a trade between two teams. In the trade, the send_players would move
+        from the from_team to the to_team, and vice versa for the receive_players.
         :param str from_team: the name of the team originating the trade
         :param str to_team: the name of the other team in the trade
         :param list send_players: the players to be sent by the originator
@@ -23,7 +23,7 @@ class Trade:
 
     def __eq__(self, other):
         return (
-            type(other) == Trade
+            isinstance(other, Trade)
             and self.from_team == other.from_team
             and self.to_team == other.to_team
             and set(self.send_players) == set(other.send_players)

@@ -78,4 +78,7 @@ class PlayerProjection:
         self.name = name
 
     def __str__(self):
-        return f"{self.name:<30}min:{float(self.mins):.1f}  fp:{float(self.fp):.1f}  pts:{float(self.pts):.1f}"
+        return (
+            f"{self.name:<30}min:{float(self.mins):.1f}  "
+            f"fp:{float(self.fp):.1f}  pts:{float(self.pts):.1f}"
+        )

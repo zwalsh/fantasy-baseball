@@ -7,16 +7,16 @@ from espn.sessions.espn_session_provider import EspnSessionProvider
 
 
 class BasketballApi(EspnApi):
-    def slot_enum(self):
+    def _slot_enum(self):
         return BasketballSlot
 
-    def stat_enum(self):
+    def _stat_enum(self):
         return BasketballStat
 
-    def api_url_segment(self):
+    def _api_url_segment(self):
         return "fba"
 
-    def position(self, position_id):
+    def _position(self, position_id):
         return BasketballPosition(position_id)
 
     class Builder:

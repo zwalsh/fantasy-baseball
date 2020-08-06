@@ -36,13 +36,12 @@ class ExplodingGame(GameState):
         raise ValueError
 
 
-"""
-example from: https://www.cc.gatech.edu/~thad/6601-gradAI-fall2015/Korf_Multi-player-Alpha-beta-Pruning.pdf
-example tree, one layer per player 0, 1, 2
-                        a
-            b           f           h
-        c   d   e     g x x       i x x
-"""
+# example from:
+# https://www.cc.gatech.edu/~thad/6601-gradAI-fall2015/Korf_Multi-player-Alpha-beta-Pruning.pdf
+# example tree, one layer per player 0, 1, 2
+#                         a
+#             b           f           h
+#         c   d   e     g x x       i x x
 state_x = ExplodingGame()
 
 # bottom layer - player 2's choice

@@ -11,7 +11,7 @@ LOGGER = logging.getLogger("tasks.archive_year_stats")
 
 class ArchiveYearlyStats(Task):
     def __init__(self, username, password, configs, cur_period):
-        self.username = username
+        super().__init__(username)
         self.all_days = [
             ArchiveDailyStats(username, password, configs, pd)
             for pd in range(0, cur_period)

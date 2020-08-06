@@ -30,7 +30,8 @@ def max_n(
     Runs the MAX^N algorithm (expansion of minimax) to determine the value of the given game state
     when it is the given player's turn.
 
-    Returns a list of values, where each player has an entry for their value in their index in the list.
+    Returns a list of values, where each player has an entry for their value
+    in their index in the list.
 
     Takes two functions over GameState:
         - one returns the value of a terminal state
@@ -47,6 +48,7 @@ def max_n(
     :param answer_now: whether to use the heuristic to rapidly determine an approximate answer
     :return: a tuple with a value for every player in the game, given the state and whose turn it is
     """
+    # pylint: disable=global-statement
     global max_n_total_nodes
     max_n_total_nodes += 1
     if max_n_total_nodes % 1000 == 0:

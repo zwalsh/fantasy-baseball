@@ -6,6 +6,8 @@ import requests
 
 from espn.sessions.espn_session_store import EspnSessionStore
 
+PROD_BASE_URL = "https://registerdisney.go.com/jgc/v6/client/ESPN-ONESITE.WEB-PROD"
+
 
 class LoginException(Exception):
     """
@@ -19,7 +21,7 @@ LOGGER = logging.getLogger("espn.api.espn_session_provider")
 
 
 class EspnSessionProvider:
-    LOGIN_URL = "https://registerdisney.go.com/jgc/v6/client/ESPN-ONESITE.WEB-PROD/guest/login?langPref=en-US"
+    LOGIN_URL = PROD_BASE_URL + "/guest/login?langPref=en-US"
 
     def __init__(self, username, password):
         self.username = username
@@ -28,7 +30,7 @@ class EspnSessionProvider:
 
     @staticmethod
     def api_key():
-        key_url = "https://registerdisney.go.com/jgc/v6/client/ESPN-ONESITE.WEB-PROD/api-key?langPref=en-US"
+        key_url = PROD_BASE_URL + "/api-key?langPref=en-US"
         resp = requests.post(key_url)
         return "APIKEY " + resp.headers["api-key"]
 

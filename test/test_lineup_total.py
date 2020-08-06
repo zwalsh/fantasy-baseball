@@ -2,7 +2,6 @@ import operator
 import unittest
 
 from optimize.lineup_total import LineupTotal
-from scoring_setting import ScoringSetting
 from stats import Stats
 from espn.baseball.baseball_stat import BaseballStat
 from test.test_lineup import LineupTest

@@ -18,6 +18,7 @@ class ArchiveDailyStats(Task):
         :param list team_configs: all the teams for which to archive stats
         :param int scoring_period: the scoring period for which to archive stats
         """
+        super().__init__(username)
         self.username = username
         self.password = password
         self.team_configs = team_configs

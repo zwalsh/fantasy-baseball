@@ -1,6 +1,4 @@
-
 class ScoringSetting:
-
     def __init__(self, stat, is_reverse):
         """
         Represents a Scoring setting in a fantasy league, based on a Stat

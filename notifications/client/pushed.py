@@ -20,7 +20,8 @@ class PushedClient:
         Sends a push notification to the client with the given message content. If a URL is given,
         opening that push will direct the user to the given URL.
         :param str content: the message text
-        :param str content_url: Optional - the URL that the user will be redirected to if they open the notification
+        :param str content_url: Optional - the URL that the user will be redirected to if the
+        notification is opened
         """
         LOGGER.info(
             "sending message: %(content)s to user: %(user)s",

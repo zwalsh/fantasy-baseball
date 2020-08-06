@@ -36,6 +36,7 @@ class BasketballStat(Enum):
             BasketballStat.TURNOVERS,
         }
 
+    # pylint: disable=no-self-use
     def num_rounding_digits(self):
         return 3
 

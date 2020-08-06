@@ -1,6 +1,5 @@
 import logging
 from json import JSONDecodeError
-from pathlib import Path
 import json
 
 from config.team_config import EspnTeamConfig
@@ -52,8 +51,9 @@ def all_teams(directory):
 
 def read_json(file_contents):
     """
-    Reads the contents of a file and converts it into an EspnTeamConfig. Assumes that the input is a JSON string.
-    Converts the input into an EspnTeamConfig, returning None if the string does not meet the specifications.
+    Reads the contents of a file and converts it into an EspnTeamConfig. Assumes that the input is
+    a JSON string. Converts the input into an EspnTeamConfig, returning None if the string does not
+    meet the specifications.
     :param str file_contents: JSON-encoded string representing an EspnTeamConfig
     :return EspnTeamConfig: the configuration encoded by the input
     """

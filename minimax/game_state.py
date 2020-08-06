@@ -1,7 +1,7 @@
 from typing import List
 
 
-class GameState(object):
+class GameState:
     def __init__(self):
         return
 

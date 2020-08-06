@@ -1,13 +1,12 @@
-
 class League:
-
     def __init__(self, teams):
         self.teams = teams
 
     def points(self, scoring_settings):
         """
-        Calculates the total points that each team in the league has based on the given scoring settings. Sorts the output of
-        each team in each category and assigns the correct number of points to the person at each position.
+        Calculates the total points that each team in the league has based on the given scoring
+        settings. Sorts the output of each team in each category and assigns the correct number of
+        points to the person at each position.
         :return: point values for each team, {team_id: points}
         """
 
@@ -26,7 +25,9 @@ class League:
 
             team_stat_values = list(map(lambda p: p[1], team_stats))
             for (team_id, val_for_stat) in team_stats:
-                team_points = League.points_available_for_value(val_for_stat, team_stat_values)
+                team_points = League.points_available_for_value(
+                    val_for_stat, team_stat_values
+                )
                 point_values[team_id] += team_points
 
         return point_values

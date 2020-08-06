@@ -2,7 +2,7 @@ from espn.baseball.baseball_stat import BaseballStat
 
 
 class Stats:
-    stat_functions = {  # todo should figure out a way to pull these out into the enum
+    stat_functions = {
         BaseballStat.AVG: lambda s: s.average(),
         BaseballStat.OBP: lambda s: s.obp(),
         BaseballStat.WHIP: lambda s: s.whip(),
@@ -52,14 +52,22 @@ class Stats:
         return s
 
     def average(self):
-        return round(self.stat_dict.get(BaseballStat.AVG, self.stat_dict.get(BaseballStat.H) / self.stat_dict.get(
-            BaseballStat.AB)), 3)
+        return round(
+            self.stat_dict.get(
+                BaseballStat.AVG,
+                self.stat_dict.get(BaseballStat.H)
+                / self.stat_dict.get(BaseballStat.AB),
+            ),
+            3,
+        )
 
     # note - adjust calculation to include not just walks + hits but also HBP, etc.
     def obp(self):
         exact_obp = self.stat_dict.get(BaseballStat.OBP)
         if exact_obp is None:
-            reached_base = self.stat_dict[BaseballStat.H] + self.stat_dict[BaseballStat.BB]
+            reached_base = (
+                    self.stat_dict[BaseballStat.H] + self.stat_dict[BaseballStat.BB]
+            )
             exact_obp = reached_base / self.stat_dict[BaseballStat.PA]
         return round(exact_obp, 3)
 
@@ -103,9 +111,11 @@ class Stats:
         return round((walks + hits) / outs * 3.0, 3)
 
     def plate_appearances(self):
-        return self.stat_dict.get(BaseballStat.PA,
-                                  self.unrounded_value_for_stat(BaseballStat.AB) +
-                                  self.unrounded_value_for_stat(BaseballStat.BB))
+        return self.stat_dict.get(
+            BaseballStat.PA,
+            self.unrounded_value_for_stat(BaseballStat.AB)
+            + self.unrounded_value_for_stat(BaseballStat.BB),
+        )
 
     def unrounded_value_for_stat(self, stat):
         if stat in self.stat_enum.sum_stats():
@@ -115,7 +125,4 @@ class Stats:
 
     def value_for_stat(self, stat):
         val = self.unrounded_value_for_stat(stat)
-        if val is not None:
-            return round(val, stat.num_rounding_digits())
-        else:
-            return val
+        return round(val, stat.num_rounding_digits()) if val is not None else val

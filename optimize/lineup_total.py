@@ -16,8 +16,8 @@ class LineupTotal:
     @staticmethod
     def total_from_projections(lineup, projections):
         """
-        Calculates the accumulated statistics of this set of starters, based on the given projections
-        for each player
+        Calculates the accumulated statistics of this set of starters, based on the
+        given projections for each player
         :param Lineup lineup: the lineup of players that are starting
         :param dict projections: the projected stats that those players will accrue
         :return Stats: a Stats object holding their cumulative totals

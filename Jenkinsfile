@@ -14,10 +14,15 @@ pipeline {
                 sh 'python3.8 -m xmlrunner -o test-reports'
             }
         }
-        stage('lint') {
+        stage('lint-warnings-errors') {
             steps {
-                sh 'find . -type f -name "*.py" | xargs python3.8 -m pylint --rcfile=pylintrc --output-format=junit | tee pylint.out'
+                sh 'find . -type f -name "*.py" | xargs python3.8 -m pylint --rcfile=pylintrc --disable=R,C --output-format=junit | tee pylint-we.out'
                 sh 'exit ${PIPESTATUS[0]}'
+            }
+        }
+        stage('lint-conventions-refactors') {
+            steps {
+                sh 'find . -type f -name "*.py" | xargs python3.8 -m pylint --rcfile=pylintrc --fail-under=9'
             }
         }
     }
@@ -36,7 +41,7 @@ pipeline {
         }
         always {
             junit 'test-reports/*.xml'
-            junit 'pylint.out'
+            junit 'pylint-we.out'
         }
     }
 }
