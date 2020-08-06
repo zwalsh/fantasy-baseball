@@ -73,7 +73,4 @@ def prod_logging():
 
 def config_dict():
     env = os.getenv("ENV", "DEV")
-    if env == "PROD":
-        return prod_logging()
-    else:
-        return DEV_LOGGING
+    return prod_logging() if env == "PROD" else DEV_LOGGING
