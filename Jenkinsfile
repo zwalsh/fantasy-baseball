@@ -14,15 +14,20 @@ pipeline {
                 sh 'python3.8 -m xmlrunner -o test-reports'
             }
         }
-        stage('lint-warnings-errors') {
-            steps {
-                sh 'find . -type f -name "*.py" | xargs python3.8 -m pylint --rcfile=pylintrc --disable=R,C --output-format=junit | tee pylint-we.out'
-                sh 'exit ${PIPESTATUS[0]}'
-            }
-        }
-        stage('lint-conventions-refactors') {
-            steps {
-                sh 'find . -type f -name "*.py" | xargs python3.8 -m pylint --rcfile=pylintrc --fail-under=9'
+        stage('lint') {
+            parallel {
+
+                stage('lint-warnings-errors') {
+                    steps {
+                        sh 'find . -type f -name "*.py" | xargs python3.8 -m pylint --rcfile=pylintrc --disable=R,C --output-format=junit | tee pylint-we.out'
+                        sh 'exit ${PIPESTATUS[0]}'
+                    }
+                }
+                stage('lint-conventions-refactors') {
+                    steps {
+                        sh 'find . -type f -name "*.py" | xargs python3.8 -m pylint --rcfile=pylintrc --fail-under=9'
+                    }
+                }
             }
         }
     }
