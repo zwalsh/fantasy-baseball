@@ -10,16 +10,16 @@ LOGGER = logging.getLogger("espn.football.api")
 
 
 class FootballApi(EspnApi):
-    def slot_enum(self):
+    def _slot_enum(self):
         return FootballSlot
 
-    def stat_enum(self):
+    def _stat_enum(self):
         return FootballStat
 
-    def position(self, position_id):
+    def _position(self, position_id):
         return FootballPosition(position_id)
 
-    def api_url_segment(self):
+    def _api_url_segment(self):
         return "ffl"
 
     class Builder:

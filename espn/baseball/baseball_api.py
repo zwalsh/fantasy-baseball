@@ -34,7 +34,7 @@ class BaseballApi(EspnApi):
         """
         super().__init__(session_provider, league_id, team_id)
 
-    def api_url_segment(self):
+    def _api_url_segment(self):
         return "flb"
 
     # { team_id: Lineup, ...}
@@ -45,7 +45,7 @@ class BaseballApi(EspnApi):
         :param int player_id: the ESPN id of the player to check
         :return bool: whether or not the player is pitching today
         """
-        player_resp = self.player_request(player_id)
+        player_resp = self._player_request(player_id)
         name = player_resp["fullName"]
         LOGGER.debug(f"checking start status for {name}")
         stats = player_resp["stats"]
@@ -56,13 +56,13 @@ class BaseballApi(EspnApi):
         LOGGER.debug(f"starting? {is_starter}")
         return is_starter
 
-    def slot_enum(self):
+    def _slot_enum(self):
         return BaseballSlot
 
-    def stat_enum(self):
+    def _stat_enum(self):
         return BaseballStat
 
-    def position(self, position_id):
+    def _position(self, position_id):
         return BaseballPosition(position_id)
 
     class Builder:
