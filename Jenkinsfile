@@ -22,8 +22,7 @@ pipeline {
         }
         stage('lint-conventions-refactors') {
             steps {
-                sh 'find . -type f -name "*.py" | xargs python3.8 -m pylint --rcfile=pylintrc --exit-zero --output-format=junit | tee pylint-rc.out'
-                sh 'exit ${PIPESTATUS[0]}'
+                sh 'find . -type f -name "*.py" | xargs python3.8 -m pylint --rcfile=pylintrc --fail-under=9.0'
             }
         }
     }
@@ -43,7 +42,6 @@ pipeline {
         always {
             junit 'test-reports/*.xml'
             junit 'pylint-we.out'
-            junit 'pylint-rc.out'
         }
     }
 }
