@@ -22,7 +22,7 @@ pipeline {
         }
         stage('lint-conventions-refactors') {
             steps {
-                sh 'find . -type f -name "*.py" | xargs python3.8 -m pylint --rcfile=pylintrc --fail-under=9.0'
+                sh 'find . -type f -name "*.py" | xargs python3.8 -m pylint --rcfile=pylintrc --fail-under=9'
             }
         }
     }
