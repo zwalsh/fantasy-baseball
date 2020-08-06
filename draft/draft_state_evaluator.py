@@ -84,7 +84,8 @@ class DraftStateEvaluator(StateEvaluator):
             if cached is not None:
                 averages[slot] = cached
                 continue
-            # self.averages_cache[(slot, len(players))] = self.averages_cache.get((slot, len(players)), 0) + 1
+            # self.averages_cache[(slot, len(players))] =
+            # self.averages_cache.get((slot, len(players)), 0) + 1
             projections = list(
                 map(self._get_projection, map(lambda p: p.name, players))
             )
@@ -130,7 +131,7 @@ class DraftStateEvaluator(StateEvaluator):
             BaseballStat.WHIP: 0.008,
         }
         for ss in self.scoring_settings:
-            values_for_stat = self._accrued_value_in_league(
+            values_for_stat = _accrued_value_in_league(
                 [stats.unrounded_value_for_stat(ss.stat) for stats in totals],
                 ss.is_reverse,
                 stat_std_devs[ss.stat],
@@ -138,35 +139,6 @@ class DraftStateEvaluator(StateEvaluator):
             for i, val in enumerate(values_for_stat):
                 values[i] += val
         return values
-
-    def _accrued_value_in_league(
-        self, stat_values: List[float], is_reverse: bool, std_dev
-    ) -> List[float]:
-        """
-        Given a list of accrued stat values, calculates the worth of each of those values.
-
-        Worth is assigned as follows: best value gets n, worst value gets 1. From there, adjust
-        the worth of each value based on distance to neighbors.
-        :param std_dev:
-        :param stat_values:
-        :param is_reverse:
-        :return:
-        """
-        result = [1] * len(stat_values)
-        for first in range(0, len(stat_values)):
-            for second in range(first + 1, len(stat_values)):
-                mean_1 = stat_values[first]
-                mean_2 = stat_values[second]
-                variance = 2 * pow(std_dev, 2)
-                first_minus_second = NormalDist(mean_1 - mean_2, sqrt(variance))
-                p_second_greater = first_minus_second.cdf(0)
-                if is_reverse:
-                    result[second] += 1 - p_second_greater
-                    result[first] += p_second_greater
-                else:
-                    result[second] += p_second_greater
-                    result[first] += 1 - p_second_greater
-        return result
 
     def _cumulative_stats(self, lineup: Lineup):
         """
@@ -243,3 +215,34 @@ def slots_to_fill(lineups: List[Lineup], settings: LineupSettings) -> dict:
                 - len(lineup.player_dict.get(slot, []))
             )
     return empty_counts
+
+
+def _accrued_value_in_league(
+    stat_values: List[float], is_reverse: bool, std_dev
+) -> List[float]:
+    """
+    Given a list of accrued stat values, calculates the worth of each of those values.
+
+    Worth is assigned as follows: best value gets n, worst value gets 1. From there, adjust
+    the worth of each value based on distance to neighbors.
+    :param std_dev:
+    :param stat_values:
+    :param is_reverse:
+    :return:
+    """
+    result = [1] * len(stat_values)
+    # pylint: disable=consider-using-enumerate
+    for first in range(0, len(stat_values)):
+        for second in range(first + 1, len(stat_values)):
+            mean_1 = stat_values[first]
+            mean_2 = stat_values[second]
+            variance = 2 * pow(std_dev, 2)
+            first_minus_second = NormalDist(mean_1 - mean_2, sqrt(variance))
+            p_second_greater = first_minus_second.cdf(0)
+            if is_reverse:
+                result[second] += 1 - p_second_greater
+                result[first] += p_second_greater
+            else:
+                result[second] += p_second_greater
+                result[first] += 1 - p_second_greater
+    return result
