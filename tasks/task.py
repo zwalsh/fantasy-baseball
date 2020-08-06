@@ -10,8 +10,8 @@ class Task:
     @staticmethod
     def create(username):
         """
-        Creates a Task, initializing whatever dependencies may be necessary. Each subclass must implement this
-        method for itself, and it should be used instead of __init__.
+        Creates a Task, initializing whatever dependencies may be necessary. Each subclass must
+        implement this method for itself, and it should be used instead of __init__.
         :param str username: the username of the ESPN user that this Task is being run for
         :return Task: the created Task
         """
@@ -19,7 +19,8 @@ class Task:
 
     def run(self):
         """
-        This executes the actual behavior of the Task. Is called by the execute method of the parent Task class.
+        This executes the actual behavior of the Task. Is called by the execute method of the
+        parent Task class.
 
         Should be overridden in every Task implementation.
         """
@@ -29,8 +30,8 @@ class Task:
 
     def execute(self):
         """
-        Executes this Task in a controlled manner. Calls the method run(), logging and notifying in the event
-        of an error.
+        Executes this Task in a controlled manner. Calls the method run(), logging and notifying
+        in the event of an error.
         """
         logging.config.dictConfig(logging_config.config_dict())
 

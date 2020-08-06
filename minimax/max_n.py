@@ -30,7 +30,8 @@ def max_n(
     Runs the MAX^N algorithm (expansion of minimax) to determine the value of the given game state
     when it is the given player's turn.
 
-    Returns a list of values, where each player has an entry for their value in their index in the list.
+    Returns a list of values, where each player has an entry for their value
+    in their index in the list.
 
     Takes two functions over GameState:
         - one returns the value of a terminal state

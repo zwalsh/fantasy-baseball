@@ -1,10 +1,10 @@
 import unittest
 
 from espn.baseball.baseball_slot import BaseballSlot
+from espn.baseball.baseball_stat import BaseballStat
 from lineup_transition import LineupTransition
 from notifications.notifier import Notifier
 from scoring_setting import ScoringSetting
-from espn.baseball.baseball_stat import BaseballStat
 from test.test_lineup_total import LineupTotalTest
 from test.test_player import PlayerTest
 
