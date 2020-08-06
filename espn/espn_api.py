@@ -39,11 +39,6 @@ class EspnApi(metaclass=ABCMeta):
         self.year = year
         self.cache = dict()
 
-    def _espn_get(self, url, headers=None, check_cache=True):
-        return self._espn_request(
-            method="GET", url=url, payload={}, headers=headers, check_cache=check_cache
-        )
-
     @abstractmethod
     def _stat_enum(self):
         pass
@@ -132,6 +127,11 @@ class EspnApi(metaclass=ABCMeta):
         self.cache[url] = response
         return response
 
+    def _espn_get(self, url, headers=None, check_cache=True):
+        return self._espn_request(
+            method="GET", url=url, payload={}, headers=headers, check_cache=check_cache
+        )
+
     def _espn_post(self, url, payload, headers=None):
         return self._espn_request(
             method="POST", url=url, payload=payload, headers=headers
@@ -154,14 +154,6 @@ class EspnApi(metaclass=ABCMeta):
             f"&scoringPeriodId={self.scoring_period()}"
             "&view=mRoster"
         )
-
-    def lineup(self, team_id=None):
-        """
-        Returns the current lineup of the team with the given team id
-        :param int team_id: the id of the team in this league to get the lineup for
-        :return Lineup: Lineup the lineup of the given team
-        """
-        return self.all_lineups()[team_id or self.team_id]
 
     def _all_info_url(self):
         return (
@@ -199,6 +191,14 @@ class EspnApi(metaclass=ABCMeta):
             if converted is not None:
                 possible_positions.add(converted)
         return Player(name, first, last, player_id, possible_positions, position)
+
+    def lineup(self, team_id=None):
+        """
+        Returns the current lineup of the team with the given team id
+        :param int team_id: the id of the team in this league to get the lineup for
+        :return Lineup: Lineup the lineup of the given team
+        """
+        return self.all_lineups()[team_id or self.team_id]
 
     def all_lineups(self):
         resp = self._espn_get(self._all_lineups_url()).json()
