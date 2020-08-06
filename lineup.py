@@ -45,13 +45,13 @@ class Lineup:
         start_time = time.time()
         LOGGER.info("generating all possible lineups")
 
-        while not len(frontier) == 0:
+        while len(frontier) != 0:
             total_stack += len(frontier)
             node = frontier.pop(0)
             successors = node.successors(lineup_settings)
             total_proc += 1
             if total_proc % 1000 == 0:
-                LOGGER.debug("processed {}".format(total_proc))
+                LOGGER.debug(f"processed {total_proc}")
             max_stack = max(max_stack, len(frontier))
             for successor in successors:
                 starters = successor.lineup.starters()
@@ -88,6 +88,7 @@ class Lineup:
         if len(possible_combos) == 0:
             return [(self, remaining_players)]
         new_lineups = []
+        # pylint: disable=cell-var-from-loop
         for players in possible_combos:
             l_copy = self.copy()
             rem_copy = copy.copy(remaining_players)
@@ -145,17 +146,18 @@ class Lineup:
 
         for slot, players in self.player_dict.items():
             for player in players:
+                # pylint: disable=cell-var-from-loop
                 if player not in to_lineup.player_dict.get(slot, []):
                     to_slots = to_lineup.player_dict.keys()
                     to_slot = next(
                         filter(lambda s: player in to_lineup.player_dict[s], to_slots),
                         self.slot_enum.BENCH,
                     )
-                    if (
-                        slot != to_slot
-                        and slot != BaseballSlot.PITCHER
-                        and slot != BaseballSlot.INJURED
-                    ):  # todo remove BaseballSlot references
+                    if slot not in (
+                        to_slot,
+                        BaseballSlot.PITCHER,
+                        BaseballSlot.INJURED,
+                    ):
                         transitions.append(LineupTransition(player, slot, to_slot))
 
         return transitions

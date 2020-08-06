@@ -1,6 +1,3 @@
-from espn.baseball.baseball_slot import BaseballSlot
-
-
 class Player:
     def __init__(
         self, name, first, last, espn_id, possible_positions, default_position

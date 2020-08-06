@@ -2,7 +2,7 @@ from espn.baseball.baseball_stat import BaseballStat
 
 
 class Stats:
-    stat_functions = {  # todo should figure out a way to pull these out into the enum
+    stat_functions = {
         BaseballStat.AVG: lambda s: s.average(),
         BaseballStat.OBP: lambda s: s.obp(),
         BaseballStat.WHIP: lambda s: s.whip(),
@@ -66,7 +66,7 @@ class Stats:
         exact_obp = self.stat_dict.get(BaseballStat.OBP)
         if exact_obp is None:
             reached_base = (
-                self.stat_dict[BaseballStat.H] + self.stat_dict[BaseballStat.BB]
+                    self.stat_dict[BaseballStat.H] + self.stat_dict[BaseballStat.BB]
             )
             exact_obp = reached_base / self.stat_dict[BaseballStat.PA]
         return round(exact_obp, 3)
@@ -125,7 +125,4 @@ class Stats:
 
     def value_for_stat(self, stat):
         val = self.unrounded_value_for_stat(stat)
-        if val is not None:
-            return round(val, stat.num_rounding_digits())
-        else:
-            return val
+        return round(val, stat.num_rounding_digits()) if val is not None else val
