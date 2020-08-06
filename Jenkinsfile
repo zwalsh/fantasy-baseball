@@ -13,7 +13,7 @@ pipeline {
             steps {
                 sh 'python3.8 -m xmlrunner -o test-reports'
             }
-
+        }
         stage('lint-warnings-errors') {
             steps {
                 sh 'find . -type f -name "*.py" | xargs python3.8 -m pylint --rcfile=pylintrc --disable=R,C --output-format=junit | tee pylint-we.out'
