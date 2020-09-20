@@ -29,6 +29,7 @@ DEV_LOGGING = {
         "fangraphs.api": {},
         "fangraphs.metrics": {},
         "fantasypros.api": {},
+        "footballdiehards.api": {},
         "config.team_reader": {},
         "config.password_reader": {},
         "minimax.max_n": {},
