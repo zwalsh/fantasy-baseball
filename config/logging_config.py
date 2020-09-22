@@ -39,6 +39,7 @@ DEV_LOGGING = {
         "numberfire.api": {},
         "optimize.optimizer": {},
         "optimize.optimize_fp": {},
+        "optimize.dfs_lineup": {},
         "fantasysp.api": {},
         "tasks.set_lineup": {},
         "tasks.notify_new_trades": {},
