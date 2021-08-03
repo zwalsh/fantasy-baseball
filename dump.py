@@ -2,7 +2,7 @@ import logging
 import pickle
 from pathlib import Path
 
-LOGGER = logging.getLogger('dump')
+LOGGER = logging.getLogger("dump")
 
 
 def load_from_cache(pickled_path: Path, bytes_fn):

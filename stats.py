@@ -66,7 +66,7 @@ class Stats:
         exact_obp = self.stat_dict.get(BaseballStat.OBP)
         if exact_obp is None:
             reached_base = (
-                    self.stat_dict[BaseballStat.H] + self.stat_dict[BaseballStat.BB]
+                self.stat_dict[BaseballStat.H] + self.stat_dict[BaseballStat.BB]
             )
             exact_obp = reached_base / self.stat_dict[BaseballStat.PA]
         return round(exact_obp, 3)

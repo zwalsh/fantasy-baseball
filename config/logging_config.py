@@ -25,6 +25,7 @@ DEV_LOGGING = {
         "espn.trade_store": {},
         "espn.stat_store": {},
         "draft.draft_state_evaluator": {},
+        "dump": {},
         "lineup": {},
         "fangraphs.api": {},
         "fangraphs.metrics": {},

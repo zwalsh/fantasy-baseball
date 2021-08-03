@@ -58,7 +58,7 @@ class FantasyProsApi:
         }
         # approximate plate appearances as at-bats plus walks
         stats_dict[BaseballStat.PA] = (
-                stats_dict[BaseballStat.AB] + stats_dict[BaseballStat.BB]
+            stats_dict[BaseballStat.AB] + stats_dict[BaseballStat.BB]
         )
         return Stats(stats_dict, BaseballStat)
 
@@ -120,56 +120,66 @@ class FantasyProsApi:
         )
 
     def _qb_stats_for_row(self, row):
-        cells = row.find('td')
-        return Stats({
-            FootballStat.YDS_PASS: float(cells[3].text.replace(',', '')),
-            FootballStat.TD_PASS: float(cells[4].text),
-            FootballStat.INT_PASS: float(cells[5].text),
-            FootballStat.YDS_RUSH: float(cells[7].text),
-            FootballStat.TD_RUSH: float(cells[8].text),
-            FootballStat.FUML: float(cells[9].text),
-            FootballStat.FP: float(cells[10].text)
-        }, FootballStat)
+        cells = row.find("td")
+        return Stats(
+            {
+                FootballStat.YDS_PASS: float(cells[3].text.replace(",", "")),
+                FootballStat.TD_PASS: float(cells[4].text),
+                FootballStat.INT_PASS: float(cells[5].text),
+                FootballStat.YDS_RUSH: float(cells[7].text),
+                FootballStat.TD_RUSH: float(cells[8].text),
+                FootballStat.FUML: float(cells[9].text),
+                FootballStat.FP: float(cells[10].text),
+            },
+            FootballStat,
+        )
 
     def _rb_stats_for_row(self, row):
-        cells = row.find('td')
-        return Stats({
-            FootballStat.YDS_RUSH: float(cells[2].text.replace(',', '')),
-            FootballStat.TD_RUSH: float(cells[3].text),
-            FootballStat.REC: float(cells[4].text),
-            FootballStat.YDS_REC: float(cells[5].text.replace(',', '')),
-            FootballStat.TD_REC: float(cells[6].text),
-            FootballStat.FUML: float(cells[7].text),
-            FootballStat.FP: float(cells[8].text)
-        }, FootballStat)
+        cells = row.find("td")
+        return Stats(
+            {
+                FootballStat.YDS_RUSH: float(cells[2].text.replace(",", "")),
+                FootballStat.TD_RUSH: float(cells[3].text),
+                FootballStat.REC: float(cells[4].text),
+                FootballStat.YDS_REC: float(cells[5].text.replace(",", "")),
+                FootballStat.TD_REC: float(cells[6].text),
+                FootballStat.FUML: float(cells[7].text),
+                FootballStat.FP: float(cells[8].text),
+            },
+            FootballStat,
+        )
 
     def _wr_stats_for_row(self, row):
-        cells = row.find('td')
-        return Stats({
-            FootballStat.REC: float(cells[1].text),
-            FootballStat.YDS_REC: float(cells[2].text.replace(',', '')),
-            FootballStat.TD_REC: float(cells[3].text),
-            FootballStat.YDS_RUSH: float(cells[5].text.replace(',', '')),
-            FootballStat.TD_RUSH: float(cells[6].text),
-            FootballStat.FUML: float(cells[7].text),
-            FootballStat.FP: float(cells[8].text)
-        }, FootballStat)
+        cells = row.find("td")
+        return Stats(
+            {
+                FootballStat.REC: float(cells[1].text),
+                FootballStat.YDS_REC: float(cells[2].text.replace(",", "")),
+                FootballStat.TD_REC: float(cells[3].text),
+                FootballStat.YDS_RUSH: float(cells[5].text.replace(",", "")),
+                FootballStat.TD_RUSH: float(cells[6].text),
+                FootballStat.FUML: float(cells[7].text),
+                FootballStat.FP: float(cells[8].text),
+            },
+            FootballStat,
+        )
 
     def _te_stats_for_row(self, row):
-        cells = row.find('td')
-        return Stats({
-            FootballStat.REC: float(cells[1].text),
-            FootballStat.YDS_REC: float(cells[2].text.replace(',', '')),
-            FootballStat.TD_REC: float(cells[3].text),
-            FootballStat.FUML: float(cells[4].text),
-            FootballStat.FP: float(cells[5].text)
-        }, FootballStat)
+        cells = row.find("td")
+        return Stats(
+            {
+                FootballStat.REC: float(cells[1].text),
+                FootballStat.YDS_REC: float(cells[2].text.replace(",", "")),
+                FootballStat.TD_REC: float(cells[3].text),
+                FootballStat.FUML: float(cells[4].text),
+                FootballStat.FP: float(cells[5].text),
+            },
+            FootballStat,
+        )
 
     def _dst_stats_for_row(self, row):
-        cells = row.find('td')
-        return Stats({
-            FootballStat.FP: float(cells[9].text)
-        }, FootballStat)
+        cells = row.find("td")
+        return Stats({FootballStat.FP: float(cells[9].text)}, FootballStat)
 
     def _fb_player_stats_from_row(self, row, position):
         # pylint: disable=unnecessary-lambda
@@ -181,7 +191,9 @@ class FantasyProsApi:
             FootballPosition.DEFENSE: lambda r: self._dst_stats_for_row(r),
         }[position](row)
 
-    def _week_football_projections(self, position: FootballPosition) -> Dict[str, Stats]:
+    def _week_football_projections(
+        self, position: FootballPosition
+    ) -> Dict[str, Stats]:
         """
         Grabs projections for the week for the given position.
 
@@ -194,8 +206,9 @@ class FantasyProsApi:
         """
         projections = dict()
         rows = self.table_rows(
-            f'https://www.fantasypros.com/nfl/projections/{str(position).lower()}.php?scoring=HALF')
-        players = [r for r in rows if 'mpb-player' in r.attrs.get('class', [''])[0]]
+            f"https://www.fantasypros.com/nfl/projections/{str(position).lower()}.php?scoring=HALF"
+        )
+        players = [r for r in rows if "mpb-player" in r.attrs.get("class", [""])[0]]
         for p in players:
             name = FantasyProsApi.name_from_row(p)
             proj = self._fb_player_stats_from_row(p, position)

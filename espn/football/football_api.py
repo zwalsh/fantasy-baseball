@@ -58,5 +58,5 @@ class FootballApi(EspnApi):
                 EspnSessionProvider(self.__username, self.__password),
                 self.__league_id,
                 self.__team_id,
-                self.__year
+                self.__year,
             )
