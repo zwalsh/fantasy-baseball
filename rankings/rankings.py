@@ -56,14 +56,14 @@ def replacement_level(
     for pos, count in avg_rostered_count.items():
         if pos == FootballPosition.RUNNING_BACK:
             count = (
-                count - 0.8
+                count - 0.9
             )  # adjusting based on new year w/ 10 teams but 1 fewer roster spot
         if pos == FootballPosition.WIDE_RECEIVER:
-            count = count - 0.05
-        if pos == FootballPosition.TIGHT_END:
-            count = count - 0.35
-        if pos == FootballPosition.QUARTER_BACK:
             count = count + 0.1
+        if pos == FootballPosition.TIGHT_END:
+            count = count - 0.2
+        if pos == FootballPosition.QUARTER_BACK:
+            count = count
         replacement[pos] = ceil(count * team_count)
 
     return replacement
@@ -134,7 +134,9 @@ def ranked_by_position(
     ranked_by_pos = dict()
     for pos in FootballPosition:
         # pylint: disable=cell-var-from-loop
-        players = list(filter(lambda p: p.default_position == pos, iter(projections.keys())))
+        players = list(
+            filter(lambda p: p.default_position == pos, iter(projections.keys()))
+        )
         projections_at_pos = {
             player: projection
             for player, projection in projections.items()
@@ -180,7 +182,7 @@ def _player_values(
 
 def rank_all_players(
     last_year: FootballApi, football: FootballApi, fantasy_pros: FantasyProsApi
-):
+) -> List[Player]:
     avg_count_cache = Path(
         f"cache/football/roster-count-{last_year.league_id}-{last_year.year}.p"
     )
@@ -195,10 +197,10 @@ def rank_all_players(
 
     values = _player_values(projections, replacement_values)
 
-    sorted_by_value = sorted(values.items(), key=lambda tup: tup[1], reverse=True)[:200]
+    sorted_by_value = sorted(values.items(), key=lambda tup: tup[1], reverse=True)
 
     LOGGER.info("RNK PRNK PLAYER                   VALUE POINTS")
-    for rank, (player, value) in enumerate(sorted_by_value):
+    for rank, (player, value) in list(enumerate(sorted_by_value))[:200]:
         position_rankings = enumerate(
             map(lambda tup: tup[0], ranked_by_pos[player.default_position])
         )
@@ -208,3 +210,4 @@ def rank_all_players(
         LOGGER.info(
             f"{rank + 1:<3} {player.default_position}{player_rank_at_position:<2} {player.name:<24} {value:5.1f} {projections[player]:5.1f}"
         )
+    return list(map(lambda tup: tup[0], sorted_by_value))

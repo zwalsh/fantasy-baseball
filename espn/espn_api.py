@@ -2,7 +2,7 @@ import json
 import logging
 import time
 from abc import abstractmethod, ABCMeta
-from typing import Dict
+from typing import Dict, List
 
 import requests
 
@@ -23,6 +23,16 @@ class EspnApiException(Exception):
     """
 
     pass
+
+
+def _player_draft_strategy_item(player: Player):
+    return {"playerId": player.espn_id}
+
+
+def _draft_strategy_json(rankings: List[Player]):
+    return {
+        "draftStrategy": {"draftList": list(map(_player_draft_strategy_item, rankings))}
+    }
 
 
 class EspnApi(metaclass=ABCMeta):
@@ -144,6 +154,9 @@ class EspnApi(metaclass=ABCMeta):
             f"/seasons/{self.year}/segments/0/leagues/"
             f"{self.league_id}"
         )
+
+    def _team_url(self):
+        return f"{self._base_url()}" f"/teams/{self.team_id}"
 
     def _scoring_period_info_url(self, scoring_period):
         return f"{self._base_url()}" f"?scoringPeriodId={scoring_period}&view=mRoster"
@@ -528,3 +541,8 @@ class EspnApi(metaclass=ABCMeta):
         cur_lineup = self.lineup(self.team_id)
         transitions = cur_lineup.transitions(lineup)
         return self.execute_transitions(transitions)
+
+    def set_draft_strategy(self, rankings: List[Player]):
+        draft_strategy_url = self._team_url()
+        payload = _draft_strategy_json(rankings)
+        return self._espn_post(draft_strategy_url, payload)
