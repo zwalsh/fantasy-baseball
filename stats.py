@@ -66,7 +66,7 @@ class Stats:
         exact_obp = self.stat_dict.get(BaseballStat.OBP)
         if exact_obp is None:
             reached_base = (
-                    self.stat_dict[BaseballStat.H] + self.stat_dict[BaseballStat.BB]
+                self.stat_dict[BaseballStat.H] + self.stat_dict[BaseballStat.BB]
             )
             exact_obp = reached_base / self.stat_dict[BaseballStat.PA]
         return round(exact_obp, 3)
@@ -126,3 +126,16 @@ class Stats:
     def value_for_stat(self, stat):
         val = self.unrounded_value_for_stat(stat)
         return round(val, stat.num_rounding_digits()) if val is not None else val
+
+    def points(self, points_map) -> float:
+        """
+        Determine the total number of fantasy points for this set of Stats. Pass in the result of
+        EspnApi.points_per_stat()
+
+        :param points_map: how many points does each stat provide?
+        :return: total number of fantasy points for these stats
+        """
+        total = 0.0
+        for stat, value in self.stat_dict.items():
+            total += points_map.get(stat, 0.0) * value
+        return total

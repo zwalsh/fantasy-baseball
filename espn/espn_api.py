@@ -2,7 +2,7 @@ import json
 import logging
 import time
 from abc import abstractmethod, ABCMeta
-from typing import Dict
+from typing import Dict, List
 
 import requests
 
@@ -25,8 +25,18 @@ class EspnApiException(Exception):
     pass
 
 
+def _player_draft_strategy_item(player: Player):
+    return {"playerId": player.espn_id}
+
+
+def _draft_strategy_json(rankings: List[Player]):
+    return {
+        "draftStrategy": {"draftList": list(map(_player_draft_strategy_item, rankings))}
+    }
+
+
 class EspnApi(metaclass=ABCMeta):
-    def __init__(self, session_provider, league_id, team_id, year=2020):
+    def __init__(self, session_provider, league_id, team_id, year=2021):
         """
         Programmatic access to ESPN's (undocumented) API, caching requests that do not need
         refreshing, and automatically fetching a token for the user/password combination.
@@ -60,11 +70,11 @@ class EspnApi(metaclass=ABCMeta):
     def _slot_enum(self):
         pass
 
-    def _all_lineups_url(self):
-        return self._scoring_period_info_url(self.scoring_period())
+    def _all_lineups_url(self, scoring_period):
+        return self._scoring_period_info_url(scoring_period)
 
     def _espn_request(
-            self, method, url, payload, headers=None, check_cache=True, retries=1
+        self, method, url, payload, headers=None, check_cache=True, retries=1
     ):
         if check_cache and url in self.cache.keys():
             return self.cache.get(url)
@@ -145,6 +155,9 @@ class EspnApi(metaclass=ABCMeta):
             f"{self.league_id}"
         )
 
+    def _team_url(self):
+        return f"{self._base_url()}" f"/teams/{self.team_id}"
+
     def _scoring_period_info_url(self, scoring_period):
         return f"{self._base_url()}" f"?scoringPeriodId={scoring_period}&view=mRoster"
 
@@ -201,8 +214,10 @@ class EspnApi(metaclass=ABCMeta):
         """
         return self.all_lineups()[team_id or self.team_id]
 
-    def all_lineups(self):
-        resp = self._espn_get(self._all_lineups_url()).json()
+    def all_lineups(self, scoring_period=None) -> Dict[int, Lineup]:
+        if scoring_period is None:
+            scoring_period = self.scoring_period()
+        resp = self._espn_get(self._all_lineups_url(scoring_period)).json()
         teams = resp["teams"]
         lineup_dict = dict()
         for team in teams:
@@ -299,8 +314,8 @@ class EspnApi(metaclass=ABCMeta):
             stats_dict = next(
                 filter(
                     lambda d: d["scoringPeriodId"] == scoring_period_id
-                              and d["statSourceId"] == 0
-                              and d["statSplitTypeId"] == 5,
+                    and d["statSourceId"] == 0
+                    and d["statSplitTypeId"] == 5,
                     entry_stats_list,
                 ),
                 None,
@@ -332,11 +347,16 @@ class EspnApi(metaclass=ABCMeta):
         #     LOGGER.info(f"split: {stat_dict['statSplitTypeId']}")
         #     LOGGER.info(f"scoringPd: {stat_dict['scoringPeriodId']}")
 
-        relevant_stats = filter(lambda s: s["statSourceId"] == 0
-                                          and s["statSplitTypeId"] == 1
-                                          and s["seasonId"] == self.year, player_stats)
-        return {stat_dict["scoringPeriodId"]: self.create_stats(stat_dict["stats"]) for stat_dict
-                in relevant_stats}
+        relevant_stats = filter(
+            lambda s: s["statSourceId"] == 0
+            and s["statSplitTypeId"] == 1
+            and s["seasonId"] == self.year,
+            player_stats,
+        )
+        return {
+            stat_dict["scoringPeriodId"]: self.create_stats(stat_dict["stats"])
+            for stat_dict in relevant_stats
+        }
 
     def player_stats(self) -> Dict[Player, Dict[int, Stats]]:
         """
@@ -353,7 +373,8 @@ class EspnApi(metaclass=ABCMeta):
                 full_player_obj = self._player_request(player_obj["id"])
                 player = self.roster_entry_to_player(full_player_obj)
                 player_stats[player] = self._season_stats_from_player_stats_array(
-                    full_player_obj["stats"])
+                    full_player_obj["stats"]
+                )
             except ValueError:
                 LOGGER.error(f"Could not parse player from {player_obj['player']}")
         return player_stats
@@ -389,10 +410,14 @@ class EspnApi(metaclass=ABCMeta):
                 "filterIds": {"value": [player_id]},
                 "filterStatsForTopScoringPeriodIds": {
                     "value": 16,
-                    "additionalValue": ["002020", "102020",
-                                        "002019", "1120207",
-                                        "022020"]
-                }
+                    "additionalValue": [
+                        "002020",
+                        "102020",
+                        "002019",
+                        "1120207",
+                        "022020",
+                    ],
+                },
             }
         }
         resp = self._espn_get(
@@ -406,10 +431,7 @@ class EspnApi(metaclass=ABCMeta):
         filter_header = {
             "players": {
                 "limit": 300,
-                "sortPercOwned": {
-                    "sortPriority": 2,
-                    "sortAsc": False
-                }
+                "sortPercOwned": {"sortPriority": 2, "sortAsc": False},
             }
         }
         resp = self._espn_get(
@@ -436,9 +458,9 @@ class EspnApi(metaclass=ABCMeta):
                 lambda p: (
                     p["player"],
                     p.get("player", {})
-                        .get("draftRanksByRankType", {})
-                        .get("STANDARD", {})
-                        .get("rank", 9999),
+                    .get("draftRanksByRankType", {})
+                    .get("STANDARD", {})
+                    .get("rank", 9999),
                 ),
                 players_json_array,
             )
@@ -519,3 +541,8 @@ class EspnApi(metaclass=ABCMeta):
         cur_lineup = self.lineup(self.team_id)
         transitions = cur_lineup.transitions(lineup)
         return self.execute_transitions(transitions)
+
+    def set_draft_strategy(self, rankings: List[Player]):
+        draft_strategy_url = self._team_url()
+        payload = _draft_strategy_json(rankings)
+        return self._espn_post(draft_strategy_url, payload)
