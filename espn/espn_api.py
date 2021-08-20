@@ -26,7 +26,7 @@ class EspnApiException(Exception):
 
 
 class EspnApi(metaclass=ABCMeta):
-    def __init__(self, session_provider, league_id, team_id, year=2020):
+    def __init__(self, session_provider, league_id, team_id, year=2021):
         """
         Programmatic access to ESPN's (undocumented) API, caching requests that do not need
         refreshing, and automatically fetching a token for the user/password combination.
@@ -60,8 +60,8 @@ class EspnApi(metaclass=ABCMeta):
     def _slot_enum(self):
         pass
 
-    def _all_lineups_url(self):
-        return self._scoring_period_info_url(self.scoring_period())
+    def _all_lineups_url(self, scoring_period):
+        return self._scoring_period_info_url(scoring_period)
 
     def _espn_request(
             self, method, url, payload, headers=None, check_cache=True, retries=1
@@ -201,8 +201,10 @@ class EspnApi(metaclass=ABCMeta):
         """
         return self.all_lineups()[team_id or self.team_id]
 
-    def all_lineups(self):
-        resp = self._espn_get(self._all_lineups_url()).json()
+    def all_lineups(self, scoring_period=None) -> Dict[int, Lineup]:
+        if scoring_period is None:
+            scoring_period = self.scoring_period()
+        resp = self._espn_get(self._all_lineups_url(scoring_period)).json()
         teams = resp["teams"]
         lineup_dict = dict()
         for team in teams:

@@ -41,6 +41,7 @@ DEV_LOGGING = {
         "optimize.optimize_fp": {},
         "optimize.dfs_lineup": {},
         "fantasysp.api": {},
+        "rankings.rankings": {},
         "tasks.set_lineup": {},
         "tasks.notify_new_trades": {},
         "tasks.check_fangraphs": {},

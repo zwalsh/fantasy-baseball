@@ -122,7 +122,7 @@ class FantasyProsApi:
     def _qb_stats_for_row(self, row):
         cells = row.find('td')
         return Stats({
-            FootballStat.YDS_PASS: float(cells[3].text),
+            FootballStat.YDS_PASS: float(cells[3].text.replace(',', '')),
             FootballStat.TD_PASS: float(cells[4].text),
             FootballStat.INT_PASS: float(cells[5].text),
             FootballStat.YDS_RUSH: float(cells[7].text),
@@ -134,10 +134,10 @@ class FantasyProsApi:
     def _rb_stats_for_row(self, row):
         cells = row.find('td')
         return Stats({
-            FootballStat.YDS_RUSH: float(cells[2].text),
+            FootballStat.YDS_RUSH: float(cells[2].text.replace(',', '')),
             FootballStat.TD_RUSH: float(cells[3].text),
             FootballStat.REC: float(cells[4].text),
-            FootballStat.YDS_REC: float(cells[5].text),
+            FootballStat.YDS_REC: float(cells[5].text.replace(',', '')),
             FootballStat.TD_REC: float(cells[6].text),
             FootballStat.FUML: float(cells[7].text),
             FootballStat.FP: float(cells[8].text)
@@ -147,9 +147,9 @@ class FantasyProsApi:
         cells = row.find('td')
         return Stats({
             FootballStat.REC: float(cells[1].text),
-            FootballStat.YDS_REC: float(cells[2].text),
+            FootballStat.YDS_REC: float(cells[2].text.replace(',', '')),
             FootballStat.TD_REC: float(cells[3].text),
-            FootballStat.YDS_RUSH: float(cells[5].text),
+            FootballStat.YDS_RUSH: float(cells[5].text.replace(',', '')),
             FootballStat.TD_RUSH: float(cells[6].text),
             FootballStat.FUML: float(cells[7].text),
             FootballStat.FP: float(cells[8].text)
@@ -159,7 +159,7 @@ class FantasyProsApi:
         cells = row.find('td')
         return Stats({
             FootballStat.REC: float(cells[1].text),
-            FootballStat.YDS_REC: float(cells[2].text),
+            FootballStat.YDS_REC: float(cells[2].text.replace(',', '')),
             FootballStat.TD_REC: float(cells[3].text),
             FootballStat.FUML: float(cells[4].text),
             FootballStat.FP: float(cells[5].text)
