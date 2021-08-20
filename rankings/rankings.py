@@ -133,11 +133,8 @@ def ranked_by_position(
     """
     ranked_by_pos = dict()
     for pos in FootballPosition:
-
-        def filter_on_position(player):
-            return player.default_position == pos
-
-        players = list(filter(filter_on_position, iter(projections.keys())))
+        # pylint: disable=cell-var-from-loop
+        players = list(filter(lambda p: p.default_position == pos, iter(projections.keys())))
         projections_at_pos = {
             player: projection
             for player, projection in projections.items()
