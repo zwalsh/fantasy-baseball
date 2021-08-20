@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 
 from config import password_reader, team_reader
-from espn.baseball.baseball_api import BaseballApi
+from espn.football.football_api import FootballApi
 from tasks.archive_daily_stats import ArchiveDailyStats
 from tasks.task import Task
 
@@ -24,9 +24,9 @@ class ArchiveYearlyStats(Task):
     @staticmethod
     def create(username):
         password = password_reader.password(username, Path.cwd() / "config/passwords")
-        configs = team_reader.all_teams(Path.cwd() / "config/team_configs/baseball")
+        configs = team_reader.all_teams(Path.cwd() / "config/team_configs/football")
         scoring_period = (
-            BaseballApi.Builder()
+            FootballApi.Builder()
             .username(username)
             .password(password)
             .league_id(configs[0].league_id)

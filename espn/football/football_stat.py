@@ -44,6 +44,7 @@ class FootballStat(Enum):
     PR_TD = "PR TD"
     FR_TD = "FR TD"
     INT_TD = "INT TD"
+    FP = "FANTASY POINTS"
 
     @staticmethod
     def sum_stats():

@@ -2,10 +2,13 @@ import logging
 import pickle
 from datetime import date
 from pathlib import Path
+from typing import Dict
 
 from requests_html import HTMLSession
 
 from espn.baseball.baseball_stat import BaseballStat
+from espn.football.football_position import FootballPosition
+from espn.football.football_stat import FootballStat
 from stats import Stats
 from timing.timed import timed
 
@@ -55,7 +58,7 @@ class FantasyProsApi:
         }
         # approximate plate appearances as at-bats plus walks
         stats_dict[BaseballStat.PA] = (
-            stats_dict[BaseballStat.AB] + stats_dict[BaseballStat.BB]
+                stats_dict[BaseballStat.AB] + stats_dict[BaseballStat.BB]
         )
         return Stats(stats_dict, BaseballStat)
 
@@ -115,3 +118,97 @@ class FantasyProsApi:
             "https://www.fantasypros.com/mlb/projections/pitchers.php",
             FantasyProsApi.pitcher_stats_from_row,
         )
+
+    def _qb_stats_for_row(self, row):
+        cells = row.find('td')
+        return Stats({
+            FootballStat.YDS_PASS: float(cells[3].text),
+            FootballStat.TD_PASS: float(cells[4].text),
+            FootballStat.INT_PASS: float(cells[5].text),
+            FootballStat.YDS_RUSH: float(cells[7].text),
+            FootballStat.TD_RUSH: float(cells[8].text),
+            FootballStat.FUML: float(cells[9].text),
+            FootballStat.FP: float(cells[10].text)
+        }, FootballStat)
+
+    def _rb_stats_for_row(self, row):
+        cells = row.find('td')
+        return Stats({
+            FootballStat.YDS_RUSH: float(cells[2].text),
+            FootballStat.TD_RUSH: float(cells[3].text),
+            FootballStat.REC: float(cells[4].text),
+            FootballStat.YDS_REC: float(cells[5].text),
+            FootballStat.TD_REC: float(cells[6].text),
+            FootballStat.FUML: float(cells[7].text),
+            FootballStat.FP: float(cells[8].text)
+        }, FootballStat)
+
+    def _wr_stats_for_row(self, row):
+        cells = row.find('td')
+        return Stats({
+            FootballStat.REC: float(cells[1].text),
+            FootballStat.YDS_REC: float(cells[2].text),
+            FootballStat.TD_REC: float(cells[3].text),
+            FootballStat.YDS_RUSH: float(cells[5].text),
+            FootballStat.TD_RUSH: float(cells[6].text),
+            FootballStat.FUML: float(cells[7].text),
+            FootballStat.FP: float(cells[8].text)
+        }, FootballStat)
+
+    def _te_stats_for_row(self, row):
+        cells = row.find('td')
+        return Stats({
+            FootballStat.REC: float(cells[1].text),
+            FootballStat.YDS_REC: float(cells[2].text),
+            FootballStat.TD_REC: float(cells[3].text),
+            FootballStat.FUML: float(cells[4].text),
+            FootballStat.FP: float(cells[5].text)
+        }, FootballStat)
+
+    def _dst_stats_for_row(self, row):
+        cells = row.find('td')
+        return Stats({
+            FootballStat.FP: float(cells[9].text)
+        }, FootballStat)
+
+    def _fb_player_stats_from_row(self, row, position):
+        # pylint: disable=unnecessary-lambda
+        return {
+            FootballPosition.QUARTER_BACK: lambda r: self._qb_stats_for_row(r),
+            FootballPosition.RUNNING_BACK: lambda r: self._rb_stats_for_row(r),
+            FootballPosition.WIDE_RECEIVER: lambda r: self._wr_stats_for_row(r),
+            FootballPosition.TIGHT_END: lambda r: self._te_stats_for_row(r),
+            FootballPosition.DEFENSE: lambda r: self._dst_stats_for_row(r),
+        }[position](row)
+
+    def _week_football_projections(self, position: FootballPosition) -> Dict[str, Stats]:
+        """
+        Grabs projections for the week for the given position.
+
+        GETs the URL below, substituting in position_str, and scrapes the rows.
+
+        https://www.fantasypros.com/nfl/projections/<position_str>.php
+
+        :param position_str: the position for which to load the page and get stats.
+        :return: dictionary of name to Stat
+        """
+        projections = dict()
+        rows = self.table_rows(
+            f'https://www.fantasypros.com/nfl/projections/{str(position).lower()}.php?scoring=HALF')
+        players = [r for r in rows if 'mpb-player' in r.attrs.get('class', [''])[0]]
+        for p in players:
+            name = FantasyProsApi.name_from_row(p)
+            proj = self._fb_player_stats_from_row(p, position)
+            projections[name] = proj
+        return projections
+
+    def week_football_projections(self) -> Dict[str, Stats]:
+        """
+        Scrapes the weekly projections pages at FantasyPros to get the best projections for
+        players at all projections.
+        :return: dictionary of all players' names to projected stats
+        """
+        projections = dict()
+        for position in FootballPosition:
+            projections.update(self._week_football_projections(position))
+        return projections
