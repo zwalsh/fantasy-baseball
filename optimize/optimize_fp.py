@@ -3,7 +3,6 @@ import logging
 from functools import reduce
 
 from espn.basketball.basketball_slot import BasketballSlot
-from espn.basketball.basketball_stat import BasketballStat
 
 LOGGER = logging.getLogger("optimize.optimize_fp")
 

@@ -2,7 +2,6 @@ import logging
 from pathlib import Path
 
 from config import password_reader, team_reader
-from espn.baseball.baseball_api import BaseballApi
 from espn.football.football_api import FootballApi
 from espn.stat_store import StatStore
 from tasks.task import Task

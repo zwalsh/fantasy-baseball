@@ -172,6 +172,7 @@ class FantasyProsApi:
         }, FootballStat)
 
     def _fb_player_stats_from_row(self, row, position):
+        # pylint: disable=unnecessary-lambda
         return {
             FootballPosition.QUARTER_BACK: lambda r: self._qb_stats_for_row(r),
             FootballPosition.RUNNING_BACK: lambda r: self._rb_stats_for_row(r),

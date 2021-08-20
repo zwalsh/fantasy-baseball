@@ -5,22 +5,17 @@ from espn.football.football_position import FootballPosition
 from espn.football.football_slot import FootballSlot
 from footballdiehards.dfs_projection import DFSProjection
 
-"""
-1. Start with top x at each position, see if lineup is possible?
-2. expand by 1 player each time, forcing that player into lineup?
-3. expand adding next top player by value?
-"""
+# 1. Start with top x at each position, see if lineup is possible?
+# 2. expand by 1 player each time, forcing that player into lineup?
+# 3. expand adding next top player by value?
 
-"""
-player pool:
-Dict[position, List[projection]] - players sorted by proj. points
-
-search space:
-Dict[Position, count] - starting with strictly max possible of each using flex
-
-gen all rosters using those params, filter down to possible with salary cap
-
-"""
+# player pool:
+# Dict[position, List[projection]] - players sorted by proj. points
+#
+# search space:
+# Dict[Position, count] - starting with strictly max possible of each using flex
+#
+# gen all rosters using those params, filter down to possible with salary cap
 
 LOGGER = logging.getLogger('optimize.dfs_lineup')
 
@@ -177,7 +172,7 @@ def _all_lineups(pool: PlayerPool,
                  slots: Dict[FootballSlot, int]) -> List[Lineup]:
     if sum(slots.values()) == 0:
         return [Lineup(candidate)]
-    next_slot, count_left = next(filter(lambda i: i[1] > 0, slots.items()))
+    next_slot, _ = next(filter(lambda i: i[1] > 0, slots.items()))
     new_lineups = []
     for player in filter(lambda p: p not in candidate, pool.players_for_slot(next_slot)):
         new_candidate = candidate.copy()
