@@ -62,8 +62,8 @@ def replacement_level(
             count = count + 0.1
         if pos == FootballPosition.TIGHT_END:
             count = count - 0.2
-        if pos == FootballPosition.QUARTER_BACK:
-            count = count
+        # if pos == FootballPosition.QUARTER_BACK:
+        #     count = count
         replacement[pos] = ceil(count * team_count)
 
     return replacement
