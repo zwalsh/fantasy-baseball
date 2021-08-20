@@ -41,10 +41,10 @@ def optimize_lineup(espn, fangraphs, notifier):
 
     hitter_projections = fangraphs.hitter_projections()
     possibles = possible_lineup_totals(lineup, l_settings, hitter_projections)
-    best_pa = best_for_stat(lineup, possibles, ScoringSetting(BaseballStat.PA, False))
+    best_pa = best_for_stat(lineup, possibles, ScoringSetting(BaseballStat.PA, False, 0.0))
     threshold = best_pa.stats.value_for_stat(BaseballStat.PA) * 0.95
     candidates = above_threshold_for_stat(
-        possibles, ScoringSetting(BaseballStat.PA, False), threshold
+        possibles, ScoringSetting(BaseballStat.PA, False, 0.0), threshold
     )
 
     num_candidates = len(candidates)
@@ -53,7 +53,7 @@ def optimize_lineup(espn, fangraphs, notifier):
     )
     best_list = best_lineups(lineup, candidates, hitting_settings)
     most_pas_from_best = best_for_stat(
-        lineup, best_list, ScoringSetting(BaseballStat.PA, False)
+        lineup, best_list, ScoringSetting(BaseballStat.PA, False, 0.0)
     )
     LOGGER.info(f"Using lineup {most_pas_from_best.lineup}")
 

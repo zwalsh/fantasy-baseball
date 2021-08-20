@@ -75,6 +75,18 @@ class FantasySPApi:
                 stat = FantasySPApi.td_class_to_stat.get(cls)
                 if stat:
                     s.stat_dict[stat] = float(td.text)
+        ft_pct = s.stat_dict[BasketballStat.FTPCT]
+        if ft_pct > 0.0001:
+            s.stat_dict[BasketballStat.FTA] = s.stat_dict[BasketballStat.FTM] / ft_pct * 100
+
+        fg_pct = s.stat_dict[BasketballStat.FGPCT]
+        if fg_pct > 0.0001:
+            points_from_twos = s.stat_dict[BasketballStat.POINTS] - \
+                               3 * s.stat_dict[BasketballStat.THREES] - \
+                               s.stat_dict[BasketballStat.FTM]
+            twos = points_from_twos / 2
+            fg_made = twos + s.stat_dict[BasketballStat.THREES]
+            s.stat_dict[BasketballStat.FGA] = fg_made / fg_pct * 100
         return PlayerProjection(name, s)
 
 

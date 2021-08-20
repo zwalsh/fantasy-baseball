@@ -2,6 +2,7 @@ import json
 import logging
 import time
 from abc import abstractmethod, ABCMeta
+from typing import Dict
 
 import requests
 
@@ -63,7 +64,7 @@ class EspnApi(metaclass=ABCMeta):
         return self._scoring_period_info_url(self.scoring_period())
 
     def _espn_request(
-        self, method, url, payload, headers=None, check_cache=True, retries=1
+            self, method, url, payload, headers=None, check_cache=True, retries=1
     ):
         if check_cache and url in self.cache.keys():
             return self.cache.get(url)
@@ -298,8 +299,8 @@ class EspnApi(metaclass=ABCMeta):
             stats_dict = next(
                 filter(
                     lambda d: d["scoringPeriodId"] == scoring_period_id
-                    and d["statSourceId"] == 0
-                    and d["statSplitTypeId"] == 5,
+                              and d["statSourceId"] == 0
+                              and d["statSplitTypeId"] == 5,
                     entry_stats_list,
                 ),
                 None,
@@ -325,14 +326,50 @@ class EspnApi(metaclass=ABCMeta):
             team_to_stats[t["id"]] = stats
         return team_to_stats
 
+    def _season_stats_from_player_stats_array(self, player_stats) -> Dict[int, Stats]:
+        # for stat_dict in player_stats:
+        #     LOGGER.info(f"source: {stat_dict['statSourceId']}")
+        #     LOGGER.info(f"split: {stat_dict['statSplitTypeId']}")
+        #     LOGGER.info(f"scoringPd: {stat_dict['scoringPeriodId']}")
+
+        relevant_stats = filter(lambda s: s["statSourceId"] == 0
+                                          and s["statSplitTypeId"] == 1
+                                          and s["seasonId"] == self.year, player_stats)
+        return {stat_dict["scoringPeriodId"]: self.create_stats(stat_dict["stats"]) for stat_dict
+                in relevant_stats}
+
+    def player_stats(self) -> Dict[Player, Dict[int, Stats]]:
+        """
+        Return all players' stats in all scoring periods.
+
+        Expensive! Requires a separate HTTP request for each individual player.
+        :return dict: Dictionary mapping player to all of their stats, keyed by scoring period
+        """
+        player_stats = {}
+        players = self._all_players()
+        LOGGER.info(f"Parsing stats for {len(players)} players")
+        for player_obj in players:
+            try:
+                full_player_obj = self._player_request(player_obj["id"])
+                player = self.roster_entry_to_player(full_player_obj)
+                player_stats[player] = self._season_stats_from_player_stats_array(
+                    full_player_obj["stats"])
+            except ValueError:
+                LOGGER.error(f"Could not parse player from {player_obj['player']}")
+        return player_stats
+
     def scoring_settings(self):
         info = self.all_info().json()
         scoring_items = info["settings"]["scoringSettings"]["scoringItems"]
         return list(map(self._json_to_scoring_setting, scoring_items))
 
+    def points_per_stat(self):
+        return {setting.stat: setting.points for setting in self.scoring_settings()}
+
     def _json_to_scoring_setting(self, item):
         stat = self._stat_enum().espn_stat_to_stat(item["statId"])
-        return ScoringSetting(stat, item["isReverseItem"])
+        points = item["pointsOverrides"].get(16, item["points"])
+        return ScoringSetting(stat, item["isReverseItem"], points)
 
     def _player_url(self):
         return f"{self._base_url()}?view=kona_playercard"
@@ -347,13 +384,41 @@ class EspnApi(metaclass=ABCMeta):
         :param int player_id: the id of the player to make the request about
         :return dict: the parsed response from ESPN
         """
-        filter_header = {"players": {"filterIds": {"value": [player_id]}}}
+        filter_header = {
+            "players": {
+                "filterIds": {"value": [player_id]},
+                "filterStatsForTopScoringPeriodIds": {
+                    "value": 16,
+                    "additionalValue": ["002020", "102020",
+                                        "002019", "1120207",
+                                        "022020"]
+                }
+            }
+        }
         resp = self._espn_get(
             self._player_url(),
             {"X-Fantasy-Filter": json.dumps(filter_header)},
             check_cache=False,
         )
         return resp.json()["players"][0]["player"]
+
+    def _all_players(self):
+        filter_header = {
+            "players": {
+                "limit": 300,
+                "sortPercOwned": {
+                    "sortPriority": 2,
+                    "sortAsc": False
+                }
+            }
+        }
+        resp = self._espn_get(
+            self._player_url(),
+            {"X-Fantasy-Filter": json.dumps(filter_header)},
+            check_cache=False,
+        )
+        players_json_array = resp.json()["players"]
+        return players_json_array
 
     def player(self, player_id):
         """
@@ -365,16 +430,15 @@ class EspnApi(metaclass=ABCMeta):
         return self.roster_entry_to_player(self._player_request(player_id))
 
     def all_players_sorted(self):
-        resp = self._espn_get(self._all_players_url())
-        players_json_array = resp.json()["players"]
+        players_json_array = self._all_players()
         players_list = list(
             map(
                 lambda p: (
                     p["player"],
                     p.get("player", {})
-                    .get("draftRanksByRankType", {})
-                    .get("STANDARD", {})
-                    .get("rank", 9999),
+                        .get("draftRanksByRankType", {})
+                        .get("STANDARD", {})
+                        .get("rank", 9999),
                 ),
                 players_json_array,
             )

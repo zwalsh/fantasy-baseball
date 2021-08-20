@@ -24,7 +24,7 @@ class BasketballApi(EspnApi):
             """
             Builds a BaseballApi instance, creating the EspnSessionProvider objects under the hood
             """
-            self.__year = 2020
+            self.__year = 2021
             self.__username = ""
             self.__password = ""
             self.__league_id = 0

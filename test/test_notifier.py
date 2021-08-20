@@ -41,7 +41,7 @@ class Test(unittest.TestCase):
         team = "Team1"
         ts = [self.t1, self.t2]
 
-        n.notify_set_lineup(team, self.lt1, ts, [ScoringSetting(BaseballStat.H, False)])
+        n.notify_set_lineup(team, self.lt1, ts, [ScoringSetting(BaseballStat.H, False, 0.0)])
 
         msg = team + ": 50.00PA\n10.00H "
         for t in ts:
@@ -60,7 +60,7 @@ class Test(unittest.TestCase):
         ts = [self.t1, self.t2]
 
         n.notify_set_lineup(
-            team, self.lt1, ts, [ScoringSetting(BaseballStat.WHIP, True)]
+            team, self.lt1, ts, [ScoringSetting(BaseballStat.WHIP, True, 0.0)]
         )
 
         expected = team + ": 50.00PA\n"

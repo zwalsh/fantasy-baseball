@@ -132,11 +132,11 @@ def restricted_pool(pool: PlayerPool,
 
 
 starting_space = {
-    FootballPosition.QUARTER_BACK: 12,
-    FootballPosition.RUNNING_BACK: 10,
+    FootballPosition.QUARTER_BACK: 2,
+    FootballPosition.RUNNING_BACK: 4,
     FootballPosition.WIDE_RECEIVER: 5,
-    FootballPosition.TIGHT_END: 3,
-    FootballPosition.DEFENSE: 3
+    FootballPosition.TIGHT_END: 2,
+    FootballPosition.DEFENSE: 4
 }
 
 
@@ -153,6 +153,7 @@ def best_lineup(pool: PlayerPool, slots: Dict[FootballSlot, int], salary: int) -
         slots_with_player[slot] -= 1
         lineups = valid_lineups(small_pool, slots_with_player, salary, {player})
     lineups.sort(key=lambda l: l.total_points(), reverse=True)
+    LOGGER.info(f"Found {len(lineups)} possible lineups.")
     return lineups[0]
 
 

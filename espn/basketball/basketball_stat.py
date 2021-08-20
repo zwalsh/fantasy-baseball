@@ -48,6 +48,7 @@ class BasketballStat(Enum):
             2: BasketballStat.STEALS,
             3: BasketballStat.ASSISTS,
             6: BasketballStat.REBOUNDS,
+            11: BasketballStat.TURNOVERS,
             13: BasketballStat.FGM,
             14: BasketballStat.FGA,
             15: BasketballStat.FTM,
