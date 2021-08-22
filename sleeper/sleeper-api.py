@@ -150,7 +150,7 @@ class SleeperApi:
         try:
             response = self.gql_client.execute(request_gql)
         except HTTPError as e:
-            LOGGER.error("Failed to update draft queue with error", e)
+            LOGGER.error("Failed to update draft queue with error", exc_info=e)
             raise e
 
         return response
