@@ -9,6 +9,12 @@ pipeline {
                 setBuildStatus('pending')
             }
         }
+        stage('pip') {
+            steps {
+                sh 'pip install -r requirements.txt'
+                sh 'pip install -r requirements-test.txt'
+            }
+        }
         stage('test') {
             steps {
                 sh 'python3.8 -m xmlrunner -o test-reports'
@@ -16,13 +22,13 @@ pipeline {
         }
         stage('lint-warnings-errors') {
             steps {
-                sh 'find . -type f -name "*.py" | xargs python3.8 -m pylint --rcfile=pylintrc --disable=R,C --output-format=junit | tee pylint-we.out'
+                sh 'find . -type f -name "*.py" | xargs -P 4 python3.8 -m pylint --rcfile=pylintrc --disable=R,C --output-format=junit | tee pylint-we.out'
                 sh 'exit ${PIPESTATUS[0]}'
             }
         }
         stage('lint-conventions-refactors') {
             steps {
-                sh 'find . -type f -name "*.py" | xargs python3.8 -m pylint --rcfile=pylintrc --fail-under=9'
+                sh 'find . -type f -name "*.py" | xargs -P 4 python3.8 -m pylint --rcfile=pylintrc --fail-under=9'
             }
         }
     }
