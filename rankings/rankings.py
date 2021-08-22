@@ -56,14 +56,14 @@ def replacement_level(
     for pos, count in avg_rostered_count.items():
         if pos == FootballPosition.RUNNING_BACK:
             count = (
-                count - 0.9
+                count - 0.75
             )  # adjusting based on new year w/ 10 teams but 1 fewer roster spot
         if pos == FootballPosition.WIDE_RECEIVER:
-            count = count + 0.1
+            count = count + 0.25
         if pos == FootballPosition.TIGHT_END:
             count = count - 0.2
-        # if pos == FootballPosition.QUARTER_BACK:
-        #     count = count
+        if pos == FootballPosition.QUARTER_BACK:
+            count = count - 0.1
         replacement[pos] = ceil(count * team_count)
 
     return replacement
@@ -75,7 +75,6 @@ OVERRIDES = {
     "Darrell Henderson": "Darrell Henderson Jr.",
     "Travis Etienne": "Travis Etienne Jr.",
     "D.K. Metcalf": "DK Metcalf",
-    "D.J. Moore": "DJ Moore",
     "D.J. Chark Jr.": "DJ Chark Jr.",
     "Will Fuller V": "William Fuller V",
     "Keelan Cole Sr.": "Keelan Cole",

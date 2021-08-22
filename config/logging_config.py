@@ -43,6 +43,7 @@ DEV_LOGGING = {
         "optimize.dfs_lineup": {},
         "fantasysp.api": {},
         "rankings.rankings": {},
+        "sleeper.api": {},
         "tasks.set_lineup": {},
         "tasks.notify_new_trades": {},
         "tasks.check_fangraphs": {},
