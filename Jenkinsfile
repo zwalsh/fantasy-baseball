@@ -11,8 +11,8 @@ pipeline {
         }
         stage('pip') {
             steps {
-                sh 'pip3 install -r requirements.txt'
-                sh 'pip3 install -r requirements-test.txt'
+                sh 'python3.8 -m pip install -r requirements.txt'
+                sh 'python3.8 -m pip install -r requirements-test.txt'
             }
         }
         stage('test') {
