@@ -1,48 +1,55 @@
 import logging
 
 from functools import reduce
+from typing import Dict
 
+from espn.basketball.basketball_api import BasketballApi
 from espn.basketball.basketball_slot import BasketballSlot
+from fantasysp.api import FantasySPApi
 
 LOGGER = logging.getLogger("optimize.optimize_fp")
 
 
-def optimize_fp(espn, fantasysp, notifier):
+def player_to_fp(fantasysp: FantasySPApi, espn: BasketballApi) -> Dict[str, float]:
+    """
+    Returns a map from name to points for each player based on the fantasy sports api.
+
+    Currently, FantasySPApi is behind a paywall :( refactoring in case it comes back
+    """
+    projections = fantasysp.players()
+    points_map = espn.points_per_stat()
+    return {player_proj.name: stats_to_fp(player_proj.stats, points_map)
+            for player_proj in projections}
+
+
+def optimize_fp(espn, player_to_points: Dict[str, float], notifier):
     """
     Set the lineup that will maximize fantasy points.
     :param EspnApi espn: access to espn
-    :param FantasySPApi fantasysp: access to FantasySP
+    :param player_to_points: the number of fantasy points each player is projected to get
     :param Notifier notifier: notifier for taking action
     """
 
-    points_map = espn.points_per_stat()
     cur_lineup = espn.lineup()
-    projections = fantasysp.players()
-    LOGGER.info(f"num projections: {len(projections)}")
+    LOGGER.info(f"num projections: {len(player_to_points)}")
 
     poss_lineups = cur_lineup.possible_lineups(
         espn.lineup_settings(), BasketballSlot.starting_slots()
     )
 
-    player_to_proj = dict()
     for player in cur_lineup.players():
-        projection = find_projection(projections, player.name)
+        projection = player_to_points.get(player.name)
         if projection is None:
             LOGGER.warning(f"No projection for {player.name}")
         else:
-            LOGGER.info(
-                f"Projection for {player.name:<30}{stats_to_fp(projection.stats, points_map)}"
-            )
-        player_to_proj[player.name] = (
-            projection.stats if projection is not None else None
-        )
+            LOGGER.info(f"Projection for {player.name:<30}{projection}")
 
     # min/max least transitions, most points
     cur_max_points = 0.0
     cur_least_transitions = 0
     cur_best_lineup = cur_lineup
     for l in poss_lineups:
-        fp = total_fp_given_starters(player_to_proj, l.starters(), points_map)
+        fp = total_fp_given_starters(player_to_points, l.starters())
         if cur_max_points + 0.1 > fp > cur_max_points - 0.1:
             num_transitions = len(cur_lineup.transitions(l))
             if num_transitions < cur_least_transitions:
@@ -54,13 +61,12 @@ def optimize_fp(espn, fantasysp, notifier):
             cur_least_transitions = len(cur_lineup.transitions(l))
             cur_max_points = fp
 
-    total_points = total_fp_given_starters(player_to_proj, cur_best_lineup.starters(), points_map)
+    total_points = total_fp_given_starters(player_to_points, cur_best_lineup.starters())
     LOGGER.info(f"Best lineup: {cur_best_lineup}, fp: {total_points}")
 
     transitions = cur_lineup.transitions(cur_best_lineup)
-    player_to_fp = {name: stats_to_fp(stats, points_map) for name, stats in player_to_proj.items()}
     notifier.notify_set_fba_lineup(
-        espn.team_name(), transitions, total_points, player_to_fp
+        espn.team_name(), transitions, total_points, player_to_points
     )
     try:
         if len(transitions) > 0:
@@ -71,16 +77,14 @@ def optimize_fp(espn, fantasysp, notifier):
         raise e
 
 
-def total_fp_given_starters(projections, starters, points_map):
+def total_fp_given_starters(projections, starters):
     """
     Returns the number of fantasy points given the set of starters
     :param dict projections: map of player name to projected fantasy points
     :param set starters: set of starters
-    :param dict points_map: points per basketball stat
-    :return float: number of fantasy points
     """
     return reduce(
-        lambda so_far, starter: so_far + stats_to_fp(projections.get(starter.name), points_map),
+        lambda so_far, starter: so_far + projections.get(starter.name, 0.0),
         starters,
         0.0,
     )
