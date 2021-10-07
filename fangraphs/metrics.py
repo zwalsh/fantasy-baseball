@@ -17,7 +17,7 @@ class FangraphsMetrics:
         updated = Path("fangraphs/updated.txt")
         if not (updated.exists() and updated.is_file()):
             LOGGER.info("last update file does not exist, creating it now")
-            f = updated.open("w+")
+            f = updated.open("w+", encoding="UTF-8")
             f.close()
         return updated
 
@@ -29,7 +29,7 @@ class FangraphsMetrics:
         :return datetime: the datetime of the last update, or None if there have been none recorded
         """
         f = FangraphsMetrics.last_update_file()
-        text = f.read_text()
+        text = f.read_text(encoding="UTF-8")
         lines = text.splitlines()
         if len(lines) == 0:
             return None
@@ -44,5 +44,5 @@ class FangraphsMetrics:
         """
         f = FangraphsMetrics.last_update_file()
         LOGGER.info(f"writing Fangraphs projections update {update} to disk")
-        fo = f.open("a")
+        fo = f.open("a", encoding="UTF-8")
         fo.write(str(update) + "\n")
