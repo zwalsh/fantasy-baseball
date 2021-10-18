@@ -1,7 +1,7 @@
 # Generate pre-draft rankings based on value above replacement level
 import logging
 from datetime import date
-from math import ceil
+from math import ceil, floor
 from pathlib import Path
 from typing import Dict, List
 
@@ -56,14 +56,14 @@ def replacement_level(
     for pos, count in avg_rostered_count.items():
         if pos == FootballPosition.RUNNING_BACK:
             count = (
-                count - 0.75
+                count - 1.1
             )  # adjusting based on new year w/ 10 teams but 1 fewer roster spot
         if pos == FootballPosition.WIDE_RECEIVER:
-            count = count + 0.25
+            count = count + 0.2
         if pos == FootballPosition.TIGHT_END:
-            count = count - 0.2
-        if pos == FootballPosition.QUARTER_BACK:
             count = count - 0.1
+        # if pos == FootballPosition.QUARTER_BACK:
+        #     count = count
         replacement[pos] = ceil(count * team_count)
 
     return replacement
@@ -188,6 +188,13 @@ def rank_all_players(
     avg_count = load_from_cache(
         avg_count_cache, lambda: roster_count_of_all_lineups(last_year)
     )
+    # avg_count = {
+    #     FootballPosition.QUARTER_BACK: 1.2,
+    #     FootballPosition.RUNNING_BACK: 6.0,
+    #     FootballPosition.WIDE_RECEIVER: 6.0,
+    #     FootballPosition.TIGHT_END: 1.2,
+    #     FootballPosition.DEFENSE: 1.0
+    # }
     replacement_rank = replacement_level(avg_count, 10)
     projections = projections_by_player(football, fantasy_pros)
 
@@ -200,13 +207,17 @@ def rank_all_players(
 
     LOGGER.info("RNK PRNK PLAYER                   VALUE POINTS")
     for rank, (player, value) in list(enumerate(sorted_by_value))[:200]:
+        # if player.default_position != FootballPosition.WIDE_RECEIVER:
+        #     continue
         position_rankings = enumerate(
             map(lambda tup: tup[0], ranked_by_pos[player.default_position])
         )
         player_rank_at_position = (
             next(p_rank for (p_rank, p) in position_rankings if p == player) + 1
         )
+        value_bars = int(int(floor(value)) / 10)
+        value_str = "|" * value_bars
         LOGGER.info(
-            f"{rank + 1:<3} {player.default_position}{player_rank_at_position:<2} {player.name:<24} {value:5.1f} {projections[player]:5.1f}"
+            f"{rank + 1:<3} {player.default_position}{player_rank_at_position:<2} {player.name:<24} {value:5.1f} {projections[player]:5.1f} {value_str}"
         )
     return list(map(lambda tup: tup[0], sorted_by_value))
