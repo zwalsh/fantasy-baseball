@@ -51,4 +51,4 @@ class SetFbaLineup(Task):
         password = password_reader.password(username, Path.cwd() / "config/passwords")
         configs = team_reader.all_teams(Path.cwd() / "config/team_configs/basketball")
         notifier = notifier_config.current_notifier(username)
-        return SetFbaLineup(username, password, configs, notifier, FantasySPApi())
+        return SetFbaLineup(username, password, configs, notifier, FantasySPApi(), NumberFireApi())
