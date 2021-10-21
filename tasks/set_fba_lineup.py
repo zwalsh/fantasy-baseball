@@ -40,8 +40,7 @@ class SetFbaLineup(Task):
                     .build()
             )
             if USE_NF:
-                nf_projections = self.numberfire.projections()
-                player_to_points = {pp.name: pp.fp for pp in nf_projections}
+                player_to_points = self.numberfire.player_to_points()
             else:
                 player_to_points = player_to_fp(self.fantasysp, espn)
             optimize_fp(espn, player_to_points, self.notifier)

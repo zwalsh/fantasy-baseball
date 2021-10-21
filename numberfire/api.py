@@ -1,7 +1,7 @@
 import logging
 
 import time
-from typing import List
+from typing import List, Dict
 
 import requests
 from bs4 import BeautifulSoup
@@ -28,6 +28,12 @@ class PlayerProjection:
         )
 
 
+# Maps names as returned from numberfire to the espn equivalent
+NF_NAMES_TO_ESPN_NAMES = {
+    'C.J. McCollum': 'CJ McCollum'
+}
+
+
 class NumberFireApi:
     def page(self):
         """
@@ -47,7 +53,7 @@ class NumberFireApi:
         return next(
             filter(
                 lambda tbody: tbody.has_attr("class")
-                and "stat-table__body" in tbody["class"],
+                              and "stat-table__body" in tbody["class"],
                 table_bodies,
             )
         )
@@ -83,3 +89,9 @@ class NumberFireApi:
                 NumberFireApi.row_to_projection, self.projections_table().find_all("tr")
             )
         )
+
+    def player_to_points(self) -> Dict[str, float]:
+        return {
+            NF_NAMES_TO_ESPN_NAMES.get(projection.name, projection.name): projection.fp
+            for projection in self.projections()
+        }
