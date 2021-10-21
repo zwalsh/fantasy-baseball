@@ -2,6 +2,7 @@ import unittest
 
 from espn.baseball.baseball_slot import BaseballSlot
 from espn.baseball.baseball_position import BaseballPosition
+from espn.basketball.basketball_slot import BasketballSlot
 from player import Player
 
 
@@ -155,6 +156,15 @@ class PlayerTest(unittest.TestCase):
             BaseballSlot.CORNER_INFIELD,
         },
         None,
+    )
+
+    lebron = Player(
+        "Lebron James",
+        "Lebron",
+        "James",
+        1111,
+        {BasketballSlot.POWER_FORWARD, BasketballSlot.SMALL_FORWARD, BasketballSlot.POINT_GUARD},
+        BasketballSlot.POINT_GUARD
     )
 
     def test_can_play(self):

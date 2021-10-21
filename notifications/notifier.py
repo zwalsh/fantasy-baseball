@@ -25,7 +25,7 @@ class Notifier:
             msg += (
                 "\n"
                 + self.transition_message(tr)
-                + f" ({player_to_fp.get(tr.player.name):.1f})"
+                + f" ({player_to_fp.get(tr.player.name, 0):.1f})"
             )
         self.client.send_message(msg)
 
