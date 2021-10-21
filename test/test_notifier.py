@@ -2,6 +2,7 @@ import unittest
 
 from espn.baseball.baseball_slot import BaseballSlot
 from espn.baseball.baseball_stat import BaseballStat
+from espn.basketball.basketball_slot import BasketballSlot
 from lineup_transition import LineupTransition
 from notifications.notifier import Notifier
 from scoring_setting import ScoringSetting
@@ -71,3 +72,18 @@ class Test(unittest.TestCase):
 
         self.assertEqual(expected, msg_rec)
         self.assertEqual(None, url_rec)
+
+    def test_notify_when_no_projection(self):
+        mock_client = MockClient()
+        n = Notifier(mock_client)
+
+        n.notify_set_fba_lineup(
+            team_name="name",
+            transitions=[
+                LineupTransition(PlayerTest.lebron, BasketballSlot.POINT_GUARD, BaseballSlot.BENCH)
+            ],
+            total_points=123.0,
+            player_to_fp={} # no projection for lebron
+        )
+
+        self.assertEqual(mock_client.messages[0][0],"name: 123.0 points\nJames: PG->BE (0.0)")
