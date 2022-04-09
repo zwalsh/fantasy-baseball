@@ -43,6 +43,7 @@ DEV_LOGGING = {
         "optimize.dfs_lineup": {},
         "fantasysp.api": {},
         "rankings.rankings": {},
+        "rankings.baseball": {},
         "sleeper.api": {},
         "tasks.set_lineup": {},
         "tasks.notify_new_trades": {},
@@ -50,6 +51,7 @@ DEV_LOGGING = {
         "tasks.archive_daily_stats": {},
         "tasks.archive_year_stats": {},
         "tasks.set_fba_lineup": {},
+        "tasks.set_predraft_rankings": {},
     },
 }
 
