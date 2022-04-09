@@ -3,9 +3,7 @@ from pathlib import Path
 
 from config import team_reader, password_reader, notifier_config
 from espn.baseball.baseball_api import BaseballApi
-from fangraphs.api import FangraphsApi
 from fantasypros.api import FantasyProsApi
-from optimize.lineup_optimizer import optimize_lineup
 from rankings.baseball import set_predraft_rankings
 from tasks.task import Task
 
@@ -16,7 +14,8 @@ class SetPredraftRankings(Task):
     """
     Use this once before the draft to import fantasypros rankings into ESPN
     """
-    def __init__(self, username, password, configs, notifier, fantasypros):
+
+    def __init__(self, username, password, configs, fantasypros):
         super().__init__(username)
         self.password = password
         self.configs = configs
@@ -30,11 +29,11 @@ class SetPredraftRankings(Task):
 
             espn = (
                 BaseballApi.Builder()
-                .username(self.username)
-                .password(self.password)
-                .league_id(team_config.league_id)
-                .team_id(team_config.team_id)
-                .build()
+                    .username(self.username)
+                    .password(self.password)
+                    .league_id(team_config.league_id)
+                    .team_id(team_config.team_id)
+                    .build()
             )
             set_predraft_rankings(self.fantasypros, espn)
 
@@ -42,5 +41,4 @@ class SetPredraftRankings(Task):
     def create(username):
         password = password_reader.password(username, Path.cwd() / "config/passwords")
         configs = team_reader.all_teams(Path.cwd() / "config/team_configs/baseball")
-        notifier = notifier_config.current_notifier(username)
-        return SetPredraftRankings(username, password, configs, notifier, FantasyProsApi())
+        return SetPredraftRankings(username, password, configs, FantasyProsApi())
