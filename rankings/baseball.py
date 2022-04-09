@@ -24,9 +24,7 @@ def set_predraft_rankings(fantasypros: FantasyProsApi, baseball: BaseballApi):
 
 OVERRIDDEN_NAMES = {
     'Cedric Mullins II': 'Cedric Mullins',
-    # 'Ramon Laureano':
     'Kike Hernandez': 'Enrique Hernandez',
-    'Wil Myers': '',
 }
 
 
