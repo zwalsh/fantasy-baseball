@@ -1,11 +1,15 @@
 import logging
 
 import time
+from datetime import date
+from pathlib import Path
 from typing import List, Dict
 
 import requests
 from bs4 import BeautifulSoup
 
+from dump import load_from_cache
+from espn.baseball.baseball_stat import BaseballStat
 from stats import Stats
 
 LOGGER = logging.getLogger("numberfire.api")
@@ -38,17 +42,41 @@ NF_NAMES_TO_ESPN_NAMES = {
 
 class NumberFireApi:
 
-    @staticmethod
-    def _page(projections_url):
+    def __init__(self):
+        self._cache_dir = Path("cache/numberfire/")
+        # use a session to store cookies that affect the returned projections
+        self._session = requests.Session()
+        if not self._cache_dir.exists():
+            self._cache_dir.mkdir()
+
+    def _cache_key(self, sport):
+        today = date.today()
+        date_string = str(today)
+        sport_dir = self._cache_dir / sport
+        if not sport_dir.exists():
+            sport_dir.mkdir()
+        return sport_dir / f"{date_string}.p"
+
+    def _page(self, projections_url):
         """
         Gets the daily fantasy projections page from NumberFire
         :return BeautifulSoup: the html on the page
         """
         start_time = time.time()
         LOGGER.info("Fetching daily projections page from Numberfire")
-        r = requests.get(projections_url)
+
+        extra_cookies = {
+            'cache-control': 'max-age=0'
+        }
+        r = self._session.get(projections_url, cookies=extra_cookies)
         LOGGER.info(f"Finished after {time.time() - start_time:.3f} seconds")
         return BeautifulSoup(r.content)
+
+    def _set_slate(self):
+        form_data = {
+            'slate_id': 260779  # "All Day" slate on numberfire, as opposed to limited slates
+        }
+        self._session.post("https://www.numberfire.com/mlb/daily-fantasy/set-slate", data=form_data)
 
     @staticmethod
     def _projections_table(page):
@@ -74,6 +102,34 @@ class NumberFireApi:
         blk = NumberFireApi.find_with_class(tds, "blk")
         to = NumberFireApi.find_with_class(tds, "to")
         return PlayerProjection(name, fp, mins, pts, reb, ast, stl, blk, to)
+
+    @staticmethod
+    def row_to_projection_baseball(row) -> (str, Stats):
+        links = row.find_all("a")
+        tds = row.find_all("td")
+        name = NumberFireApi.find_with_class(links, "full")
+
+        plate_appearances = float(NumberFireApi.find_with_class(tds, "pa"))
+        walks = float(NumberFireApi.find_with_class(tds, "bb"))
+        singles = float(NumberFireApi.find_with_class(tds, "1b"))
+        doubles = float(NumberFireApi.find_with_class(tds, "2b"))
+        triples = float(NumberFireApi.find_with_class(tds, "3b"))
+        homers = float(NumberFireApi.find_with_class(tds, "hr"))
+        hits = singles + doubles + triples + homers
+        at_bats = plate_appearances - walks
+
+        projection_dict = {
+            BaseballStat.PA: plate_appearances,
+            BaseballStat.BB: walks,
+            BaseballStat.AB: at_bats,
+            BaseballStat.H: hits,
+            BaseballStat.HR: homers,
+            BaseballStat.R: float(NumberFireApi.find_with_class(tds, "r")),
+            BaseballStat.RBI: float(NumberFireApi.find_with_class(tds, "rbi")),
+            BaseballStat.SB: float(NumberFireApi.find_with_class(tds, "sb"))
+        }
+
+        return name, Stats(projection_dict, BaseballStat)
 
     @staticmethod
     def find_with_class(elt, target_class):
@@ -102,4 +158,18 @@ class NumberFireApi:
         }
 
     def baseball_hitter_projections(self) -> Dict[str, Stats]:
-        return dict()
+        baseball_url = "https://www.numberfire.com/mlb/daily-fantasy/daily-baseball-projections/batters"
+
+        def projections_fn():
+            self._set_slate()
+            projections_rows = self._projections_table(self._page(baseball_url)).find_all("tr")
+            return {
+                name: stats for name, stats in
+                map(NumberFireApi.row_to_projection_baseball, projections_rows)
+            }
+
+        projections = load_from_cache(
+            self._cache_key("baseball"),
+            projections_fn
+        )
+        return projections

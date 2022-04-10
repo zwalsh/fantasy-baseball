@@ -132,7 +132,7 @@ class Lineup:
         return frozenset(self.player_dict.get(self.slot_enum.BENCH, []))
 
     def injured(self):
-        return frozenset(self.player_dict[self.slot_enum.INJURED])
+        return frozenset(self.player_dict.get(self.slot_enum.INJURED, []))
 
     def transitions(self, to_lineup):
         """
