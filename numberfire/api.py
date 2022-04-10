@@ -6,6 +6,8 @@ from typing import List, Dict
 import requests
 from bs4 import BeautifulSoup
 
+from stats import Stats
+
 LOGGER = logging.getLogger("numberfire.api")
 
 
@@ -35,31 +37,31 @@ NF_NAMES_TO_ESPN_NAMES = {
 
 
 class NumberFireApi:
-    def page(self):
+
+    @staticmethod
+    def _page(projections_url):
         """
         Gets the daily fantasy projections page from NumberFire
         :return BeautifulSoup: the html on the page
         """
         start_time = time.time()
         LOGGER.info("Fetching daily projections page from Numberfire")
-        r = requests.get(
-            "http://www.numberfire.com/nba/fantasy/full-fantasy-basketball-projections"
-        )
+        r = requests.get(projections_url)
         LOGGER.info(f"Finished after {time.time() - start_time:.3f} seconds")
         return BeautifulSoup(r.content)
 
-    def projections_table(self):
-        table_bodies = self.page().find_all("tbody")
+    @staticmethod
+    def _projections_table(page):
+        table_bodies = page.find_all("tbody")
         return next(
             filter(
-                lambda tbody: tbody.has_attr("class")
-                              and "stat-table__body" in tbody["class"],
+                lambda tbody: tbody.has_attr("class") and "stat-table__body" in tbody["class"],
                 table_bodies,
             )
         )
 
     @staticmethod
-    def row_to_projection(row):
+    def row_to_projection_basketball(row):
         links = row.find_all("a")
         tds = row.find_all("td")
         name = NumberFireApi.find_with_class(links, "full")
@@ -84,9 +86,12 @@ class NumberFireApi:
         Returns a list of PlayerProjections for today's slate of games
         :return list: projections for each player with a game today
         """
+        basketball_url = "http://www.numberfire.com/nba/fantasy/full-fantasy-basketball-projections"
+        basketball_page = self._page(basketball_url)
         return list(
             map(
-                NumberFireApi.row_to_projection, self.projections_table().find_all("tr")
+                NumberFireApi.row_to_projection_basketball,
+                self._projections_table(basketball_page).find_all("tr")
             )
         )
 
@@ -95,3 +100,6 @@ class NumberFireApi:
             NF_NAMES_TO_ESPN_NAMES.get(projection.name, projection.name): projection.fp
             for projection in self.projections()
         }
+
+    def baseball_hitter_projections(self) -> Dict[str, Stats]:
+        return dict()
