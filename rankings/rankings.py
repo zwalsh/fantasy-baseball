@@ -221,3 +221,5 @@ def rank_all_players(
             f"{rank + 1:<3} {player.default_position}{player_rank_at_position:<2} {player.name:<24} {value:5.1f} {projections[player]:5.1f} {value_str}"
         )
     return list(map(lambda tup: tup[0], sorted_by_value))
+
+

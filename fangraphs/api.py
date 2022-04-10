@@ -11,6 +11,9 @@ LOGGER = logging.getLogger("fangraphs.api")
 
 
 class FangraphsApi:
+    """
+    Not useful anymore - they removed this page. 04-09-2022
+    """
     @staticmethod
     def hitter_projections():
         """

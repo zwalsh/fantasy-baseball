@@ -2,7 +2,7 @@ import logging
 import pickle
 from datetime import date
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 from requests_html import HTMLSession
 
@@ -34,7 +34,9 @@ class FantasyProsApi:
         return r.html
 
     def table_rows(self, url):
-        return self.page(url).find("#data", first=True).find("tr")
+        page = self.page(url)
+        data_table = page.find("tbody", first=True)
+        return data_table.find("tr")
 
     @staticmethod
     def name_from_row(row):
@@ -43,6 +45,13 @@ class FantasyProsApi:
             filter(lambda a: "player-name" in a.attrs.get("class", []), links), None
         )
         return player_name_link.text if player_name_link is not None else None
+
+    @staticmethod
+    def _rank_from_row(row) -> int:
+        # overall rank is in the third td element
+        cells = row.find("td")
+        rank_cell = cells[2]
+        return int(rank_cell.text) if rank_cell is not None and rank_cell.text != '' else None
 
     @staticmethod
     def hitter_stats_from_row(row):
@@ -118,6 +127,47 @@ class FantasyProsApi:
             "https://www.fantasypros.com/mlb/projections/pitchers.php",
             FantasyProsApi.pitcher_stats_from_row,
         )
+
+    def _hitter_draft_rankings(self):
+        return self._baseball_draft_rankings("https://www.fantasypros.com/mlb/rankings/hitters.php?eligibility=E")
+
+    def _pitcher_draft_rankings(self):
+        return self._baseball_draft_rankings("https://www.fantasypros.com/mlb/rankings/pitchers.php?eligibility=E")
+
+    def _baseball_draft_rankings(self, url) -> Dict[str, int]:
+        """
+
+        :return: map of name to overall rank
+        """
+        rows = self.table_rows(url)
+        rankings = filter(
+            lambda r: True,
+            rows
+        )
+
+        name_to_overall = dict()
+        for row in rankings:
+            player_name = self.name_from_row(row)
+            rank = self._rank_from_row(row)
+            if rank is not None:
+                name_to_overall[player_name] = rank
+
+        return name_to_overall
+
+    def baseball_draft_rankings(self) -> List[str]:
+        pitcher_rankings = self._pitcher_draft_rankings()
+        hitter_rankings = self._hitter_draft_rankings()
+
+        combined_rankings = {}
+        combined_rankings.update(pitcher_rankings)
+        combined_rankings.update(hitter_rankings)
+
+        top_300 = filter(lambda p: p[1] <= 300, combined_rankings.items())
+
+        top_300_sorted = sorted(list(top_300), key=lambda p: p[1])
+
+        return list(map(lambda p: p[0], top_300_sorted))
+
 
     def _qb_stats_for_row(self, row):
         cells = row.find("td")

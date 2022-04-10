@@ -36,7 +36,7 @@ def _draft_strategy_json(rankings: List[Player]):
 
 
 class EspnApi(metaclass=ABCMeta):
-    def __init__(self, session_provider, league_id, team_id, year=2021):
+    def __init__(self, session_provider, league_id, team_id, year=2022):
         """
         Programmatic access to ESPN's (undocumented) API, caching requests that do not need
         refreshing, and automatically fetching a token for the user/password combination.
@@ -430,7 +430,7 @@ class EspnApi(metaclass=ABCMeta):
     def _all_players(self):
         filter_header = {
             "players": {
-                "limit": 300,
+                "limit": 400,
                 "sortPercOwned": {"sortPriority": 2, "sortAsc": False},
             }
         }
@@ -468,6 +468,11 @@ class EspnApi(metaclass=ABCMeta):
         relevant_players = filter(lambda p: p[1] not in {0, 9999}, players_list)
         sorted_list = sorted(relevant_players, key=lambda tup: tup[1])
         return list(map(lambda tup: self.roster_entry_to_player(tup[0]), sorted_list))
+
+    def players_by_name(self) -> Dict[str, Player]:
+        players = self.all_players_sorted()
+        players_by_name = {p.name: p for p in players}
+        return players_by_name
 
     def league(self):
         """
