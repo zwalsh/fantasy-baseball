@@ -44,10 +44,11 @@ class NumberFireApi:
 
     def __init__(self):
         self._cache_dir = Path("cache/numberfire/")
-        # use a session to store cookies that affect the returned projections
-        self._session = requests.Session()
         if not self._cache_dir.exists():
             self._cache_dir.mkdir()
+
+        # use a session to store cookies that affect the returned projections
+        self._session = requests.Session()
 
     def _cache_key(self, sport):
         today = date.today()
@@ -64,11 +65,7 @@ class NumberFireApi:
         """
         start_time = time.time()
         LOGGER.info("Fetching daily projections page from Numberfire")
-
-        extra_cookies = {
-            'cache-control': 'max-age=0'
-        }
-        r = self._session.get(projections_url, cookies=extra_cookies)
+        r = self._session.get(projections_url)
         LOGGER.info(f"Finished after {time.time() - start_time:.3f} seconds")
         return BeautifulSoup(r.content)
 
