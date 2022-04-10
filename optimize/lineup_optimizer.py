@@ -1,26 +1,40 @@
 import logging
 import operator
+from typing import Dict
 
+from espn.baseball.baseball_api import BaseballApi
 from espn.baseball.baseball_position import BaseballPosition
 from espn.baseball.baseball_slot import BaseballSlot
 from espn.baseball.baseball_stat import BaseballStat
+from fangraphs.api import FangraphsApi
 from lineup_transition import LineupTransition
+from notifications.notifier import Notifier
+from numberfire.api import NumberFireApi
 from optimize.lineup_total import LineupTotal
 from scoring_setting import ScoringSetting
+from stats import Stats
 
-# first - log/notify number of lineups to choose from within 95% of max PA
-# then - choose best: first one to appear within some % of max of all categories
 
 LOGGER = logging.getLogger("optimize.optimizer")
 
 
-def optimize_lineup(espn, fangraphs, notifier):
+# first - log/notify number of lineups to choose from within 95% of max PA
+# then - choose best: first one to appear within some % of max of all categories
+def optimize_lineup(espn, fangraphs: FangraphsApi, notifier):
+    return optimize_lineup_from_projections(espn, fangraphs.hitter_projections(), notifier)
+
+
+def optimize_lineup_nf(espn: BaseballApi, nf: NumberFireApi, notifier: Notifier):
+    return optimize_lineup_from_projections(espn, nf.baseball_hitter_projections(), notifier)
+
+
+def optimize_lineup_from_projections(espn: BaseballApi, hitter_projections: Dict[str, Stats], notifier: Notifier):
     """
     Optimizes the lineup that is accessible from the given ESPN api object, with
     projections from the given Fangraphs api object. Notifies the notifier object
     of appropriate actions taken.
     :param EspnApi espn: API access to ESPN for a particular fantasy team
-    :param FangraphsApi fangraphs: API access to Fangraphs projections
+    :param hitter_projections: projected stats for all hitters, by name
     :param Notifier notifier: wrapper around a Notifier client
     """
     lineup = espn.lineup()
@@ -39,7 +53,6 @@ def optimize_lineup(espn, fangraphs, notifier):
         s_settings,
     )
 
-    hitter_projections = fangraphs.hitter_projections()
     possibles = possible_lineup_totals(lineup, l_settings, hitter_projections)
     best_pa = best_for_stat(lineup, possibles, ScoringSetting(BaseballStat.PA, False, 0.0))
     threshold = best_pa.stats.value_for_stat(BaseballStat.PA) * 0.95
