@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from config import team_reader, password_reader, notifier_config
+from config import team_reader, password_reader
 from espn.baseball.baseball_api import BaseballApi
 from fantasypros.api import FantasyProsApi
 from rankings.baseball import set_predraft_rankings
