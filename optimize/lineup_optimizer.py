@@ -9,6 +9,7 @@ from espn.baseball.baseball_stat import BaseballStat
 from fangraphs.api import FangraphsApi
 from lineup_transition import LineupTransition
 from notifications.notifier import Notifier
+from numberfire.api import NumberFireApi
 from optimize.lineup_total import LineupTotal
 from scoring_setting import ScoringSetting
 from stats import Stats
@@ -21,6 +22,10 @@ LOGGER = logging.getLogger("optimize.optimizer")
 # then - choose best: first one to appear within some % of max of all categories
 def optimize_lineup(espn, fangraphs: FangraphsApi, notifier):
     return optimize_lineup_from_projections(espn, fangraphs.hitter_projections(), notifier)
+
+
+def optimize_lineup_nf(espn: BaseballApi, nf: NumberFireApi, notifier: Notifier):
+    return optimize_lineup_from_projections(espn, nf.baseball_hitter_projections(), notifier)
 
 
 def optimize_lineup_from_projections(espn: BaseballApi, hitter_projections: Dict[str, Stats], notifier: Notifier):
