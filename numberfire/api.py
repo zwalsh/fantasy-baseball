@@ -50,6 +50,8 @@ class NumberFireApi:
         # use a session to store cookies that affect the returned projections
         self._session = requests.Session()
 
+    baseball_url = "https://www.numberfire.com/mlb/daily-fantasy/daily-baseball-projections/batters"
+
     def _cache_key(self, sport):
         today = date.today()
         date_string = str(today)
@@ -69,9 +71,23 @@ class NumberFireApi:
         LOGGER.info(f"Finished after {time.time() - start_time:.3f} seconds")
         return BeautifulSoup(r.content)
 
+    def _get_all_day_slate_id(self) -> int:
+        # NumberFire has "slates" of available players
+        # we want the 'All Day' slate, but...
+        # The slate id for the 'All Day' slate changes every day
+        list_items = self._page(self.baseball_url).find_all("li")
+        all_day_slate_item = next(
+            filter(
+                lambda li: li.text == "'All Day'",
+                list_items
+            )
+        )
+        return int(all_day_slate_item['data-value'])
+
     def _set_slate(self):
+        slate_id = self._get_all_day_slate_id()
         form_data = {
-            'slate_id': 260779  # "All Day" slate on numberfire, as opposed to limited slates
+            'slate_id': slate_id
         }
         self._session.post("https://www.numberfire.com/mlb/daily-fantasy/set-slate", data=form_data)
 
@@ -155,11 +171,9 @@ class NumberFireApi:
         }
 
     def baseball_hitter_projections(self) -> Dict[str, Stats]:
-        baseball_url = "https://www.numberfire.com/mlb/daily-fantasy/daily-baseball-projections/batters"
-
         def projections_fn():
             self._set_slate()
-            projections_rows = self._projections_table(self._page(baseball_url)).find_all("tr")
+            projections_rows = self._projections_table(self._page(self.baseball_url)).find_all("tr")
             return {
                 name: stats for name, stats in
                 map(NumberFireApi.row_to_projection_baseball, projections_rows)
