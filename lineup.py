@@ -30,8 +30,17 @@ class Lineup:
         :param set slots_to_fill: the slots to fill up with players
         :return set: set of lineups with all combinations of starters
         """
+
+        # don't use injured players to build possible lineups
+        possible_starters = list(
+            filter(
+                lambda p: p not in self.injured(),
+                self.players()
+            )
+        )
+
         initial_node = LineupSearchNode(
-            Lineup(dict(), self.slot_enum), self.players(), slots_to_fill
+            Lineup(dict(), self.slot_enum), possible_starters, slots_to_fill
         )
         # stack of nodes representing the frontier of the search graph
         frontier = [initial_node]
@@ -154,9 +163,9 @@ class Lineup:
                         self.slot_enum.BENCH,
                     )
                     if slot not in (
-                        to_slot,
-                        BaseballSlot.PITCHER,
-                        BaseballSlot.INJURED,
+                            to_slot,
+                            BaseballSlot.PITCHER,
+                            BaseballSlot.INJURED,
                     ):
                         transitions.append(LineupTransition(player, slot, to_slot))
 
