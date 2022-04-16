@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 from dump import load_from_cache
 from espn.baseball.baseball_stat import BaseballStat
 from stats import Stats
+from timing.timed import timed
 
 LOGGER = logging.getLogger("numberfire.api")
 
@@ -40,6 +41,13 @@ NF_NAMES_TO_ESPN_NAMES = {
 }
 
 
+class NumberFireApiException(Exception):
+    """
+    Raise this exception when something unexpected happens with the NumberFire API
+    """
+    pass
+
+
 class NumberFireApi:
 
     def __init__(self):
@@ -60,6 +68,7 @@ class NumberFireApi:
             sport_dir.mkdir()
         return sport_dir / f"{date_string}.p"
 
+    @timed(LOGGER)
     def _page(self, projections_url):
         """
         Gets the daily fantasy projections page from NumberFire
@@ -75,6 +84,7 @@ class NumberFireApi:
         # NumberFire has "slates" of available players
         # we want the 'All Day' slate, but...
         # The slate id for the 'All Day' slate changes every day
+        LOGGER.info("Getting 'All Day' slate id from numberfire")
         list_items = self._page(self.baseball_url).find_all("li")
         all_day_slate_item = next(
             filter(
@@ -170,17 +180,22 @@ class NumberFireApi:
             for projection in self.projections()
         }
 
-    def baseball_hitter_projections(self) -> Dict[str, Stats]:
-        def projections_fn():
-            self._set_slate()
-            projections_rows = self._projections_table(self._page(self.baseball_url)).find_all("tr")
-            return {
-                name: stats for name, stats in
-                map(NumberFireApi.row_to_projection_baseball, projections_rows)
-            }
+    def _baseball_hitter_projections(self) -> Dict[str, Stats]:
+        self._set_slate()
+        projections_rows = self._projections_table(self._page(self.baseball_url)).find_all("tr")
+        if len(projections_rows) == 0:
+            message = "Attempting to find projections from NumberFire and found none."
+            raise NumberFireApiException(message)
 
+        LOGGER.info(f"Found {len(projections_rows)} hitter projections.")
+        return {
+            name: stats for name, stats in
+            map(NumberFireApi.row_to_projection_baseball, projections_rows)
+        }
+
+    def baseball_hitter_projections(self) -> Dict[str, Stats]:
         projections = load_from_cache(
             self._cache_key("baseball"),
-            projections_fn
+            self._baseball_hitter_projections
         )
         return projections
