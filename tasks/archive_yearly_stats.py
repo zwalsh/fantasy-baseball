@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 
 from config import password_reader, team_reader
+
 from espn.football.football_api import FootballApi
 from tasks.archive_daily_stats import ArchiveDailyStats
 from tasks.task import Task

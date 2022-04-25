@@ -1,21 +1,24 @@
 from espn.baseball.baseball_stat import BaseballStat
+from espn.basketball.basketball_stat import BasketballStat
 
 
 class Stats:
+
     stat_functions = {
         BaseballStat.AVG: lambda s: s.average(),
         BaseballStat.OBP: lambda s: s.obp(),
         BaseballStat.WHIP: lambda s: s.whip(),
         BaseballStat.ERA: lambda s: s.era(),
         BaseballStat.PA: lambda s: s.plate_appearances(),
+        BasketballStat.FTPCT: lambda s: s.divide(BasketballStat.FTM, BasketballStat.FTA),
+        BasketballStat.FGPCT: lambda s: s.divide(BasketballStat.FGM, BasketballStat.FGA),
     }
-
+    """
+    Accepts a dictionary from Stat to float
+    :param stat_dict: mapping of a stat to its float value
+    :param stat_enum: the enum of Stats that can be in this Stat object
+    """
     def __init__(self, stat_dict, stat_enum):
-        """
-        Accepts a dictionary from Stat to float
-        :param stat_dict: mapping of a stat to its float value
-        :param stat_enum: the enum of Stats that can be in this Stat object
-        """
         self.stat_dict = stat_dict
         self.stat_enum = stat_enum
 
@@ -51,13 +54,25 @@ class Stats:
                 s += "{}\t{}\n".format(name, stat)
         return s
 
+    def divide(self, s_num, s_denom):
+        """
+        Returns the result of dividing the numerator stat by the denominator stat, returning zero if the denominator is zero
+        :param s_num:
+        :param s_denom:
+        :return:
+        """
+        denom_val = self.stat_dict.get(s_denom)
+        if denom_val is None or denom_val == 0.0:
+            return 0.0
+        return self.stat_dict.get(s_num, 0.0) / denom_val
+
     def average(self):
         return round(
             self.stat_dict.get(
                 BaseballStat.AVG,
                 self.stat_dict.get(BaseballStat.H)
                 / self.stat_dict.get(BaseballStat.AB),
-            ),
+                ),
             3,
         )
 
@@ -66,7 +81,7 @@ class Stats:
         exact_obp = self.stat_dict.get(BaseballStat.OBP)
         if exact_obp is None:
             reached_base = (
-                self.stat_dict[BaseballStat.H] + self.stat_dict[BaseballStat.BB]
+                    self.stat_dict[BaseballStat.H] + self.stat_dict[BaseballStat.BB]
             )
             exact_obp = reached_base / self.stat_dict[BaseballStat.PA]
         return round(exact_obp, 3)
@@ -97,6 +112,9 @@ class Stats:
         earned_runs = self.stat_dict.get(BaseballStat.ER, 0)
         outs = self.stat_dict.get(BaseballStat.OUTS, 1.0)
 
+        if outs == 0.0:
+            return 0.0
+
         return round(earned_runs * 27.0 / outs, 3)
 
     def whip(self):
@@ -108,6 +126,10 @@ class Stats:
         walks = self.stat_dict.get(BaseballStat.P_BB, 0)
         outs = self.stat_dict.get(BaseballStat.OUTS, 1.0)
 
+        if outs == 0.0:
+            return 0.0
+
+
         return round((walks + hits) / outs * 3.0, 3)
 
     def plate_appearances(self):
@@ -115,7 +137,7 @@ class Stats:
             BaseballStat.PA,
             self.unrounded_value_for_stat(BaseballStat.AB)
             + self.unrounded_value_for_stat(BaseballStat.BB),
-        )
+            )
 
     def unrounded_value_for_stat(self, stat):
         if stat in self.stat_enum.sum_stats():
