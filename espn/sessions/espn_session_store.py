@@ -2,7 +2,6 @@ from pathlib import Path
 
 
 class EspnSessionStore:
-
     def __init__(self):
         """
         Provides an interface for file-system storage of session cookies

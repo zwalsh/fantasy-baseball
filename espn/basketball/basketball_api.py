@@ -7,17 +7,16 @@ from espn.sessions.espn_session_provider import EspnSessionProvider
 
 
 class BasketballApi(EspnApi):
-
-    def slot_enum(self):
+    def _slot_enum(self):
         return BasketballSlot
 
-    def stat_enum(self):
+    def _stat_enum(self):
         return BasketballStat
 
-    def api_url_segment(self):
+    def _api_url_segment(self):
         return "fba"
 
-    def position(self, position_id):
+    def _position(self, position_id):
         return BasketballPosition(position_id)
 
     class Builder:
@@ -25,7 +24,7 @@ class BasketballApi(EspnApi):
             """
             Builds a BaseballApi instance, creating the EspnSessionProvider objects under the hood
             """
-            self.__year = 2020
+            self.__year = 2021
             self.__username = ""
             self.__password = ""
             self.__league_id = 0
@@ -52,5 +51,9 @@ class BasketballApi(EspnApi):
             return self
 
         def build(self):
-            return BasketballApi(EspnSessionProvider(self.__username, self.__password), self.__league_id,
-                                 self.__team_id, self.__year)
+            return BasketballApi(
+                EspnSessionProvider(self.__username, self.__password),
+                self.__league_id,
+                self.__team_id,
+                self.__year,
+            )

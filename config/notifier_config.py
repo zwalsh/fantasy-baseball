@@ -7,11 +7,8 @@ from notifications.notifier import Notifier
 
 
 def current_notifier(user):
-    env = os.getenv('ENV', 'DEV')
-    if env == 'PROD':
-        return prod_notifier(user)
-    else:
-        return Notifier(DevClient())
+    env = os.getenv("ENV", "DEV")
+    return prod_notifier(user) if env == "PROD" else Notifier(DevClient())
 
 
 def prod_notifier(user):
@@ -32,4 +29,4 @@ def user_pushed_id(user):
 
 def read_text(rel_path_str):
     abs_path = Path.cwd() / rel_path_str
-    return abs_path.read_text()
+    return abs_path.read_text().rstrip()

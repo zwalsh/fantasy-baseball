@@ -10,11 +10,13 @@ class BasketballStat(Enum):
     FTA = "FTA"
     FTPCT = "FT%"
     THREES = "3PT"
+    TWOS = "2PT"
     REBOUNDS = "REB"
     ASSISTS = "AST"
     STEALS = "STL"
     BLOCKS = "BLK"
     POINTS = "PTS"
+    TURNOVERS = "TO"
 
     @staticmethod
     def sum_stats():
@@ -25,15 +27,18 @@ class BasketballStat(Enum):
             BasketballStat.FTM,
             BasketballStat.FTA,
             BasketballStat.THREES,
+            BasketballStat.TWOS,
             BasketballStat.REBOUNDS,
             BasketballStat.ASSISTS,
             BasketballStat.STEALS,
             BasketballStat.BLOCKS,
             BasketballStat.POINTS,
+            BasketballStat.TURNOVERS,
         }
 
+    # pylint: disable=no-self-use
     def num_rounding_digits(self):
-        return 0 if self in BasketballStat.sum_stats() else 3
+        return 3
 
     @staticmethod
     def espn_stat_to_stat(stat_id):
@@ -43,6 +48,7 @@ class BasketballStat(Enum):
             2: BasketballStat.STEALS,
             3: BasketballStat.ASSISTS,
             6: BasketballStat.REBOUNDS,
+            11: BasketballStat.TURNOVERS,
             13: BasketballStat.FGM,
             14: BasketballStat.FGA,
             15: BasketballStat.FTM,

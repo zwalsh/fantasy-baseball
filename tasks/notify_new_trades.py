@@ -12,7 +12,7 @@ LOGGER = logging.getLogger("tasks.notify_new_trades")
 
 class NotifyNewTrades(Task):
     def __init__(self, username, password, configs, notifier):
-        self.username = username
+        super().__init__(username)
         self.password = password
         self.configs = configs
         self.notifier = notifier
@@ -20,7 +20,7 @@ class NotifyNewTrades(Task):
     @staticmethod
     def create(username):
         password = password_reader.password(username, Path.cwd() / "config/passwords")
-        configs = team_reader.all_teams(Path.cwd() / "config/team_configs")
+        configs = team_reader.all_teams(Path.cwd() / "config/team_configs/baseball")
         notifier = notifier_config.current_notifier(username)
         return NotifyNewTrades(username, password, configs, notifier)
 
@@ -31,8 +31,14 @@ class NotifyNewTrades(Task):
     def check_for_trades(self, config):
         LOGGER.info(f"searching for new trades in league {config.league_id}")
 
-        espn = BaseballApi.Builder().username(self.username).password(self.password).league_id(
-            config.league_id).team_id(config.team_id).build()
+        espn = (
+            BaseballApi.Builder()
+            .username(self.username)
+            .password(self.password)
+            .league_id(config.league_id)
+            .team_id(config.team_id)
+            .build()
+        )
         team_name = espn.team_name(config.team_id)
         trade_store = TradeStore(config.league_id)
         cur_trades = trade_finder.all_current_trades(espn)

@@ -17,4 +17,3 @@ class BasketballPosition(Enum):
             BasketballPosition.CENTER: "C",
         }
         return names[self]
-

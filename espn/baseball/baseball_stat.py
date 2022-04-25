@@ -44,36 +44,11 @@ class BaseballStat(Enum):
         }
 
     def num_rounding_digits(self):
-        if self in {BaseballStat.AVG, BaseballStat.OBP}:
-            return 3
-        else:
-            return 2
+        return 3 if self in {BaseballStat.AVG, BaseballStat.OBP} else 2
 
     @staticmethod
     def sum_stats():
-        return {
-            BaseballStat.AB,
-            BaseballStat.H,
-            BaseballStat.HR,
-            BaseballStat.BB,
-            BaseballStat.PA,
-            BaseballStat.R,
-            BaseballStat.RBI,
-            BaseballStat.SB,
-            BaseballStat.OUTS,
-            BaseballStat.BATTERS,
-            BaseballStat.PITCHES,
-            BaseballStat.P_H,
-            BaseballStat.P_BB,
-            BaseballStat.HBP,
-            BaseballStat.P_R,
-            BaseballStat.ER,
-            BaseballStat.P_HR,
-            BaseballStat.K,
-            BaseballStat.W,
-            BaseballStat.L,
-            BaseballStat.SV
-        }
+        return sum_stats_set
 
     @staticmethod
     def espn_stat_to_stat(stat_id):
@@ -105,3 +80,28 @@ class BaseballStat(Enum):
             57: BaseballStat.SV,
             99: BaseballStat.STARTER,
         }.get(stat_id)
+
+
+sum_stats_set = {
+    BaseballStat.AB,
+    BaseballStat.H,
+    BaseballStat.HR,
+    BaseballStat.BB,
+    BaseballStat.PA,
+    BaseballStat.R,
+    BaseballStat.RBI,
+    BaseballStat.SB,
+    BaseballStat.OUTS,
+    BaseballStat.BATTERS,
+    BaseballStat.PITCHES,
+    BaseballStat.P_H,
+    BaseballStat.P_BB,
+    BaseballStat.HBP,
+    BaseballStat.P_R,
+    BaseballStat.ER,
+    BaseballStat.P_HR,
+    BaseballStat.K,
+    BaseballStat.W,
+    BaseballStat.L,
+    BaseballStat.SV,
+}

@@ -1,16 +1,16 @@
 import unittest
 
 from espn.baseball.baseball_slot import BaseballSlot
+from espn.baseball.baseball_stat import BaseballStat
+from espn.basketball.basketball_slot import BasketballSlot
 from lineup_transition import LineupTransition
 from notifications.notifier import Notifier
 from scoring_setting import ScoringSetting
-from espn.baseball.baseball_stat import BaseballStat
 from test.test_lineup_total import LineupTotalTest
 from test.test_player import PlayerTest
 
 
 class MockClient:
-
     def __init__(self):
         """
         Fake client to be used by a Notifier in tests
@@ -22,8 +22,12 @@ class MockClient:
 
 
 class Test(unittest.TestCase):
-    t1 = LineupTransition(PlayerTest.muncy, BaseballSlot.CORNER_INFIELD, BaseballSlot.BENCH)
-    t2 = LineupTransition(PlayerTest.merrifield, BaseballSlot.OUTFIELD, BaseballSlot.SECOND)
+    t1 = LineupTransition(
+        PlayerTest.muncy, BaseballSlot.CORNER_INFIELD, BaseballSlot.BENCH
+    )
+    t2 = LineupTransition(
+        PlayerTest.merrifield, BaseballSlot.OUTFIELD, BaseballSlot.SECOND
+    )
 
     lt1 = LineupTotalTest.lt1
 
@@ -38,7 +42,7 @@ class Test(unittest.TestCase):
         team = "Team1"
         ts = [self.t1, self.t2]
 
-        n.notify_set_lineup(team, self.lt1, ts, [ScoringSetting(BaseballStat.H, False)])
+        n.notify_set_lineup(team, self.lt1, ts, [ScoringSetting(BaseballStat.H, False, 0.0)])
 
         msg = team + ": 50.00PA\n10.00H "
         for t in ts:
@@ -49,21 +53,6 @@ class Test(unittest.TestCase):
         self.assertEqual(msg, msg_rec)
         self.assertEqual(None, url_rec)
 
-    def test_notify_set_lineup_truncate(self):
-        mock_client = MockClient()
-        n = Notifier(mock_client)
-
-        team = "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong team name"
-        ts = [self.t1, self.t1]
-
-        n.notify_set_lineup(team, self.lt1, ts, [ScoringSetting(BaseballStat.H, False)])
-
-        expected = team + ": 50.00PA\n10.00H "
-        expected += "\n" + Notifier.transition_message(self.t1)
-        expected += "\n" + "Muncy: ..."
-
-        self.assertEqual(expected, mock_client.messages[0][0])
-
     def test_notify_ignore_non_hitting_stat(self):
         mock_client = MockClient()
         n = Notifier(mock_client)
@@ -71,7 +60,9 @@ class Test(unittest.TestCase):
         team = "Name"
         ts = [self.t1, self.t2]
 
-        n.notify_set_lineup(team, self.lt1, ts, [ScoringSetting(BaseballStat.WHIP, True)])
+        n.notify_set_lineup(
+            team, self.lt1, ts, [ScoringSetting(BaseballStat.WHIP, True, 0.0)]
+        )
 
         expected = team + ": 50.00PA\n"
         for t in ts:
@@ -81,3 +72,18 @@ class Test(unittest.TestCase):
 
         self.assertEqual(expected, msg_rec)
         self.assertEqual(None, url_rec)
+
+    def test_notify_when_no_projection(self):
+        mock_client = MockClient()
+        n = Notifier(mock_client)
+
+        n.notify_set_fba_lineup(
+            team_name="name",
+            transitions=[
+                LineupTransition(PlayerTest.lebron, BasketballSlot.POINT_GUARD, BaseballSlot.BENCH)
+            ],
+            total_points=123.0,
+            player_to_fp={} # no projection for lebron
+        )
+
+        self.assertEqual(mock_client.messages[0][0],"name: 123.0 points\nJames: PG->BE (0.0)")

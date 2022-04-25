@@ -30,7 +30,7 @@ class BaseballSlot(Enum):
             12: BaseballSlot.UTIL,
             13: BaseballSlot.PITCHER,
             16: BaseballSlot.BENCH,
-            17: BaseballSlot.INJURED
+            17: BaseballSlot.INJURED,
         }
 
     @staticmethod
@@ -41,23 +41,29 @@ class BaseballSlot(Enum):
         return {v: k for k, v in BaseballSlot.slot_id_to_slot().items()}[self]
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
     @staticmethod
     def starting_slots():
-        return {ls for ls in BaseballSlot} - {BaseballSlot.BENCH, BaseballSlot.INJURED}
+        return {
+            ls
+            for ls in BaseballSlot
+            if ls not in {BaseballSlot.BENCH, BaseballSlot.INJURED}
+        }
 
     @staticmethod
     def hitting_slots():
-        return {BaseballSlot.CATCHER,
-                BaseballSlot.FIRST,
-                BaseballSlot.SECOND,
-                BaseballSlot.THIRD,
-                BaseballSlot.SHORT,
-                BaseballSlot.MIDDLE_INFIELD,
-                BaseballSlot.CORNER_INFIELD,
-                BaseballSlot.OUTFIELD,
-                BaseballSlot.UTIL}
+        return {
+            BaseballSlot.CATCHER,
+            BaseballSlot.FIRST,
+            BaseballSlot.SECOND,
+            BaseballSlot.THIRD,
+            BaseballSlot.SHORT,
+            BaseballSlot.MIDDLE_INFIELD,
+            BaseballSlot.CORNER_INFIELD,
+            BaseballSlot.OUTFIELD,
+            BaseballSlot.UTIL,
+        }
 
     @staticmethod
     def catcher():
@@ -65,19 +71,39 @@ class BaseballSlot(Enum):
 
     @staticmethod
     def first():
-        return {BaseballSlot.FIRST, BaseballSlot.CORNER_INFIELD, BaseballSlot.BENCH, BaseballSlot.UTIL}
+        return {
+            BaseballSlot.FIRST,
+            BaseballSlot.CORNER_INFIELD,
+            BaseballSlot.BENCH,
+            BaseballSlot.UTIL,
+        }
 
     @staticmethod
     def second():
-        return {BaseballSlot.SECOND, BaseballSlot.MIDDLE_INFIELD, BaseballSlot.BENCH, BaseballSlot.UTIL}
+        return {
+            BaseballSlot.SECOND,
+            BaseballSlot.MIDDLE_INFIELD,
+            BaseballSlot.BENCH,
+            BaseballSlot.UTIL,
+        }
 
     @staticmethod
     def third():
-        return {BaseballSlot.THIRD, BaseballSlot.CORNER_INFIELD, BaseballSlot.BENCH, BaseballSlot.UTIL}
+        return {
+            BaseballSlot.THIRD,
+            BaseballSlot.CORNER_INFIELD,
+            BaseballSlot.BENCH,
+            BaseballSlot.UTIL,
+        }
 
     @staticmethod
     def short():
-        return {BaseballSlot.SHORT, BaseballSlot.MIDDLE_INFIELD, BaseballSlot.BENCH, BaseballSlot.UTIL}
+        return {
+            BaseballSlot.SHORT,
+            BaseballSlot.MIDDLE_INFIELD,
+            BaseballSlot.BENCH,
+            BaseballSlot.UTIL,
+        }
 
     @staticmethod
     def outfield():
@@ -86,3 +112,7 @@ class BaseballSlot(Enum):
     @staticmethod
     def pitcher():
         return {BaseballSlot.PITCHER, BaseballSlot.BENCH}
+
+    @staticmethod
+    def slot_to_slot_id(slot):
+        return {v: k for k, v in BaseballSlot.slot_id_to_slot().items()}[slot]

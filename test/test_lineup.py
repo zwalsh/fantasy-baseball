@@ -26,49 +26,54 @@ class LineupTest(unittest.TestCase):
         BaseballSlot.SECOND: [PlayerTest.merrifield],
         BaseballSlot.THIRD: [PlayerTest.carpenter],
         BaseballSlot.SHORT: [PlayerTest.segura],
-        BaseballSlot.OUTFIELD: [PlayerTest.springer,
-                                PlayerTest.rosario,
-                                PlayerTest.braun,
-                                PlayerTest.santana,
-                                PlayerTest.choo],
+        BaseballSlot.OUTFIELD: [
+            PlayerTest.springer,
+            PlayerTest.rosario,
+            PlayerTest.braun,
+            PlayerTest.santana,
+            PlayerTest.choo,
+        ],
         BaseballSlot.MIDDLE_INFIELD: [PlayerTest.cano],
         BaseballSlot.CORNER_INFIELD: [PlayerTest.rizzo],
         BaseballSlot.UTIL: [PlayerTest.cabrera],
-        BaseballSlot.PITCHER: [PlayerTest.degrom,
-                               PlayerTest.kimbrel,
-                               PlayerTest.morton,
-                               PlayerTest.hill,
-                               PlayerTest.arrieta,
-                               PlayerTest.glasnow,
-                               PlayerTest.barnes,
-                               PlayerTest.stripling,
-                               PlayerTest.smith],
-        BaseballSlot.BENCH: [PlayerTest.paddack,
-                             PlayerTest.yelich,
-                             PlayerTest.peraza],
-        BaseballSlot.INJURED: [PlayerTest.olson,
-                               PlayerTest.jimenez],
+        BaseballSlot.PITCHER: [
+            PlayerTest.degrom,
+            PlayerTest.kimbrel,
+            PlayerTest.morton,
+            PlayerTest.hill,
+            PlayerTest.arrieta,
+            PlayerTest.glasnow,
+            PlayerTest.barnes,
+            PlayerTest.stripling,
+            PlayerTest.smith,
+        ],
+        BaseballSlot.BENCH: [PlayerTest.paddack, PlayerTest.yelich, PlayerTest.peraza],
+        BaseballSlot.INJURED: [PlayerTest.olson, PlayerTest.jimenez],
     }
 
     simple_lineup = Lineup(base_lineup_dict, BaseballSlot)
 
     def test_possible_starters_one_slot(self):
-        lineup_settings = LineupSettings({
-            BaseballSlot.CATCHER: 0,
-            BaseballSlot.FIRST: 1,
-            BaseballSlot.SECOND: 0,
-            BaseballSlot.THIRD: 0,
-            BaseballSlot.SHORT: 0,
-            BaseballSlot.MIDDLE_INFIELD: 0,
-            BaseballSlot.CORNER_INFIELD: 0,
-            BaseballSlot.OUTFIELD: 0,
-            BaseballSlot.UTIL: 0,
-            BaseballSlot.BENCH: 0,
-            BaseballSlot.PITCHER: 0,
-            BaseballSlot.INJURED: 0
-        })
+        lineup_settings = LineupSettings(
+            {
+                BaseballSlot.CATCHER: 0,
+                BaseballSlot.FIRST: 1,
+                BaseballSlot.SECOND: 0,
+                BaseballSlot.THIRD: 0,
+                BaseballSlot.SHORT: 0,
+                BaseballSlot.MIDDLE_INFIELD: 0,
+                BaseballSlot.CORNER_INFIELD: 0,
+                BaseballSlot.OUTFIELD: 0,
+                BaseballSlot.UTIL: 0,
+                BaseballSlot.BENCH: 0,
+                BaseballSlot.PITCHER: 0,
+                BaseballSlot.INJURED: 0,
+            }
+        )
 
-        lineups = self.simple_lineup.possible_lineups(lineup_settings, BaseballSlot.hitting_slots())
+        lineups = self.simple_lineup.possible_lineups(
+            lineup_settings, BaseballSlot.hitting_slots()
+        )
         starters = set(map(Lineup.starters, lineups))
         self.assertEqual(len(starters), 4)
         self.assertTrue(frozenset({PlayerTest.rizzo}) in starters)
@@ -77,29 +82,35 @@ class LineupTest(unittest.TestCase):
         self.assertTrue(frozenset({PlayerTest.cabrera}) in starters)
 
     def test_possible_starters_two_slots_no_dups(self):
-        lineup_settings = LineupSettings({
-            BaseballSlot.CATCHER: 0,
-            BaseballSlot.FIRST: 1,
-            BaseballSlot.SECOND: 0,
-            BaseballSlot.THIRD: 0,
-            BaseballSlot.SHORT: 0,
-            BaseballSlot.MIDDLE_INFIELD: 0,
-            BaseballSlot.CORNER_INFIELD: 1,
-            BaseballSlot.OUTFIELD: 0,
-            BaseballSlot.UTIL: 0,
-            BaseballSlot.BENCH: 0,
-            BaseballSlot.PITCHER: 0,
-            BaseballSlot.INJURED: 0
-        })
+        lineup_settings = LineupSettings(
+            {
+                BaseballSlot.CATCHER: 0,
+                BaseballSlot.FIRST: 1,
+                BaseballSlot.SECOND: 0,
+                BaseballSlot.THIRD: 0,
+                BaseballSlot.SHORT: 0,
+                BaseballSlot.MIDDLE_INFIELD: 0,
+                BaseballSlot.CORNER_INFIELD: 1,
+                BaseballSlot.OUTFIELD: 0,
+                BaseballSlot.UTIL: 0,
+                BaseballSlot.BENCH: 0,
+                BaseballSlot.PITCHER: 0,
+                BaseballSlot.INJURED: 0,
+            }
+        )
 
-        lineups = self.simple_lineup.possible_lineups(lineup_settings, BaseballSlot.hitting_slots())
+        lineups = self.simple_lineup.possible_lineups(
+            lineup_settings, BaseballSlot.hitting_slots()
+        )
         starters = set(map(Lineup.starters, lineups))
         self.assertEqual(len(starters), 6)
         self.assertTrue(frozenset({PlayerTest.rizzo, PlayerTest.muncy}) in starters)
         self.assertTrue(frozenset({PlayerTest.rizzo, PlayerTest.carpenter}) in starters)
         self.assertTrue(frozenset({PlayerTest.rizzo, PlayerTest.cabrera}) in starters)
         self.assertTrue(frozenset({PlayerTest.carpenter, PlayerTest.muncy}) in starters)
-        self.assertTrue(frozenset({PlayerTest.carpenter, PlayerTest.cabrera}) in starters)
+        self.assertTrue(
+            frozenset({PlayerTest.carpenter, PlayerTest.cabrera}) in starters
+        )
         self.assertTrue(frozenset({PlayerTest.muncy, PlayerTest.cabrera}) in starters)
 
     def test_transitions_single_swap(self):
@@ -114,7 +125,12 @@ class LineupTest(unittest.TestCase):
         transitions = cf_lineup.transitions(cci_lineup)
 
         self.assertEqual(len(transitions), 1)
-        self.assertTrue(LineupTransition(PlayerTest.carpenter, BaseballSlot.FIRST, BaseballSlot.CORNER_INFIELD) in transitions)
+        self.assertTrue(
+            LineupTransition(
+                PlayerTest.carpenter, BaseballSlot.FIRST, BaseballSlot.CORNER_INFIELD
+            )
+            in transitions
+        )
 
     def test_transitions_swap_two_players(self):
         l1_dict = self.empty_lineup_dict.copy()
@@ -130,5 +146,15 @@ class LineupTest(unittest.TestCase):
         transitions = l1.transitions(l2)
 
         self.assertEqual(len(transitions), 2)
-        self.assertTrue(LineupTransition(PlayerTest.merrifield, BaseballSlot.BENCH, BaseballSlot.OUTFIELD) in transitions)
-        self.assertTrue(LineupTransition(PlayerTest.yelich, BaseballSlot.OUTFIELD, BaseballSlot.BENCH) in transitions)
+        self.assertTrue(
+            LineupTransition(
+                PlayerTest.merrifield, BaseballSlot.BENCH, BaseballSlot.OUTFIELD
+            )
+            in transitions
+        )
+        self.assertTrue(
+            LineupTransition(
+                PlayerTest.yelich, BaseballSlot.OUTFIELD, BaseballSlot.BENCH
+            )
+            in transitions
+        )

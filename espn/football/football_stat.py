@@ -37,19 +37,21 @@ class FootballStat(Enum):
     INT_DEF = "INT DEF"
     FUMR = "FUM REC"
     BLK = "BLOCK"
-    SFT = 'SAFETY'
+    SFT = "SAFETY"
     SK = "SACK"
 
     KR_TD = "KR TD"
     PR_TD = "PR TD"
     FR_TD = "FR TD"
     INT_TD = "INT TD"
-
+    FP = "FANTASY POINTS"
 
     @staticmethod
     def sum_stats():
+        # pylint: disable=unnecessary-comprehension
         return {s for s in FootballStat}
 
+    # pylint: disable=no-self-use
     def num_rounding_digits(self):
         return 0
 

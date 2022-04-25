@@ -10,17 +10,16 @@ LOGGER = logging.getLogger("espn.football.api")
 
 
 class FootballApi(EspnApi):
-
-    def slot_enum(self):
+    def _slot_enum(self):
         return FootballSlot
 
-    def stat_enum(self):
+    def _stat_enum(self):
         return FootballStat
 
-    def position(self, position_id):
+    def _position(self, position_id):
         return FootballPosition(position_id)
 
-    def api_url_segment(self):
+    def _api_url_segment(self):
         return "ffl"
 
     class Builder:
@@ -32,6 +31,7 @@ class FootballApi(EspnApi):
             self.__password = ""
             self.__league_id = 0
             self.__team_id = 0
+            self.__year = 2021
 
         def username(self, username):
             self.__username = username
@@ -49,6 +49,14 @@ class FootballApi(EspnApi):
             self.__team_id = team_id
             return self
 
+        def year(self, year):
+            self.__year = year
+            return self
+
         def build(self):
-            return FootballApi(EspnSessionProvider(self.__username, self.__password), self.__league_id,
-                               self.__team_id)
+            return FootballApi(
+                EspnSessionProvider(self.__username, self.__password),
+                self.__league_id,
+                self.__team_id,
+                self.__year,
+            )

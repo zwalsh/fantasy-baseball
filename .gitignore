@@ -7,9 +7,11 @@ config/team_configs/*
 config/pushed_config/*
 config/passwords/**
 logs/*
+cache/*
 
 .idea/**
 .venv/**
+venv/**
 **/__pycache__/**
 
 *.p

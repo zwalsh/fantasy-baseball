@@ -1,4 +1,3 @@
-
 class EspnTeamConfig:
     def __init__(self, username, league_id, team_id):
         """

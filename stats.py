@@ -3,34 +3,40 @@ from espn.basketball.basketball_stat import BasketballStat
 
 
 class Stats:
-    stat_functions = {  # todo should figure out a way to pull these out into the enum
+
+    stat_functions = {
         BaseballStat.AVG: lambda s: s.average(),
         BaseballStat.OBP: lambda s: s.obp(),
         BaseballStat.WHIP: lambda s: s.whip(),
         BaseballStat.ERA: lambda s: s.era(),
+        BaseballStat.PA: lambda s: s.plate_appearances(),
         BasketballStat.FTPCT: lambda s: s.divide(BasketballStat.FTM, BasketballStat.FTA),
         BasketballStat.FGPCT: lambda s: s.divide(BasketballStat.FGM, BasketballStat.FGA),
     }
-
+    """
+    Accepts a dictionary from Stat to float
+    :param stat_dict: mapping of a stat to its float value
+    :param stat_enum: the enum of Stats that can be in this Stat object
+    """
     def __init__(self, stat_dict, stat_enum):
-        """
-        Accepts a dictionary from Stat to float
-        :param stat_dict: mapping of a stat to its float value
-        :param stat_enum: the enum of Stats that can be in this Stat object
-        """
         self.stat_dict = stat_dict
         self.stat_enum = stat_enum
 
     def __add__(self, other):
         combined = dict()
-        my_keys = set(self.stat_dict.keys()).intersection(self.stat_enum.sum_stats())
-        for k in my_keys:
-            combined[k] = self.stat_dict.get(k) + other.stat_dict.get(k, 0.0)
-
-        other_keys = set(other.stat_dict.keys() - my_keys).intersection(self.stat_enum.sum_stats())
-        for k in other_keys:
-            combined[k] = other.stat_dict[k]
+        sum_stats = self.stat_enum.sum_stats()
+        for k in sum_stats:
+            combined[k] = self.stat_dict.get(k, 0.0) + other.stat_dict.get(k, 0.0)
         return Stats(combined, self.stat_enum)
+
+    def __mul__(self, other):
+        scaled = dict()
+        for k in self.stat_enum.sum_stats().intersection(self.stat_dict.keys()):
+            scaled[k] = self.stat_dict[k] * other
+        return Stats(scaled, self.stat_enum)
+
+    def __truediv__(self, other):
+        return self * (1 / other)
 
     def __str__(self):
         print_pairs = list()
@@ -61,14 +67,22 @@ class Stats:
         return self.stat_dict.get(s_num, 0.0) / denom_val
 
     def average(self):
-        return round(self.stat_dict.get(BaseballStat.AVG, self.stat_dict.get(BaseballStat.H) / self.stat_dict.get(
-            BaseballStat.AB)), 3)
+        return round(
+            self.stat_dict.get(
+                BaseballStat.AVG,
+                self.stat_dict.get(BaseballStat.H)
+                / self.stat_dict.get(BaseballStat.AB),
+                ),
+            3,
+        )
 
     # note - adjust calculation to include not just walks + hits but also HBP, etc.
     def obp(self):
         exact_obp = self.stat_dict.get(BaseballStat.OBP)
         if exact_obp is None:
-            reached_base = self.stat_dict[BaseballStat.H] + self.stat_dict[BaseballStat.BB]
+            reached_base = (
+                    self.stat_dict[BaseballStat.H] + self.stat_dict[BaseballStat.BB]
+            )
             exact_obp = reached_base / self.stat_dict[BaseballStat.PA]
         return round(exact_obp, 3)
 
@@ -118,6 +132,13 @@ class Stats:
 
         return round((walks + hits) / outs * 3.0, 3)
 
+    def plate_appearances(self):
+        return self.stat_dict.get(
+            BaseballStat.PA,
+            self.unrounded_value_for_stat(BaseballStat.AB)
+            + self.unrounded_value_for_stat(BaseballStat.BB),
+            )
+
     def unrounded_value_for_stat(self, stat):
         if stat in self.stat_enum.sum_stats():
             return self.stat_dict.get(stat)
@@ -126,7 +147,17 @@ class Stats:
 
     def value_for_stat(self, stat):
         val = self.unrounded_value_for_stat(stat)
-        if val is not None:
-            return round(val, stat.num_rounding_digits())
-        else:
-            return val
+        return round(val, stat.num_rounding_digits()) if val is not None else val
+
+    def points(self, points_map) -> float:
+        """
+        Determine the total number of fantasy points for this set of Stats. Pass in the result of
+        EspnApi.points_per_stat()
+
+        :param points_map: how many points does each stat provide?
+        :return: total number of fantasy points for these stats
+        """
+        total = 0.0
+        for stat, value in self.stat_dict.items():
+            total += points_map.get(stat, 0.0) * value
+        return total

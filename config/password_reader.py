@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 
 LOGGER = logging.getLogger("config.password_reader")
 
