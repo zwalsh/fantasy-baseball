@@ -28,7 +28,7 @@ class ArchiveDailyStats(Task):
     def run(self):
         for cfg in self.team_configs:
             espn = (
-                FootballApi.Builder()
+                BaseballApi.Builder()
                 .username(self.username)
                 .password(self.password)
                 .league_id(cfg.league_id)
@@ -57,7 +57,7 @@ class ArchiveDailyStats(Task):
         password = password_reader.password(username, Path.cwd() / "config/passwords")
         configs = team_reader.all_teams(Path.cwd() / "config/team_configs/football")
         scoring_period = (
-            FootballApi.Builder()
+            BaseballApi.Builder()
             .username(username)
             .password(password)
             .league_id(configs[0].league_id)

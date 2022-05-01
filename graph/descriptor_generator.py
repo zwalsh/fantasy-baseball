@@ -43,16 +43,12 @@ def graph_line(team_id, name, stat_store, stat, period_range):
     :return GraphLine: the corresponding graph line
     """
     stats_dict = stat_store.retrieve_stats(team_id)
-    cumul_total = 0.0
+    total = Stats({}, BaseballStat)
     data = []
     for pd in period_range:
         period_stats = stats_dict.get(pd, Stats({}, BaseballStat))
-        period_value = period_stats.value_for_stat(stat) or 0.0
-        if stat in BaseballStat.sum_stats():
-            cumul_total += period_value
-            data.append(cumul_total)
-        else:
-            data.append(period_value)
+        total += period_stats
+        data.append(total.value_for_stat(stat) or 0.0)
     return GraphLine(data, name)
 
 
