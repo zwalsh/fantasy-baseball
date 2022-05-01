@@ -65,11 +65,6 @@ class BaseballApi(EspnApi):
             if starter_status_by_game.get(str(game), "") == "PROBABLE":
                 is_starter = True
 
-        # stats = player_resp["stats"]
-        # starter_split = next(
-        #     filter(lambda s: s["statSplitTypeId"] == 5, stats), {}
-        # ).get("stats", {})
-        # is_starter = starter_split.get("99", None) == 1.0
         LOGGER.info(f"{player.name} {'is starting' if is_starter else 'is not starting'}")
         return is_starter
 
