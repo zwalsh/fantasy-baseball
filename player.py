@@ -1,6 +1,6 @@
 class Player:
     def __init__(
-        self, name, first, last, espn_id, possible_positions, default_position
+        self, name, first, last, espn_id, possible_positions, default_position, pro_team_id=None
     ):
         """
         Creates a Player from their name, espn id, primary positions, and possible positions
@@ -18,6 +18,7 @@ class Player:
         self.espn_id = espn_id
         self.possible_positions = possible_positions
         self.default_position = default_position
+        self.pro_team_id = pro_team_id
 
     def __str__(self):
         return f"{self.default_position}\t{self.name}\t{self.espn_id}"

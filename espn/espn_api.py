@@ -199,12 +199,13 @@ class EspnApi(metaclass=ABCMeta):
         position = self._position(default_position_id)
         first = player_map["firstName"]
         last = player_map["lastName"]
+        pro_team_id = player_map["proTeamId"]
         possible_positions = set()
         for slot in eligible_slots:
             converted = self._slot_for_id(slot)
             if converted is not None:
                 possible_positions.add(converted)
-        return Player(name, first, last, player_id, possible_positions, position)
+        return Player(name, first, last, player_id, possible_positions, position, pro_team_id)
 
     def lineup(self, team_id=None):
         """
