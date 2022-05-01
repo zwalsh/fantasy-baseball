@@ -16,6 +16,7 @@ class Test(unittest.TestCase):
         "firstName": "Nolan",
         "lastName": "Arenado",
         "id": 31261,
+        "proTeamId": 1,
     }
 
     travis_shaw_entry = {
@@ -28,6 +29,7 @@ class Test(unittest.TestCase):
         "lastName": "Shaw",
         "injured": False,
         "injuryStatus": "ACTIVE",
+        "proTeamId": 20,
     }
 
     def test_conversion(self):
