@@ -19,6 +19,7 @@ DEV_LOGGING = {
     "loggers": {
         "": {"handlers": ["default"], "level": "DEBUG", "propagate": True},
         "espn.api": {"handlers": [], "level": "DEBUG", "propagate": True},
+        "espn.baseball.api": {},
         "espn.football.api": {},
         "espn.stats_translator": {},
         "espn.trade_finder": {},

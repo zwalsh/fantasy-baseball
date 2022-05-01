@@ -400,7 +400,7 @@ class EspnApi(metaclass=ABCMeta):
         return ScoringSetting(stat, item["isReverseItem"], points)
 
     def _player_url(self):
-        return f"{self._base_url()}?view=kona_playercard"
+        return f"{self._base_url()}?view=kona_player_info"
 
     def _all_players_url(self):
         return f"{self._base_url()}?view=kona_player_info"
@@ -584,7 +584,7 @@ class EspnApi(metaclass=ABCMeta):
             team_schedule = {}
             for scoring_period, pro_games in team_entry["proGamesByScoringPeriod"].items():
                 games = list(map(self._pro_game_from_entry, pro_games))
-                team_schedule[scoring_period] = games
+                team_schedule[int(scoring_period)] = games
             schedule[team_id] = team_schedule
 
         return schedule
