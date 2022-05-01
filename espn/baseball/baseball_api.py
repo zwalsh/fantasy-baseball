@@ -6,7 +6,6 @@ from espn.baseball.baseball_stat import BaseballStat
 from espn.espn_api import EspnApi
 from espn.sessions.espn_session_provider import EspnSessionProvider
 
-
 # http://fantasy.espn.com/apis/v3/games/flb/seasons/2019/segments/0/leagues/<LEAGUE_ID>
 # - members[i].displayName == "zcwalsh"
 #     -> id == ownerId
@@ -46,14 +45,27 @@ class BaseballApi(EspnApi):
         :return bool: whether or not the player is pitching today
         """
         player_resp = self._player_request(player_id)
-        name = player_resp["fullName"]
-        LOGGER.debug(f"checking start status for {name}")
-        stats = player_resp["stats"]
-        starter_split = next(
-            filter(lambda s: s["statSplitTypeId"] == 5, stats), {}
-        ).get("stats", {})
-        is_starter = starter_split.get("99", None) == 1.0
-        LOGGER.debug(f"starting? {is_starter}")
+        player = self.roster_entry_to_player(player_resp)
+        LOGGER.info(f"checking start status for {player.name}")
+
+        # get pro team schedule
+        # get game id for pro team for today
+        # get player's starter status from roster entry
+
+        pro_schedule = self.pro_team_schedule()
+        players_team_schedule = pro_schedule[player.pro_team_id]
+        team_games_today = players_team_schedule[self.scoring_period()]
+        game_ids = {g.game_id for g in team_games_today}
+
+        starter_status_by_game = player_resp["starterStatusByProGame"]
+
+        is_starter = False
+
+        for game in game_ids:
+            if starter_status_by_game.get(str(game), "") == "PROBABLE":
+                is_starter = True
+
+        LOGGER.info(f"{player.name} {'is starting' if is_starter else 'is not starting'}")
         return is_starter
 
     def _slot_enum(self):
