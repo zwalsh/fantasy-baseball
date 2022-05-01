@@ -6,6 +6,7 @@ from typing import Dict, List
 
 import requests
 
+from espn.team_schedule import ProTeamGame
 from league import League
 from lineup import Lineup
 from lineup_settings import LineupSettings
@@ -74,7 +75,7 @@ class EspnApi(metaclass=ABCMeta):
         return self._scoring_period_info_url(scoring_period)
 
     def _espn_request(
-        self, method, url, payload, headers=None, check_cache=True, retries=1
+            self, method, url, payload, headers=None, check_cache=True, retries=1
     ):
         if check_cache and url in self.cache.keys():
             return self.cache.get(url)
@@ -148,10 +149,15 @@ class EspnApi(metaclass=ABCMeta):
             method="POST", url=url, payload=payload, headers=headers
         )
 
-    def _base_url(self):
+    def _base_url_no_league(self):
         return (
             f"http://fantasy.espn.com/apis/v3/games/{self._api_url_segment()}"
-            f"/seasons/{self.year}/segments/0/leagues/"
+            f"/seasons/{self.year}"
+        )
+
+    def _base_url(self):
+        return (
+            f"{self._base_url_no_league()}/segments/0/leagues/"
             f"{self.league_id}"
         )
 
@@ -315,8 +321,8 @@ class EspnApi(metaclass=ABCMeta):
             stats_dict = next(
                 filter(
                     lambda d: d["scoringPeriodId"] == scoring_period_id
-                    and d["statSourceId"] == 0
-                    and d["statSplitTypeId"] == 5,
+                              and d["statSourceId"] == 0
+                              and d["statSplitTypeId"] == 5,
                     entry_stats_list,
                 ),
                 None,
@@ -350,8 +356,8 @@ class EspnApi(metaclass=ABCMeta):
 
         relevant_stats = filter(
             lambda s: s["statSourceId"] == 0
-            and s["statSplitTypeId"] == 1
-            and s["seasonId"] == self.year,
+                      and s["statSplitTypeId"] == 1
+                      and s["seasonId"] == self.year,
             player_stats,
         )
         return {
@@ -459,9 +465,9 @@ class EspnApi(metaclass=ABCMeta):
                 lambda p: (
                     p["player"],
                     p.get("player", {})
-                    .get("draftRanksByRankType", {})
-                    .get("STANDARD", {})
-                    .get("rank", 9999),
+                        .get("draftRanksByRankType", {})
+                        .get("STANDARD", {})
+                        .get("rank", 9999),
                 ),
                 players_json_array,
             )
@@ -552,3 +558,33 @@ class EspnApi(metaclass=ABCMeta):
         draft_strategy_url = self._team_url()
         payload = _draft_strategy_json(rankings)
         return self._espn_post(draft_strategy_url, payload)
+
+    def _pro_schedule_url(self):
+        return f"{self._base_url_no_league()}?view=proTeamSchedules_wl"
+
+    def _pro_game_from_entry(self, entry):
+        return ProTeamGame(
+            home_team=entry["homeProTeamId"],
+            away_team=entry["awayProTeamId"],
+            game_id=entry["id"]
+        )
+
+    def pro_team_schedule(self) -> Dict[int, Dict[int, List[ProTeamGame]]]:
+        """
+        Returns the complete schedule of professional team games.
+
+        :return: Map of team id to games, keyed by scoring period. Note a team can have double-headers
+        """
+        pro_schedule_response = self._espn_get(self._pro_schedule_url()).json()
+        pro_teams = pro_schedule_response["settings"]["proTeams"]
+
+        schedule = {}
+        for team_entry in pro_teams:
+            team_id = team_entry["id"]
+            team_schedule = {}
+            for scoring_period, pro_games in team_entry["proGamesByScoringPeriod"].items():
+                games = list(map(self._pro_game_from_entry, pro_games))
+                team_schedule[scoring_period] = games
+            schedule[team_id] = team_schedule
+
+        return schedule
