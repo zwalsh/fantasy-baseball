@@ -54,7 +54,7 @@ class BaseballApi(EspnApi):
 
         pro_schedule = self.pro_team_schedule()
         players_team_schedule = pro_schedule[player.pro_team_id]
-        team_games_today = players_team_schedule[self.scoring_period()]
+        team_games_today = players_team_schedule.get(self.scoring_period(), list())
         game_ids = {g.game_id for g in team_games_today}
 
         starter_status_by_game = player_resp["starterStatusByProGame"]
