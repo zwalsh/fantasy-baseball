@@ -1,6 +1,5 @@
 import logging
 
-import time
 from datetime import date
 from pathlib import Path
 from typing import List, Dict
@@ -74,32 +73,65 @@ class NumberFireApi:
         Gets the daily fantasy projections page from NumberFire
         :return BeautifulSoup: the html on the page
         """
-        start_time = time.time()
-        LOGGER.info("Fetching daily projections page from Numberfire")
         r = self._session.get(projections_url)
-        LOGGER.info(f"Finished after {time.time() - start_time:.3f} seconds")
         return BeautifulSoup(r.content)
 
-    def _get_all_day_slate_id(self) -> int:
+    def _get_dropdown_option(self, input_option_key, option_matcher):
+        """
+        Gets a data-value for a particular option based on the input and some matcher.
+        :param input_option_key:
+        :param option_matcher:
+        :return:
+        """
+        inputs = self._page(self.baseball_url).find_all("input")
+        site_picker_input = next(
+            filter(
+                lambda i: i.get('data-option-key', '') == input_option_key,
+                inputs
+            )
+        )
+        options = site_picker_input.find_next_sibling("ul").find_all("li")
+        matched_option = next(
+            filter(
+                lambda li: option_matcher in li.text,
+                options
+            )
+        )
+        return matched_option['data-value']
+
+    def get_yahoo_dfs_site_id(self) -> int:
+        LOGGER.info("Getting Yahoo site id")
+        site_id = self._get_dropdown_option(input_option_key='site', option_matcher='Yahoo')
+        LOGGER.info(f"Yahoo site id is {site_id}")
+        return site_id
+
+    def _get_fd_all_day_slate_id(self) -> int:
         # NumberFire has "slates" of available players
         # we want the 'All Day' slate, but...
         # The slate id for the 'All Day' slate changes every day
-        LOGGER.info("Getting 'All Day' slate id from numberfire")
-        list_items = self._page(self.baseball_url).find_all("li")
-        all_day_slate_item = next(
-            filter(
-                lambda li: li.text == "'All Day'",
-                list_items
-            )
-        )
-        return int(all_day_slate_item['data-value'])
+        LOGGER.info("Getting FanDuel 'All Day' slate id from numberfire")
+        all_day_slate = self._get_dropdown_option('slate_id', 'All Day')
+        LOGGER.info(f"All Day slate id is {all_day_slate}")
+        return all_day_slate
 
-    def _set_slate(self):
-        slate_id = self._get_all_day_slate_id()
+    def _get_yahoo_all_day_slate_id(self) -> int:
+        LOGGER.info("Getting the 'SAME_DAY' slate id for yahoo from Numberfire.")
+        slate_id = self._get_dropdown_option('slate_id', 'SAME_DAY')
+        LOGGER.info(f"Yahoo SAME_DAY slate_id is {slate_id}")
+        return slate_id
+
+    def _set_slate(self, slate_id):
         form_data = {
             'slate_id': slate_id
         }
         self._session.post("https://www.numberfire.com/mlb/daily-fantasy/set-slate", data=form_data)
+
+    def _set_site(self, site_id):
+        form_data = {
+            'site': site_id
+        }
+        self._session.post("https://www.numberfire.com/mlb/daily-fantasy/set-dfs-site",
+                           data=form_data)
 
     @staticmethod
     def _projections_table(page):
@@ -180,8 +212,7 @@ class NumberFireApi:
             for projection in self.projections()
         }
 
-    def _baseball_hitter_projections(self) -> Dict[str, Stats]:
-        self._set_slate()
+    def _get_hitter_projections_from_current_page(self) -> Dict[str, Stats]:
         projections_rows = self._projections_table(self._page(self.baseball_url)).find_all("tr")
         if len(projections_rows) == 0:
             message = "Attempting to find projections from NumberFire and found none."
@@ -192,6 +223,32 @@ class NumberFireApi:
             name: stats for name, stats in
             map(NumberFireApi.row_to_projection_baseball, projections_rows)
         }
+
+    def _baseball_hitter_projections_yahoo(self) -> Dict[str, Stats]:
+        yahoo_site_id = self.get_yahoo_dfs_site_id()
+        self._set_site(yahoo_site_id)
+        all_day_slate_id = self._get_yahoo_all_day_slate_id()
+        self._set_slate(all_day_slate_id)
+        return self._get_hitter_projections_from_current_page()
+
+    def _baseball_hitter_projections_fanduel(self) -> Dict[str, Stats]:
+        self._set_slate(self._get_fd_all_day_slate_id())
+        return self._get_hitter_projections_from_current_page()
+
+    def _baseball_hitter_projections(self) -> Dict[str, Stats]:
+        try:
+            return self._baseball_hitter_projections_fanduel()
+        # pylint: disable=broad-except
+        except Exception as e:
+            LOGGER.exception(e)
+            LOGGER.error("Failed to get Fanduel projections - falling back to Yahoo projections")
+        try:
+            return self._baseball_hitter_projections_yahoo()
+        # pylint: disable=broad-except
+        except Exception as e:
+            LOGGER.exception(e)
+            LOGGER.error("Failed to get Yahoo projections - no further fallbacks")
+            raise e
 
     def baseball_hitter_projections(self) -> Dict[str, Stats]:
         projections = load_from_cache(
