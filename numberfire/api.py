@@ -1,6 +1,5 @@
 import logging
 
-import time
 from datetime import date
 from pathlib import Path
 from typing import List, Dict
@@ -239,12 +238,16 @@ class NumberFireApi:
     def _baseball_hitter_projections(self) -> Dict[str, Stats]:
         try:
             return self._baseball_hitter_projections_fanduel()
+        # pylint: disable=broad-except
         except Exception as e:
-            LOGGER.error("Failed to get Fanduel projections - falling back to Yahoo projections", e)
+            LOGGER.exception(e)
+            LOGGER.error("Failed to get Fanduel projections - falling back to Yahoo projections")
         try:
             return self._baseball_hitter_projections_yahoo()
+        # pylint: disable=broad-except
         except Exception as e:
-            LOGGER.error("Failed to get Yahoo projections - no further fallbacks", e)
+            LOGGER.exception(e)
+            LOGGER.error("Failed to get Yahoo projections - no further fallbacks")
             raise e
 
     def baseball_hitter_projections(self) -> Dict[str, Stats]:
