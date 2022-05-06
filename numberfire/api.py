@@ -180,7 +180,7 @@ class NumberFireApi:
             for projection in self.projections()
         }
 
-    def _baseball_hitter_projections(self) -> Dict[str, Stats]:
+    def _baseball_hitter_projections_fanduel(self) -> Dict[str, Stats]:
         self._set_slate()
         projections_rows = self._projections_table(self._page(self.baseball_url)).find_all("tr")
         if len(projections_rows) == 0:
@@ -196,6 +196,6 @@ class NumberFireApi:
     def baseball_hitter_projections(self) -> Dict[str, Stats]:
         projections = load_from_cache(
             self._cache_key("baseball"),
-            self._baseball_hitter_projections
+            self._baseball_hitter_projections_fanduel
         )
         return projections
