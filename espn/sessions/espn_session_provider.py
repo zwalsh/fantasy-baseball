@@ -6,7 +6,7 @@ import requests
 
 from espn.sessions.espn_session_store import EspnSessionStore
 
-PROD_BASE_URL = "https://registerdisney.go.com/jgc/v6/client/ESPN-ONESITE.WEB-PROD"
+PROD_BASE_URL = "https://registerdisney.go.com/jgc/v8/client/ESPN-ONESITE.WEB-PROD"
 
 
 class LoginException(Exception):
@@ -21,7 +21,7 @@ LOGGER = logging.getLogger("espn.api.espn_session_provider")
 
 
 class EspnSessionProvider:
-    LOGIN_URL = PROD_BASE_URL + "/guest/login?langPref=en-US"
+    LOGIN_URL = PROD_BASE_URL + "/guest/login?langPref=en-US&feature=no-password-reuse"
 
     def __init__(self, username, password):
         self.username = username

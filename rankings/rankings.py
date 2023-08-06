@@ -3,7 +3,7 @@ import logging
 from datetime import date
 from math import ceil, floor
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from dump import load_from_cache
 from espn.football.football_api import FootballApi
@@ -51,19 +51,18 @@ def replacement_level(
     :param avg_rostered_count: how many of each position does the average team roster?
     :param team_count: the number of teams in the league
     :return: for each position, which rank of player is available at any time?
-    """
+    """        # if pos == FootballPosition.RUNNING_BACK:
+        #     count = (
+        #         count - 1.1
+        #     )  # adjusting based on new year w/ 10 teams but 1 fewer roster spot
+        # if pos == FootballPosition.WIDE_RECEIVER:
+        #     count = count + 0.2
+        # if pos == FootballPosition.TIGHT_END:
+        #     count = count - 0.1
+        # # if pos == FootballPosition.QUARTER_BACK:
+        # #     count = count
     replacement = dict()
     for pos, count in avg_rostered_count.items():
-        if pos == FootballPosition.RUNNING_BACK:
-            count = (
-                count - 1.1
-            )  # adjusting based on new year w/ 10 teams but 1 fewer roster spot
-        if pos == FootballPosition.WIDE_RECEIVER:
-            count = count + 0.2
-        if pos == FootballPosition.TIGHT_END:
-            count = count - 0.1
-        # if pos == FootballPosition.QUARTER_BACK:
-        #     count = count
         replacement[pos] = ceil(count * team_count)
 
     return replacement
@@ -99,7 +98,7 @@ def _cached_projections_by_name(fantasy_pros: FantasyProsApi):
     today = date.today()
     date_string = str(today)
     return load_from_cache(
-        Path(f"cache/fp-proj-{date_string}.p"), fantasy_pros.week_football_projections
+        Path(f"cache/fp-proj-{date_string}.p"), fantasy_pros.year_football_projections
     )
 
 
@@ -126,7 +125,7 @@ def projections_by_player(
 
 def ranked_by_position(
     projections: Dict[Player, float]
-) -> Dict[FootballPosition, List[Player]]:
+) -> Dict[FootballPosition, List[Tuple[Player, float]]]:
     """
     Sorts all players, sliced by default position, ranking by projection.
     """
@@ -169,9 +168,13 @@ def replacement_level_points(
     return replacement_values
 
 
-def _player_values(
+def player_values(
     projections: Dict[Player, float], replacement_values: Dict[FootballPosition, float]
 ):
+    """
+    Returns the value above replacement of each player, given how many points they are
+    expected to score as well as the replacement value for their position.
+    """
     values = dict()
     for player, points in projections.items():
         value = points - replacement_values[player.default_position]
@@ -189,11 +192,11 @@ def rank_all_players(
         avg_count_cache, lambda: roster_count_of_all_lineups(last_year)
     )
     # avg_count = {
-    #     FootballPosition.QUARTER_BACK: 1.2,
-    #     FootballPosition.RUNNING_BACK: 6.0,
-    #     FootballPosition.WIDE_RECEIVER: 6.0,
-    #     FootballPosition.TIGHT_END: 1.2,
-    #     FootballPosition.DEFENSE: 1.0
+    #     FootballPosition.QUARTER_BACK: 1.5,
+    #     FootballPosition.RUNNING_BACK: 4.75,
+    #     FootballPosition.WIDE_RECEIVER: 5.75,
+    #     FootballPosition.TIGHT_END: 1.0,
+    #     FootballPosition.DEFENSE: 1.0,
     # }
     replacement_rank = replacement_level(avg_count, 10)
     projections = projections_by_player(football, fantasy_pros)
@@ -201,7 +204,7 @@ def rank_all_players(
     ranked_by_pos = ranked_by_position(projections)
     replacement_values = replacement_level_points(replacement_rank, ranked_by_pos)
 
-    values = _player_values(projections, replacement_values)
+    values = player_values(projections, replacement_values)
 
     sorted_by_value = sorted(values.items(), key=lambda tup: tup[1], reverse=True)
 

@@ -67,7 +67,7 @@ class FantasyProsApi:
         }
         # approximate plate appearances as at-bats plus walks
         stats_dict[BaseballStat.PA] = (
-            stats_dict[BaseballStat.AB] + stats_dict[BaseballStat.BB]
+                stats_dict[BaseballStat.AB] + stats_dict[BaseballStat.BB]
         )
         return Stats(stats_dict, BaseballStat)
 
@@ -129,10 +129,12 @@ class FantasyProsApi:
         )
 
     def _hitter_draft_rankings(self):
-        return self._baseball_draft_rankings("https://www.fantasypros.com/mlb/rankings/hitters.php?eligibility=E")
+        return self._baseball_draft_rankings(
+            "https://www.fantasypros.com/mlb/rankings/hitters.php?eligibility=E")
 
     def _pitcher_draft_rankings(self):
-        return self._baseball_draft_rankings("https://www.fantasypros.com/mlb/rankings/pitchers.php?eligibility=E")
+        return self._baseball_draft_rankings(
+            "https://www.fantasypros.com/mlb/rankings/pitchers.php?eligibility=E")
 
     def _baseball_draft_rankings(self, url) -> Dict[str, int]:
         """
@@ -168,7 +170,6 @@ class FantasyProsApi:
 
         return list(map(lambda p: p[0], top_300_sorted))
 
-
     def _qb_stats_for_row(self, row):
         cells = row.find("td")
         return Stats(
@@ -176,7 +177,7 @@ class FantasyProsApi:
                 FootballStat.YDS_PASS: float(cells[3].text.replace(",", "")),
                 FootballStat.TD_PASS: float(cells[4].text),
                 FootballStat.INT_PASS: float(cells[5].text),
-                FootballStat.YDS_RUSH: float(cells[7].text),
+                FootballStat.YDS_RUSH: float(cells[7].text.replace(",", "")),
                 FootballStat.TD_RUSH: float(cells[8].text),
                 FootballStat.FUML: float(cells[9].text),
                 FootballStat.FP: float(cells[10].text),
@@ -242,7 +243,9 @@ class FantasyProsApi:
         }[position](row)
 
     def _week_football_projections(
-        self, position: FootballPosition
+            self,
+            position: FootballPosition,
+            week_override=None,
     ) -> Dict[str, Stats]:
         """
         Grabs projections for the week for the given position.
@@ -255,9 +258,10 @@ class FantasyProsApi:
         :return: dictionary of name to Stat
         """
         projections = dict()
-        rows = self.table_rows(
-            f"https://www.fantasypros.com/nfl/projections/{str(position).lower()}.php?scoring=HALF"
-        )
+        url = f"https://www.fantasypros.com/nfl/projections/{str(position).lower()}.php?scoring=HALF"
+        if week_override is not None:
+            url = url + f"&week={week_override}"
+        rows = self.table_rows(url)
         players = [r for r in rows if "mpb-player" in r.attrs.get("class", [""])[0]]
         for p in players:
             name = FantasyProsApi.name_from_row(p)
@@ -274,4 +278,18 @@ class FantasyProsApi:
         projections = dict()
         for position in FootballPosition:
             projections.update(self._week_football_projections(position))
+        return projections
+
+    def year_football_projections(self) -> Dict[str, Stats]:
+        """
+        Scrapes the pre-draft projections page to get the best projections for players at all
+        positions.
+        :return:
+
+
+        """
+        projections = dict()
+        for position in FootballPosition:
+            # the year-long projections page can be found by adding the param ?week=draft.
+            projections.update(self._week_football_projections(position, week_override="draft"))
         return projections
