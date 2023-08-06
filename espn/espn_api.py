@@ -37,7 +37,7 @@ def _draft_strategy_json(rankings: List[Player]):
 
 
 class EspnApi(metaclass=ABCMeta):
-    def __init__(self, session_provider, league_id, team_id, year=2022):
+    def __init__(self, session_provider, league_id, team_id, year=2023):
         """
         Programmatic access to ESPN's (undocumented) API, caching requests that do not need
         refreshing, and automatically fetching a token for the user/password combination.

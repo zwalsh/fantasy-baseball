@@ -31,7 +31,7 @@ class FootballApi(EspnApi):
             self.__password = ""
             self.__league_id = 0
             self.__team_id = 0
-            self.__year = 2021
+            self.__year = 2023
 
         def username(self, username):
             self.__username = username
